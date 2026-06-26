@@ -1,10 +1,10 @@
 import { getSupabaseClient } from '@/lib/supabase';
 
-export default function Home() {
+export default async function Home() {
   const supabase = getSupabaseClient();
 
-  // Récupérer les paramètres depuis Supabase
-  const { data: parameters, error } = supabase
+  // Récupérer les paramètres depuis Supabase (requête asynchrone)
+  const { data: parameters, error } = await supabase
     .from('parameters')
     .select('*');
 
