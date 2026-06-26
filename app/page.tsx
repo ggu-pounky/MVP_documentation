@@ -1,7 +1,7 @@
-import { createClient } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase';
 
 export default function Home() {
-  const supabase = createClient();
+  const supabase = getSupabaseClient();
 
   // Récupérer les paramètres depuis Supabase
   const { data: parameters, error } = supabase
