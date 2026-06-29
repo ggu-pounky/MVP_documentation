@@ -8,8 +8,8 @@ import { Sidebar } from '@/components/Sidebar';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Mon App Supabase',
-  description: 'Une application avec Next.js et Supabase',
+  title: 'Gestion Agile - EPICs, FEATURES & User Stories',
+  description: 'Application de gestion de projet Agile avec Next.js et Supabase',
 };
 
 export default function RootLayout({
@@ -22,9 +22,11 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider>
           <Navbar />
-          <div className="flex pt-16">
+          <div className="flex pt-16 min-h-screen">
             <Sidebar />
-            <main className="flex-1 ml-64 p-8">{children}</main>
+            <main className="flex-1 ml-64 p-6 bg-[rgb(var(--background-start-rgb))]">
+              {children}
+            </main>
           </div>
         </ThemeProvider>
       </body>

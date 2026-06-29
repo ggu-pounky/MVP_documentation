@@ -44,7 +44,7 @@ export default function ParametersPage() {
       setParametres(data || []);
     } catch (err) {
       console.error('Erreur lors de la récupération des paramètres:', err);
-      setError(err instanceof Error ? err.message : 'Erreur inconnue lors de la récupération');
+      setError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
       setLoading(false);
     }
@@ -155,51 +155,65 @@ export default function ParametersPage() {
 
   if (loading && parametres.length === 0) {
     return (
-      <div className="min-h-screen bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))] p-8">
-        <p>Chargement...</p>
+      <div className="min-h-screen bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))] p-6">
+        <div className="flex items-center justify-center h-full">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[rgb(var(--primary-rgb))]"></div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))] p-8">
-      <h1 className="text-3xl font-bold mb-8 text-[rgb(var(--primary-rgb))]">Gestion des Paramètres</h1>
+    <div className="min-h-screen bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))] p-6">
+      {/* En-tête */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2 text-[rgb(var(--primary-rgb))]">
+          Gestion des Paramètres
+        </h1>
+        <p className="text-[rgba(var(--secondary-rgb),0.7)]">
+          Configurez les paramètres de votre application.
+        </p>
+      </div>
 
       {/* Message de succès */}
       {success && (
-        <div className="mb-4 p-4 bg-green-100 dark:bg-green-900/30 border border-green-500 dark:border-green-400 rounded text-green-700 dark:text-green-300">
+        <div className="alert alert-success mb-6">
           {success}
         </div>
       )}
 
       {/* Message d'erreur */}
       {error && (
-        <div className="mb-4 p-4 bg-red-100 dark:bg-red-900/30 border border-red-500 dark:border-red-400 rounded text-red-700 dark:text-red-300">
+        <div className="alert alert-error mb-6">
           Erreur : {error}
         </div>
       )}
 
       {/* Formulaire pour ajouter un paramètre */}
-      <div className="bg-[rgb(var(--card-rgb))] border border-[rgb(var(--card-border-rgb))] rounded-xl p-6 shadow-lg mb-8">
-        <h2 className="text-2xl font-semibold mb-6 text-[rgb(var(--secondary-rgb))]">Ajouter un paramètre</h2>
+      <div className="card p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4 text-[rgb(var(--secondary-rgb))]">
+          Ajouter un paramètre
+        </h2>
         <form onSubmit={handleCreateParametre} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Nom *</label>
+            <label className="form-label">Nom *</label>
             <input
               type="text"
               value={newParametre.name}
               onChange={(e) => setNewParametre({ ...newParametre, name: e.target.value })}
-              className="w-full p-2 rounded bg-[rgb(var(--background-start-rgb))] border border-[rgb(var(--card-border-rgb))] text-[rgb(var(--foreground-rgb))]"
+              placeholder="Ex: max_users"
+              className="form-input"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Valeur</label>
+            <label className="form-label">Valeur</label>
             <input
               type="text"
               value={newParametre.value}
               onChange={(e) => setNewParametre({ ...newParametre, value: e.target.value })}
-              className="w-full p-2 rounded bg-[rgb(var(--background-start-rgb))] border border-[rgb(var(--card-border-rgb))] text-[rgb(var(--foreground-rgb))]"
+              placeholder="Ex: 100"
+              className="form-input"
               required
             />
           </div>
@@ -207,35 +221,43 @@ export default function ParametersPage() {
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-[rgb(var(--primary-rgb))] text-white rounded hover:bg-[rgba(var(--primary-rgb),0.8)] transition-colors disabled:opacity-50"
+              className="btn btn-primary"
             >
-              {loading ? 'Ajout en cours...' : 'Ajouter'}
+              {loading ? 'Ajout en cours...' : 'Ajouter le paramètre'}
             </button>
           </div>
         </form>
       </div>
 
-      {/* Tableau des paramètres */}
-      <div className="bg-[rgb(var(--card-rgb))] border border-[rgb(var(--card-border-rgb))] rounded-xl p-6 shadow-lg">
-        <h2 className="text-2xl font-semibold mb-6 text-[rgb(var(--secondary-rgb))]">Liste des paramètres</h2>
+      {/* Liste des paramètres */}
+      <div className="card p-6">
+        <h2 className="text-xl font-semibold mb-6 text-[rgb(var(--secondary-rgb))]">
+          Liste des paramètres
+        </h2>
         {parametres.length === 0 ? (
-          <p className="text-[rgba(var(--secondary-rgb),0.7)] italic">Aucun paramètre trouvé.</p>
+          <p className="text-[rgba(var(--secondary-rgb),0.7)] italic">
+            Aucun paramètre trouvé.
+          </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="table-container">
+            <table className="table">
               <thead>
-                <tr className="border-b border-[rgb(var(--card-border-rgb))]">
-                  <th className="text-left p-3 font-medium">Nom</th>
-                  <th className="text-left p-3 font-medium">Valeur</th>
-                  <th className="text-left p-3 font-medium">Actions</th>
+                <tr>
+                  <th>Nom</th>
+                  <th>Valeur</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {parametres.map((parametre) => (
-                  <tr key={parametre.id} className="border-b border-[rgba(var(--card-border-rgb),0.3)]">
-                    <td className="p-3">{parametre.name}</td>
-                    <td className="p-3">{parametre.value}</td>
-                    <td className="p-3 space-x-2">
+                  <tr key={parametre.id}>
+                    <td>
+                      <code className="bg-[rgba(var(--background-start-rgb),0.2)] p-1 rounded">
+                        {parametre.name}
+                      </code>
+                    </td>
+                    <td>{parametre.value}</td>
+                    <td className="space-x-2">
                       <button
                         onClick={() => {
                           const updatedValue = prompt('Nouvelle valeur:', parametre.value);
@@ -244,7 +266,7 @@ export default function ParametersPage() {
                           }
                         }}
                         disabled={loading}
-                        className="text-[rgb(var(--primary-rgb))] hover:underline disabled:opacity-50"
+                        className="link text-sm"
                       >
                         Modifier
                       </button>
@@ -255,7 +277,7 @@ export default function ParametersPage() {
                           }
                         }}
                         disabled={loading}
-                        className="text-red-500 hover:underline disabled:opacity-50"
+                        className="text-red-500 hover:underline disabled:opacity-50 text-sm"
                       >
                         Supprimer
                       </button>

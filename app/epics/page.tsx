@@ -1,0 +1,664 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { getSupabaseClient } from '@/lib/supabase';
+import Link from 'next/link';
+
+type Epic = {
+  id: string;
+  titre: string;
+  description: string;
+  priorite: string;
+  statut: string;
+  createur: string;
+  date_creation: string;
+};
+
+type Feature = {
+  id: string;
+  titre: string;
+  description: string;
+  epic_id: string;
+  priorite: string;
+  statut: string;
+};
+
+type Exigence = {
+  id: string;
+  titre: string;
+  feature_id: string;
+};
+
+export default function EpicsPage() {
+  const supabase = getSupabaseClient();
+  const [epics, setEpics] = useState<Epic[]>([]);
+  const [features, setFeatures] = useState<Feature[]>([]);
+  const [exigences, setExigences] = useState<Exigence[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  // Formulaire pour les EPICs
+  const [newEpic, setNewEpic] = useState({
+    titre: '',
+    description: '',
+    priorite: 'Moyenne',
+    statut: 'À faire',
+    createur: '',
+  });
+
+  // État pour le formulaire de FEATURE
+  const [newFeature, setNewFeature] = useState({
+    titre: '',
+    description: '',
+    epic_id: '',
+    priorite: 'Moyenne',
+    statut: 'À faire',
+  });
+
+  // Récupérer les données au chargement
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Récupérer les EPICs
+      const { data: epicsData, error: epicsError } = await supabase
+        .from('epics')
+        .select('*')
+        .order('date_creation', { ascending: false });
+
+      if (epicsError) {
+        console.error('Erreur Supabase (EPICs):', epicsError);
+        throw new Error(`Erreur Supabase: ${epicsError.message}`);
+      }
+      setEpics(epicsData || []);
+
+      // Récupérer les FEATURES
+      const { data: featuresData, error: featuresError } = await supabase
+        .from('features')
+        .select('*');
+
+      if (featuresError) {
+        console.error('Erreur Supabase (FEATURES):', featuresError);
+        throw new Error(`Erreur Supabase: ${featuresError.message}`);
+      }
+      setFeatures(featuresData || []);
+
+      // Récupérer les exigences
+      const { data: exigencesData, error: exigencesError } = await supabase
+        .from('exigences')
+        .select('id, titre, feature_id');
+
+      if (exigencesError) {
+        console.error('Erreur Supabase (exigences):', exigencesError);
+        throw new Error(`Erreur Supabase: ${exigencesError.message}`);
+      }
+      setExigences(exigencesData || []);
+
+    } catch (err) {
+      console.error('Erreur lors de la récupération des données:', err);
+      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Créer un nouvel EPIC
+  const handleCreateEpic = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      setError(null);
+      setSuccess(null);
+
+      if (!newEpic.titre) {
+        throw new Error('Le titre est obligatoire');
+      }
+
+      const { data, error } = await supabase
+        .from('epics')
+        .insert([{
+          titre: newEpic.titre,
+          description: newEpic.description,
+          priorite: newEpic.priorite,
+          statut: newEpic.statut,
+          createur: newEpic.createur,
+        }])
+        .select();
+
+      if (error) {
+        console.error('Erreur Supabase:', error);
+        throw new Error(`Erreur Supabase: ${error.message}`);
+      }
+
+      if (!data || data.length === 0) {
+        throw new Error('Aucune donnée retournée après insertion');
+      }
+
+      setEpics([...epics, data[0]]);
+      setNewEpic({ titre: '', description: '', priorite: 'Moyenne', statut: 'À faire', createur: '' });
+      setSuccess('EPIC ajouté avec succès !');
+      setTimeout(() => setSuccess(null), 3000);
+
+    } catch (err) {
+      console.error('Erreur lors de la création de l\'EPIC:', err);
+      setError(err instanceof Error ? err.message : 'Erreur inconnue lors de la création');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Créer une nouvelle FEATURE
+  const handleCreateFeature = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      setError(null);
+      setSuccess(null);
+
+      if (!newFeature.titre) {
+        throw new Error('Le titre est obligatoire');
+      }
+
+      if (!newFeature.epic_id) {
+        throw new Error('Veuillez sélectionner un EPIC');
+      }
+
+      const { data, error } = await supabase
+        .from('features')
+        .insert([{
+          titre: newFeature.titre,
+          description: newFeature.description,
+          epic_id: newFeature.epic_id,
+          priorite: newFeature.priorite,
+          statut: newFeature.statut,
+        }])
+        .select();
+
+      if (error) {
+        console.error('Erreur Supabase:', error);
+        throw new Error(`Erreur Supabase: ${error.message}`);
+      }
+
+      if (!data || data.length === 0) {
+        throw new Error('Aucune donnée retournée après insertion');
+      }
+
+      setFeatures([...features, data[0]]);
+      setNewFeature({ titre: '', description: '', epic_id: '', priorite: 'Moyenne', statut: 'À faire' });
+      setSuccess('FEATURE ajoutée avec succès !');
+      setTimeout(() => setSuccess(null), 3000);
+
+    } catch (err) {
+      console.error('Erreur lors de la création de la FEATURE:', err);
+      setError(err instanceof Error ? err.message : 'Erreur inconnue lors de la création');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Supprimer un EPIC
+  const handleDeleteEpic = async (id: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Vérifier qu'il n'y a pas de FEATURES associées
+      const { data: associatedFeatures, error: checkError } = await supabase
+        .from('features')
+        .select('id')
+        .eq('epic_id', id);
+
+      if (checkError) {
+        console.error('Erreur lors de la vérification des FEATURES associées:', checkError);
+        throw new Error(`Erreur Supabase: ${checkError.message}`);
+      }
+
+      if (associatedFeatures && associatedFeatures.length > 0) {
+        throw new Error('Impossible de supprimer cet EPIC : des FEATURES y sont associées. Supprimez d\'abord les FEATURES liées.');
+      }
+
+      const { error } = await supabase
+        .from('epics')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Erreur Supabase:', error);
+        throw new Error(`Erreur Supabase: ${error.message}`);
+      }
+
+      setEpics(epics.filter(e => e.id !== id));
+      setSuccess('EPIC supprimé avec succès !');
+      setTimeout(() => setSuccess(null), 3000);
+
+    } catch (err) {
+      console.error('Erreur lors de la suppression:', err);
+      setError(err instanceof Error ? err.message : 'Erreur inconnue lors de la suppression');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Supprimer une FEATURE
+  const handleDeleteFeature = async (id: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Vérifier qu'il n'y a pas d'exigences associées
+      const { data: associatedExigences, error: checkError } = await supabase
+        .from('exigences')
+        .select('id')
+        .eq('feature_id', id);
+
+      if (checkError) {
+        console.error('Erreur lors de la vérification des exigences associées:', checkError);
+        throw new Error(`Erreur Supabase: ${checkError.message}`);
+      }
+
+      if (associatedExigences && associatedExigences.length > 0) {
+        throw new Error('Impossible de supprimer cette FEATURE : des User Stories y sont associées. Supprimez d\'abord les User Stories liées.');
+      }
+
+      const { error } = await supabase
+        .from('features')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Erreur Supabase:', error);
+        throw new Error(`Erreur Supabase: ${error.message}`);
+      }
+
+      setFeatures(features.filter(f => f.id !== id));
+      setSuccess('FEATURE supprimée avec succès !');
+      setTimeout(() => setSuccess(null), 3000);
+
+    } catch (err) {
+      console.error('Erreur lors de la suppression:', err);
+      setError(err instanceof Error ? err.message : 'Erreur inconnue lors de la suppression');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filtrer les FEATURES par EPIC
+  const getFeaturesForEpic = (epicId: string) => {
+    return features.filter(f => f.epic_id === epicId);
+  };
+
+  // Filtrer les exigences par FEATURE
+  const getExigencesForFeature = (featureId: string) => {
+    return exigences.filter(ex => ex.feature_id === featureId);
+  };
+
+  if (loading && epics.length === 0) {
+    return (
+      <div className="min-h-screen bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))] p-6">
+        <div className="flex items-center justify-center h-full">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[rgb(var(--primary-rgb))]"></div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))] p-6">
+      {/* En-tête */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2 text-[rgb(var(--primary-rgb))]">
+          Méthodologie Agile : EPICs et FEATURES
+        </h1>
+        <p className="text-[rgba(var(--secondary-rgb),0.7)]">
+          Gérez vos EPICs et FEATURES pour organiser vos projets de manière structurée.
+        </p>
+      </div>
+
+      {/* Message de succès */}
+      {success && (
+        <div className="alert alert-success mb-6">
+          {success}
+        </div>
+      )}
+
+      {/* Message d'erreur */}
+      {error && (
+        <div className="alert alert-error mb-6">
+          Erreur : {error}
+        </div>
+      )}
+
+      {/* Formulaire pour ajouter un EPIC */}
+      <div className="card p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4 text-[rgb(var(--secondary-rgb))]">
+          Créer un nouvel EPIC
+        </h2>
+        <p className="mb-4 text-[rgba(var(--secondary-rgb),0.7)]">
+          Un <strong>EPIC</strong> est une grande initiative ou un objectif stratégique qui regroupe plusieurs FEATURES.
+          Exemple : "Gestion des utilisateurs", "Intégration des paiements", etc.
+        </p>
+        <form onSubmit={handleCreateEpic} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="form-label">Titre *</label>
+            <input
+              type="text"
+              value={newEpic.titre}
+              onChange={(e) => setNewEpic({ ...newEpic, titre: e.target.value })}
+              placeholder="Ex: Gestion des utilisateurs"
+              className="form-input"
+              required
+            />
+          </div>
+          <div>
+            <label className="form-label">Priorité</label>
+            <select
+              value={newEpic.priorite}
+              onChange={(e) => setNewEpic({ ...newEpic, priorite: e.target.value })}
+              className="form-select"
+            >
+              <option value="Haute">Haute</option>
+              <option value="Moyenne">Moyenne</option>
+              <option value="Basse">Basse</option>
+            </select>
+          </div>
+          <div>
+            <label className="form-label">Statut</label>
+            <select
+              value={newEpic.statut}
+              onChange={(e) => setNewEpic({ ...newEpic, statut: e.target.value })}
+              className="form-select"
+            >
+              <option value="À faire">À faire</option>
+              <option value="En cours">En cours</option>
+              <option value="Terminé">Terminé</option>
+            </select>
+          </div>
+          <div>
+            <label className="form-label">Votre nom (optionnel)</label>
+            <input
+              type="text"
+              value={newEpic.createur}
+              onChange={(e) => setNewEpic({ ...newEpic, createur: e.target.value })}
+              placeholder="Ex: Jean Dupont (Product Owner)"
+              className="form-input"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="form-label">Description *</label>
+            <textarea
+              value={newEpic.description}
+              onChange={(e) => setNewEpic({ ...newEpic, description: e.target.value })}
+              placeholder="Décrivez l'EPIC : objectif, portée, bénéfices attendus..."
+              className="form-textarea"
+              rows={4}
+              required
+            />
+          </div>
+          <div className="md:col-span-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary"
+            >
+              {loading ? 'Ajout en cours...' : 'Ajouter l\'EPIC'}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Formulaire pour ajouter une FEATURE */}
+      <div className="card p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4 text-[rgb(var(--secondary-rgb))]">
+          Ajouter une FEATURE à un EPIC
+        </h2>
+        <p className="mb-4 text-[rgba(var(--secondary-rgb),0.7)]">
+          Une <strong>FEATURE</strong> est une fonctionnalité spécifique qui fait partie d'un EPIC.
+          Exemple : Pour l'EPIC "Gestion des utilisateurs", une FEATURE pourrait être "Authentification".
+        </p>
+        <form onSubmit={handleCreateFeature} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="form-label">EPIC *</label>
+            <select
+              value={newFeature.epic_id}
+              onChange={(e) => setNewFeature({ ...newFeature, epic_id: e.target.value })}
+              className="form-select"
+              required
+            >
+              <option value="">Sélectionnez un EPIC</option>
+              {epics.map((epic) => (
+                <option key={epic.id} value={epic.id}>
+                  {epic.titre}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="form-label">Titre *</label>
+            <input
+              type="text"
+              value={newFeature.titre}
+              onChange={(e) => setNewFeature({ ...newFeature, titre: e.target.value })}
+              placeholder="Ex: Authentification"
+              className="form-input"
+              required
+            />
+          </div>
+          <div>
+            <label className="form-label">Priorité</label>
+            <select
+              value={newFeature.priorite}
+              onChange={(e) => setNewFeature({ ...newFeature, priorite: e.target.value })}
+              className="form-select"
+            >
+              <option value="Haute">Haute</option>
+              <option value="Moyenne">Moyenne</option>
+              <option value="Basse">Basse</option>
+            </select>
+          </div>
+          <div>
+            <label className="form-label">Statut</label>
+            <select
+              value={newFeature.statut}
+              onChange={(e) => setNewFeature({ ...newFeature, statut: e.target.value })}
+              className="form-select"
+            >
+              <option value="À faire">À faire</option>
+              <option value="En cours">En cours</option>
+              <option value="Terminé">Terminé</option>
+            </select>
+          </div>
+          <div className="md:col-span-2">
+            <label className="form-label">Description</label>
+            <textarea
+              value={newFeature.description}
+              onChange={(e) => setNewFeature({ ...newFeature, description: e.target.value })}
+              placeholder="Décrivez la FEATURE : fonctionnalités incluses, critères de succès..."
+              className="form-textarea"
+              rows={3}
+            />
+          </div>
+          <div className="md:col-span-2">
+            <button
+              type="submit"
+              disabled={loading || !newFeature.epic_id}
+              className="btn btn-primary"
+            >
+              {loading ? 'Ajout en cours...' : 'Ajouter la FEATURE'}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Liste des EPICs et FEATURES */}
+      <div className="card p-6">
+        <h2 className="text-xl font-semibold mb-6 text-[rgb(var(--secondary-rgb))]">
+          Liste des EPICs et FEATURES
+        </h2>
+        {epics.length === 0 ? (
+          <p className="text-[rgba(var(--secondary-rgb),0.7)] italic">Aucun EPIC trouvé.</p>
+        ) : (
+          <div className="space-y-6">
+            {epics.map((epic) => {
+              const featuresForEpic = getFeaturesForEpic(epic.id);
+              return (
+                <div key={epic.id} className="border border-[rgba(var(--card-border-rgb),0.3)] rounded-lg p-4">
+                  {/* En-tête de l'EPIC */}
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-6 w-6 text-[rgb(var(--primary-rgb))]"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                          />
+                        </svg>
+                        <h3 className="text-xl font-bold text-[rgb(var(--foreground-rgb))]">{epic.titre}</h3>
+                      </div>
+                      <p className="text-sm text-[rgba(var(--secondary-rgb),0.7)]">
+                        Priorité: {epic.priorite} | Statut: {epic.statut}
+                        {epic.createur && ` | Créé par: ${epic.createur}`}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        if (confirm('Êtes-vous sûr de vouloir supprimer cet EPIC ?')) {
+                          handleDeleteEpic(epic.id);
+                        }
+                      }}
+                      disabled={loading}
+                      className="text-red-500 hover:underline disabled:opacity-50"
+                    >
+                      Supprimer EPIC
+                    </button>
+                  </div>
+                  
+                  {/* Description de l'EPIC */}
+                  <p className="mb-4 text-[rgb(var(--foreground-rgb))]">{epic.description}</p>
+
+                  {/* Section des FEATURES */}
+                  <div className="mt-4 pt-4 border-t border-[rgba(var(--card-border-rgb),0.3)]">
+                    <div className="flex justify-between items-center mb-2">
+                      <h4 className="text-lg font-medium text-[rgb(var(--secondary-rgb))]">
+                        FEATURES ({featuresForEpic.length})
+                      </h4>
+                      <Link
+                        href={`/features?epic_id=${epic.id}`}
+                        className="btn btn-secondary text-sm"
+                      >
+                        + Ajouter une FEATURE
+                      </Link>
+                    </div>
+                    
+                    {featuresForEpic.length === 0 ? (
+                      <p className="text-sm text-[rgba(var(--secondary-rgb),0.5)] italic mb-4">
+                        Aucune FEATURE associée à cet EPIC.
+                      </p>
+                    ) : (
+                      <div className="space-y-3">
+                        {featuresForEpic.map((feature) => {
+                          const exigencesForFeature = getExigencesForFeature(feature.id);
+                          return (
+                            <div key={feature.id} className="border border-[rgba(var(--card-border-rgb),0.2)] rounded-lg p-3">
+                              <div className="flex justify-between items-start mb-2">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      className="h-5 w-5 text-[rgb(var(--accent-rgb))]"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                                      />
+                                    </svg>
+                                    <h5 className="text-lg font-semibold text-[rgb(var(--foreground-rgb))]">{feature.titre}</h5>
+                                  </div>
+                                  <p className="text-sm text-[rgba(var(--secondary-rgb),0.7)]">
+                                    Priorité: {feature.priorite} | Statut: {feature.statut}
+                                  </p>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    if (confirm('Êtes-vous sûr de vouloir supprimer cette FEATURE ?')) {
+                                      handleDeleteFeature(feature.id);
+                                    }
+                                  }}
+                                  disabled={loading}
+                                  className="text-red-500 hover:underline disabled:opacity-50"
+                                >
+                                  Supprimer
+                                </button>
+                              </div>
+                              
+                              {/* Description de la FEATURE */}
+                              {feature.description && (
+                                <p className="text-sm text-[rgba(var(--foreground-rgb),0.8)] mb-2">{feature.description}</p>
+                              )}
+
+                              {/* Section des User Stories */}
+                              <div className="mt-3 pt-3 border-t border-[rgba(var(--card-border-rgb),0.2)]">
+                                <div className="flex justify-between items-center mb-1">
+                                  <h6 className="text-sm font-medium text-[rgba(var(--secondary-rgb),0.8)]">
+                                    User Stories ({exigencesForFeature.length})
+                                  </h6>
+                                  <Link
+                                    href={`/exigences?feature_id=${feature.id}`}
+                                    className="btn btn-secondary text-xs"
+                                  >
+                                    + Ajouter une User Story
+                                  </Link>
+                                </div>
+                                
+                                {exigencesForFeature.length === 0 ? (
+                                  <p className="text-xs text-[rgba(var(--secondary-rgb),0.5)] italic">
+                                    Aucune User Story associée à cette FEATURE.
+                                  </p>
+                                ) : (
+                                  <ul className="list-disc list-inside space-y-1 mt-1">
+                                    {exigencesForFeature.map((exigence) => (
+                                      <li key={exigence.id} className="text-sm text-[rgb(var(--foreground-rgb))]">
+                                        <Link
+                                          href={`/exigences/${exigence.id}`}
+                                          className="link"
+                                        >
+                                          {exigence.titre}
+                                        </Link>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

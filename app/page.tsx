@@ -4,116 +4,328 @@ import Link from 'next/link';
 export default async function Home() {
   const supabase = getSupabaseClient();
 
-  // Récupérer les paramètres depuis Supabase
-  const { data: parameters, error: parametersError } = await supabase
-    .from('parameters')
+  // Récupérer les EPICs, FEATURES et User Stories depuis Supabase
+  const { data: epics, error: epicsError } = await supabase
+    .from('epics')
+    .select('*')
+    .order('date_creation', { ascending: false });
+
+  const { data: features, error: featuresError } = await supabase
+    .from('features')
     .select('*');
 
-  // Récupérer les exigences depuis Supabase
   const { data: exigences, error: exigencesError } = await supabase
     .from('exigences')
     .select('*')
     .order('created_at', { ascending: false });
 
-  if (parametersError || exigencesError) {
+  const { data: parameters, error: parametersError } = await supabase
+    .from('parameters')
+    .select('*');
+
+  if (epicsError || featuresError || exigencesError || parametersError) {
     return (
       <div className="min-h-screen p-8 flex flex-col items-center justify-center bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))]">
         <div className="text-red-500 text-xl mb-4">
-          Erreur : {parametersError?.message || exigencesError?.message}
+          Erreur : {epicsError?.message || featuresError?.message || exigencesError?.message || parametersError?.message}
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))] p-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8 text-[rgb(var(--primary-rgb))]">
-          Tableau de bord
-        </h1>
+  // Compter les éléments
+  const epicCount = epics?.length || 0;
+  const featureCount = features?.length || 0;
+  const userStoryCount = exigences?.length || 0;
+  const parameterCount = parameters?.length || 0;
 
-        {/* Section Exigences */}
-        <div className="bg-[rgb(var(--card-rgb))] border border-[rgb(var(--card-border-rgb))] rounded-xl p-6 shadow-lg mb-8">
+  return (
+    <div className="min-h-screen bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))] p-6">
+      {/* En-tête */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold mb-2 text-[rgb(var(--primary-rgb))]">
+          Bienvenue dans Gestion Agile
+        </h1>
+        <p className="text-[rgba(var(--secondary-rgb),0.7)]">
+          Gérez vos projets avec la méthodologie Agile : EPICs, FEATURES et User Stories.
+        </p>
+      </div>
+
+      {/* Statistiques */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Carte EPICs */}
+        <div className="card p-6">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 bg-[rgba(var(--primary-rgb),0.1)] rounded-lg flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 text-[rgb(var(--primary-rgb))]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-[rgb(var(--foreground-rgb))]">{epicCount}</h3>
+              <p className="text-[rgba(var(--secondary-rgb),0.7)]">EPICs</p>
+            </div>
+          </div>
+          <Link
+            href="/epics"
+            className="btn btn-primary text-sm"
+          >
+            Voir les EPICs
+          </Link>
+        </div>
+
+        {/* Carte FEATURES */}
+        <div className="card p-6">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 bg-[rgba(var(--accent-rgb),0.1)] rounded-lg flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 text-[rgb(var(--accent-rgb))]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-[rgb(var(--foreground-rgb))]">{featureCount}</h3>
+              <p className="text-[rgba(var(--secondary-rgb),0.7)]">FEATURES</p>
+            </div>
+          </div>
+          <Link
+            href="/epics"
+            className="btn btn-primary text-sm"
+          >
+            Voir les FEATURES
+          </Link>
+        </div>
+
+        {/* Carte User Stories */}
+        <div className="card p-6">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 bg-[rgba(var(--warning-rgb),0.1)] rounded-lg flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 text-[rgb(var(--warning-rgb))]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-[rgb(var(--foreground-rgb))]">{userStoryCount}</h3>
+              <p className="text-[rgba(var(--secondary-rgb),0.7)]">User Stories</p>
+            </div>
+          </div>
+          <Link
+            href="/exigences"
+            className="btn btn-primary text-sm"
+          >
+            Voir les User Stories
+          </Link>
+        </div>
+
+        {/* Carte Paramètres */}
+        <div className="card p-6">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-12 h-12 bg-[rgba(var(--danger-rgb),0.1)] rounded-lg flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 text-[rgb(var(--danger-rgb))]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-[rgb(var(--foreground-rgb))]">{parameterCount}</h3>
+              <p className="text-[rgba(var(--secondary-rgb),0.7)]">Paramètres</p>
+            </div>
+          </div>
+          <Link
+            href="/parameters"
+            className="btn btn-primary text-sm"
+          >
+            Voir les paramètres
+          </Link>
+        </div>
+      </div>
+
+      {/* Section Derniers EPICs */}
+      {epicCount > 0 && (
+        <div className="card p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold text-[rgb(var(--secondary-rgb))]">
-              Exigences
+            <h2 className="text-xl font-semibold text-[rgb(var(--secondary-rgb))]">
+              Derniers EPICs
+            </h2>
+            <Link
+              href="/epics"
+              className="btn btn-primary text-sm"
+            >
+              Voir tous les EPICs
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {epics?.slice(0, 3).map((epic) => {
+              const featuresForEpic = features?.filter(f => f.epic_id === epic.id) || [];
+              const userStoriesForEpic = exigences?.filter(ex => 
+                featuresForEpic.some(f => f.id === ex.feature_id)
+              ) || [];
+              
+              return (
+                <div key={epic.id} className="card p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 text-[rgb(var(--primary-rgb))]"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                      />
+                    </svg>
+                    <h3 className="font-semibold text-[rgb(var(--foreground-rgb))]">{epic.titre}</h3>
+                  </div>
+                  <p className="text-sm text-[rgba(var(--secondary-rgb),0.7)] mb-3">
+                    {epic.description.length > 100 
+                      ? `${epic.description.substring(0, 100)}...` 
+                      : epic.description}
+                  </p>
+                  <div className="flex items-center gap-4 text-xs">
+                    <span className="badge badge-primary">{featuresForEpic.length} FEATURES</span>
+                    <span className="badge badge-success">{userStoriesForEpic.length} User Stories</span>
+                    <span className={`badge ${epic.priorite === 'Haute' ? 'badge-danger' : epic.priorite === 'Moyenne' ? 'badge-warning' : 'badge-secondary'}`}>
+                      {epic.priorite}
+                    </span>
+                  </div>
+                  <div className="mt-3">
+                    <Link
+                      href={`/epics#${epic.id}`}
+                      className="btn btn-secondary text-xs w-full"
+                    >
+                      Voir les détails
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Section Dernières User Stories */}
+      {userStoryCount > 0 && (
+        <div className="card p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-[rgb(var(--secondary-rgb))]">
+              Dernières User Stories
             </h2>
             <Link
               href="/exigences"
-              className="px-4 py-2 bg-[rgb(var(--primary-rgb))] text-white rounded hover:bg-[rgba(var(--primary-rgb),0.8)] transition-colors"
+              className="btn btn-primary text-sm"
             >
-              Gérer les exigences
+              Voir toutes les User Stories
             </Link>
           </div>
-          {exigences && exigences.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-[rgb(var(--card-border-rgb))]">
-                    <th className="text-left p-3 font-medium">Titre</th>
-                    <th className="text-left p-3 font-medium">Description</th>
-                    <th className="text-left p-3 font-medium">Priorité</th>
-                    <th className="text-left p-3 font-medium">Statut</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {exigences.map((exigence) => (
-                    <tr key={exigence.id} className="border-b border-[rgba(var(--card-border-rgb),0.3)]">
-                      <td className="p-3">{exigence.titre}</td>
-                      <td className="p-3">{exigence.description}</td>
-                      <td className="p-3">{exigence.priorite}</td>
-                      <td className="p-3">{exigence.statut}</td>
+          <div className="table-container">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Titre</th>
+                  <th>FEATURE</th>
+                  <th>Priorité</th>
+                  <th>Statut</th>
+                </tr>
+              </thead>
+              <tbody>
+                {exigences?.slice(0, 5).map((exigence) => {
+                  const feature = features?.find(f => f.id === exigence.feature_id);
+                  const epic = feature ? epics?.find(e => e.id === feature.epic_id) : null;
+                  
+                  return (
+                    <tr key={exigence.id}>
+                      <td>
+                        <Link
+                          href={`/exigences/${exigence.id}`}
+                          className="link"
+                        >
+                          {exigence.titre.length > 50 
+                            ? `${exigence.titre.substring(0, 50)}...` 
+                            : exigence.titre}
+                        </Link>
+                      </td>
+                      <td>
+                        {feature && epic ? (
+                          <Link
+                            href={`/epics#${epic.id}`}
+                            className="link"
+                          >
+                            {epic.titre} → {feature.titre}
+                          </Link>
+                        ) : (
+                          <span className="text-[rgba(var(--secondary-rgb),0.5)]">Aucune</span>
+                        )}
+                      </td>
+                      <td>
+                        <span className={`badge ${exigence.priorite === 'Haute' ? 'badge-danger' : exigence.priorite === 'Moyenne' ? 'badge-warning' : 'badge-secondary'}`}>
+                          {exigence.priorite}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`badge ${exigence.statut === 'Terminé' ? 'badge-success' : exigence.statut === 'En cours' ? 'badge-warning' : 'badge-secondary'}`}>
+                          {exigence.statut}
+                        </span>
+                      </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-[rgba(var(--secondary-rgb),0.7)] italic">
-              Aucune exigence trouvée. <Link href="/exigences" className="text-[rgb(var(--primary-rgb))] underline">Ajoutez-en ici</Link> !
-            </p>
-          )}
-        </div>
-
-        {/* Section Paramètres */}
-        <div className="bg-[rgb(var(--card-rgb))] border border-[rgb(var(--card-border-rgb))] rounded-xl p-6 shadow-lg">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold text-[rgb(var(--secondary-rgb))]">
-              Paramètres
-            </h2>
-            <Link
-              href="/parameters"
-              className="px-4 py-2 bg-[rgb(var(--primary-rgb))] text-white rounded hover:bg-[rgba(var(--primary-rgb),0.8)] transition-colors"
-            >
-              Gérer les paramètres
-            </Link>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-          {parameters && parameters.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-[rgb(var(--card-border-rgb))]">
-                    <th className="text-left p-3 font-medium">Nom</th>
-                    <th className="text-left p-3 font-medium">Valeur</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {parameters.map((param) => (
-                    <tr key={param.id} className="border-b border-[rgba(var(--card-border-rgb),0.3)]">
-                      <td className="p-3">{param.name}</td>
-                      <td className="p-3">{param.value}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-[rgba(var(--secondary-rgb),0.7)] italic">
-              Aucun paramètre trouvé. <Link href="/parameters" className="text-[rgb(var(--primary-rgb))] underline">Ajoutez-en ici</Link> !
-            </p>
-          )}
         </div>
-      </div>
+      )}
     </div>
   );
 }
