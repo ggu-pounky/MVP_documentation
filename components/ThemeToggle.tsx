@@ -8,13 +8,13 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="fixed top-4 right-4 p-2 rounded-full bg-[rgb(var(--card-rgb))] border border-[rgb(var(--card-border-rgb))] shadow-lg hover:scale-110 transition-transform duration-200"
+      className="p-2 rounded-full bg-[rgba(var(--background-start-rgb),0.2)] border border-[rgb(var(--card-border-rgb))] hover:bg-[rgba(var(--background-start-rgb),0.3)] transition-colors duration-200"
       aria-label="Toggle theme"
     >
       {theme === 'light' ? (
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6 text-[rgb(var(--foreground-rgb))]"
+          className="h-5 w-5 text-[rgb(var(--foreground-rgb))]"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -29,7 +29,7 @@ export function ThemeToggle() {
       ) : (
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6 text-[rgb(var(--foreground-rgb))]"
+          className="h-5 w-5 text-[rgb(var(--foreground-rgb))]"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"

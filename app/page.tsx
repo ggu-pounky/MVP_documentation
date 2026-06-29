@@ -1,5 +1,4 @@
 import { getSupabaseClient } from '@/lib/supabase';
-import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default async function Home() {
   const supabase = getSupabaseClient();
@@ -13,14 +12,12 @@ export default async function Home() {
     return (
       <div className="min-h-screen p-8 flex flex-col items-center justify-center bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))]">
         <div className="text-red-500 text-xl mb-4">Erreur : {error.message}</div>
-        <ThemeToggle />
       </div>
     );
   }
 
   return (
     <main className="min-h-screen p-8 bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))]">
-      <ThemeToggle />
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-6 text-[rgb(var(--primary-rgb))]">
           Hello World avec Supabase !
