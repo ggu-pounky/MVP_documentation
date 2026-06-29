@@ -77,7 +77,7 @@ export function Sidebar() {
               className={`block px-3 py-1 rounded text-sm transition-colors ${
                 isActive('/produits/developpement')
                   ? 'bg-[rgba(var(--primary-rgb),0.15)] text-[rgb(var(--primary-rgb))]'
-                  : 'text-[rgb(var(--secondary-rgb))] hover:bg-[rgba(var(--background-start-rgb),0.1)]'
+                : 'text-[rgb(var(--secondary-rgb))] hover:bg-[rgba(var(--background-start-rgb),0.1)]'
               }`}
             >
               Développement
@@ -87,18 +87,17 @@ export function Sidebar() {
               className={`block px-3 py-1 rounded text-sm transition-colors ${
                 isActive('/produits/tests')
                   ? 'bg-[rgba(var(--primary-rgb),0.15)] text-[rgb(var(--primary-rgb))]'
-                  : 'text-[rgb(var(--secondary-rgb))] hover:bg-[rgba(var(--background-start-rgb),0.1)]'
+                : 'text-[rgb(var(--secondary-rgb))] hover:bg-[rgba(var(--background-start-rgb),0.1)]'
               }`}
             >
               Tests
             </Link>
           </div>
           
-          {/* Séparation + Documentations */}
+          {/* Documentations */}
           <div className="mt-3">
-            <div className="border-t border-[rgb(var(--card-border-rgb))] my-2" />
-            <p className="px-6 py-1 text-xs text-[rgb(var(--secondary-rgb))] font-medium">
-              Documentations
+            <p className="px-6 py-2 text-xs text-[rgb(var(--secondary-rgb))] font-medium border-t border-[rgb(var(--card-border-rgb))] pt-2">
+              — Documentations
             </p>
             <div className="pl-6 mt-1 space-y-1">
               <Link
@@ -157,7 +156,7 @@ export function Sidebar() {
               className={`block px-3 py-1 rounded text-sm transition-colors ${
                 isActive('/reversibilite/prm')
                   ? 'bg-[rgba(var(--primary-rgb),0.15)] text-[rgb(var(--primary-rgb))]'
-                  : 'text-[rgb(var(--secondary-rgb))] hover:bg-[rgba(var(--background-start-rgb),0.1)]'
+                : 'text-[rgb(var(--secondary-rgb))] hover:bg-[rgba(var(--background-start-rgb),0.1)]'
               }`}
             >
               PRM
@@ -184,7 +183,7 @@ export function Sidebar() {
               className={`block px-3 py-1 rounded text-sm transition-colors ${
                 isActive('/maintenance/analyse-impact')
                   ? 'bg-[rgba(var(--primary-rgb),0.15)] text-[rgb(var(--primary-rgb))]'
-                  : 'text-[rgb(var(--secondary-rgb))] hover:bg-[rgba(var(--background-start-rgb),0.1)]'
+                : 'text-[rgb(var(--secondary-rgb))] hover:bg-[rgba(var(--background-start-rgb),0.1)]'
               }`}
             >
               Analyse d&apos;impact
