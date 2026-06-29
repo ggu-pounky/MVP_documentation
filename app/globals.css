@@ -6,6 +6,20 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 255, 255, 255;
   --background-end-rgb: 255, 255, 255;
+  --card-rgb: 255, 255, 255;
+  --card-border-rgb: 200, 200, 200;
+  --primary-rgb: 0, 0, 255;
+  --secondary-rgb: 100, 100, 100;
+}
+
+.dark {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 10, 10, 10;
+  --background-end-rgb: 20, 20, 20;
+  --card-rgb: 30, 30, 30;
+  --card-border-rgb: 50, 50, 50;
+  --primary-rgb: 100, 100, 255;
+  --secondary-rgb: 200, 200, 200;
 }
 
 body {
@@ -16,4 +30,10 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
 }
