@@ -93,6 +93,46 @@ export function Sidebar() {
               Tests
             </Link>
           </div>
+          
+          {/* Séparation + Documentations */}
+          <div className="mt-3">
+            <div className="border-t border-[rgb(var(--card-border-rgb))] my-2" />
+            <p className="px-6 py-1 text-xs text-[rgb(var(--secondary-rgb))] font-medium">
+              Documentations
+            </p>
+            <div className="pl-6 mt-1 space-y-1">
+              <Link
+                href="/produits/matrice-exigences"
+                className={`block px-3 py-1 rounded text-xs transition-colors ${
+                  isActive('/produits/matrice-exigences')
+                    ? 'bg-[rgba(var(--primary-rgb),0.15)] text-[rgb(var(--primary-rgb))]'
+                    : 'text-[rgb(var(--secondary-rgb))] hover:bg-[rgba(var(--background-start-rgb),0.1)]'
+                }`}
+              >
+                Matrice de traçabilité EXIGENCES
+              </Link>
+              <Link
+                href="/produits/matrice-tests"
+                className={`block px-3 py-1 rounded text-xs transition-colors ${
+                  isActive('/produits/matrice-tests')
+                    ? 'bg-[rgba(var(--primary-rgb),0.15)] text-[rgb(var(--primary-rgb))]'
+                    : 'text-[rgb(var(--secondary-rgb))] hover:bg-[rgba(var(--background-start-rgb),0.1)]'
+                }`}
+              >
+                Matrice de traçabilité TESTS
+              </Link>
+              <Link
+                href="/produits/matrice-code"
+                className={`block px-3 py-1 rounded text-xs transition-colors ${
+                  isActive('/produits/matrice-code')
+                    ? 'bg-[rgba(var(--primary-rgb),0.15)] text-[rgb(var(--primary-rgb))]'
+                    : 'text-[rgb(var(--secondary-rgb))] hover:bg-[rgba(var(--background-start-rgb),0.1)]'
+                }`}
+              >
+                Matrice de traçabilité CODE
+              </Link>
+            </div>
+          </div>
         </div>
 
         {/* Séparation au-dessus de Maintenance */}
