@@ -45,7 +45,7 @@ export default function ExigencesPage() {
     description: '',
     priorite: 'Moyenne',
     statut: 'À faire',
-    feature_id: userStoryIdFromUrl || '',
+    feature_id: userStoryIdFromUrl || null,
   });
 
   // Récupérer les données au chargement
@@ -118,7 +118,7 @@ export default function ExigencesPage() {
         description: newExigence.description,
         priorite: newExigence.priorite,
         statut: newExigence.statut,
-        feature_id: newExigence.feature_id || null,
+        feature_id: newExigence.feature_id,
       };
 
       const { data, error } = await supabase
@@ -136,7 +136,7 @@ export default function ExigencesPage() {
       }
 
       setExigences([...exigences, data[0]]);
-      setNewExigence({ titre: '', description: '', priorite: 'Moyenne', statut: 'À faire', feature_id: userStoryIdFromUrl || '' });
+      setNewExigence({ titre: '', description: '', priorite: 'Moyenne', statut: 'À faire', feature_id: userStoryIdFromUrl || null });
       setSuccess('Exigence ajoutée avec succès !');
       setTimeout(() => setSuccess(null), 3000);
 
@@ -280,8 +280,8 @@ export default function ExigencesPage() {
             <div>
               <label className="form-label">User Story associée (optionnel)</label>
               <select
-                value={newExigence.feature_id}
-                onChange={(e) => setNewExigence({ ...newExigence, feature_id: e.target.value })}
+                value={newExigence.feature_id || ''}
+                onChange={(e) => setNewExigence({ ...newExigence, feature_id: e.target.value || null })}
                 className="form-select"
               >
                 <option value="">Aucune User Story associée</option>

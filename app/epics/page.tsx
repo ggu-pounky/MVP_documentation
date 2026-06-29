@@ -26,7 +26,7 @@ type UserStory = {
 type Exigence = {
   id: string;
   titre: string;
-  userstory_id: string;
+  feature_id: string | null; // Correspond à userstory_id dans la base
 };
 
 export default function BesoinsPage() {
@@ -89,7 +89,7 @@ export default function BesoinsPage() {
       }
       setUserStories(userStoriesData || []);
 
-      // Récupérer les exigences
+      // Récupérer les exigences (avec feature_id au lieu de userstory_id)
       const { data: exigencesData, error: exigencesError } = await supabase
         .from('exigences')
         .select('id, titre, feature_id');
@@ -295,7 +295,7 @@ export default function BesoinsPage() {
 
   // Filtrer les exigences par User Story
   const getExigencesForUserStory = (userStoryId: string) => {
-    return exigences.filter(ex => ex.userstory_id === userStoryId);
+    return exigences.filter(ex => ex.feature_id === userStoryId);
   };
 
   if (loading && besoins.length === 0) {
