@@ -4,7 +4,7 @@ import Link from 'next/link';
 export default async function Home() {
   const supabase = getSupabaseClient();
 
-  // Récupérer les EPICs, FEATURES et User Stories depuis Supabase
+  // Récupérer les Besoins, FEATURES et Exigences depuis Supabase
   const { data: epics, error: epicsError } = await supabase
     .from('epics')
     .select('*')
@@ -47,13 +47,13 @@ export default async function Home() {
           Bienvenue dans Gestion Agile
         </h1>
         <p className="text-[rgba(var(--secondary-rgb),0.7)]">
-          Gérez vos projets avec la méthodologie Agile : EPICs, FEATURES et User Stories.
+          Gérez vos projets avec la méthodologie Agile : Besoins, FEATURES et Exigences.
         </p>
       </div>
 
       {/* Statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Carte EPICs */}
+        {/* Carte Besoins */}
         <div className="card p-6">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-12 h-12 bg-[rgba(var(--primary-rgb),0.1)] rounded-lg flex items-center justify-center">
@@ -74,14 +74,14 @@ export default async function Home() {
             </div>
             <div>
               <h3 className="text-2xl font-bold text-[rgb(var(--foreground-rgb))]">{epicCount}</h3>
-              <p className="text-[rgba(var(--secondary-rgb),0.7)]">EPICs</p>
+              <p className="text-[rgba(var(--secondary-rgb),0.7)]">Besoins</p>
             </div>
           </div>
           <Link
             href="/epics"
             className="btn btn-primary text-sm"
           >
-            Voir les EPICs
+            Voir les Besoins
           </Link>
         </div>
 
@@ -117,7 +117,7 @@ export default async function Home() {
           </Link>
         </div>
 
-        {/* Carte User Stories */}
+        {/* Carte Exigences */}
         <div className="card p-6">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-12 h-12 bg-[rgba(var(--warning-rgb),0.1)] rounded-lg flex items-center justify-center">
@@ -138,14 +138,14 @@ export default async function Home() {
             </div>
             <div>
               <h3 className="text-2xl font-bold text-[rgb(var(--foreground-rgb))]">{userStoryCount}</h3>
-              <p className="text-[rgba(var(--secondary-rgb),0.7)]">User Stories</p>
+              <p className="text-[rgba(var(--secondary-rgb),0.7)]">Exigences</p>
             </div>
           </div>
           <Link
             href="/exigences"
             className="btn btn-primary text-sm"
           >
-            Voir les User Stories
+            Voir les Exigences
           </Link>
         </div>
 
@@ -188,18 +188,18 @@ export default async function Home() {
         </div>
       </div>
 
-      {/* Section Derniers EPICs */}
+      {/* Section Derniers Besoins */}
       {epicCount > 0 && (
         <div className="card p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-[rgb(var(--secondary-rgb))]">
-              Derniers EPICs
+              Derniers Besoins
             </h2>
             <Link
               href="/epics"
               className="btn btn-primary text-sm"
             >
-              Voir tous les EPICs
+              Voir tous les Besoins
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -235,7 +235,7 @@ export default async function Home() {
                   </p>
                   <div className="flex items-center gap-4 text-xs">
                     <span className="badge badge-primary">{featuresForEpic.length} FEATURES</span>
-                    <span className="badge badge-success">{userStoriesForEpic.length} User Stories</span>
+                    <span className="badge badge-success">{userStoriesForEpic.length} Exigences</span>
                     <span className={`badge ${epic.priorite === 'Haute' ? 'badge-danger' : epic.priorite === 'Moyenne' ? 'badge-warning' : 'badge-secondary'}`}>
                       {epic.priorite}
                     </span>
@@ -255,18 +255,18 @@ export default async function Home() {
         </div>
       )}
 
-      {/* Section Dernières User Stories */}
+      {/* Section Dernières Exigences */}
       {userStoryCount > 0 && (
         <div className="card p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-[rgb(var(--secondary-rgb))]">
-              Dernières User Stories
+              Dernières Exigences
             </h2>
             <Link
               href="/exigences"
               className="btn btn-primary text-sm"
             >
-              Voir toutes les User Stories
+              Voir toutes les Exigences
             </Link>
           </div>
           <div className="table-container">

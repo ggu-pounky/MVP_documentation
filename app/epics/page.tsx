@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { getSupabaseClient } from '@/lib/supabase';
 import Link from 'next/link';
 
-type Epic = {
+type Besoin = {
   id: string;
   titre: string;
   description: string;
@@ -14,11 +14,11 @@ type Epic = {
   date_creation: string;
 };
 
-type Feature = {
+type UserStory = {
   id: string;
   titre: string;
   description: string;
-  epic_id: string;
+  besoin_id: string;
   priorite: string;
   statut: string;
 };
@@ -26,20 +26,20 @@ type Feature = {
 type Exigence = {
   id: string;
   titre: string;
-  feature_id: string;
+  userstory_id: string;
 };
 
-export default function EpicsPage() {
+export default function BesoinsPage() {
   const supabase = getSupabaseClient();
-  const [epics, setEpics] = useState<Epic[]>([]);
-  const [features, setFeatures] = useState<Feature[]>([]);
+  const [besoins, setBesoins] = useState<Besoin[]>([]);
+  const [userStories, setUserStories] = useState<UserStory[]>([]);
   const [exigences, setExigences] = useState<Exigence[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Formulaire pour les EPICs
-  const [newEpic, setNewEpic] = useState({
+  // Formulaire pour les besoins
+  const [newBesoin, setNewBesoin] = useState({
     titre: '',
     description: '',
     priorite: 'Moyenne',
@@ -47,11 +47,11 @@ export default function EpicsPage() {
     createur: '',
   });
 
-  // État pour le formulaire de FEATURE
-  const [newFeature, setNewFeature] = useState({
+  // État pour le formulaire de User Story
+  const [newUserStory, setNewUserStory] = useState({
     titre: '',
     description: '',
-    epic_id: '',
+    besoin_id: '',
     priorite: 'Moyenne',
     statut: 'À faire',
   });
@@ -66,28 +66,28 @@ export default function EpicsPage() {
       setLoading(true);
       setError(null);
 
-      // Récupérer les EPICs
-      const { data: epicsData, error: epicsError } = await supabase
+      // Récupérer les besoins
+      const { data: besoinsData, error: besoinsError } = await supabase
         .from('epics')
         .select('*')
         .order('date_creation', { ascending: false });
 
-      if (epicsError) {
-        console.error('Erreur Supabase (EPICs):', epicsError);
-        throw new Error(`Erreur Supabase: ${epicsError.message}`);
+      if (besoinsError) {
+        console.error('Erreur Supabase (besoins):', besoinsError);
+        throw new Error(`Erreur Supabase: ${besoinsError.message}`);
       }
-      setEpics(epicsData || []);
+      setBesoins(besoinsData || []);
 
-      // Récupérer les FEATURES
-      const { data: featuresData, error: featuresError } = await supabase
+      // Récupérer les User Stories
+      const { data: userStoriesData, error: userStoriesError } = await supabase
         .from('features')
         .select('*');
 
-      if (featuresError) {
-        console.error('Erreur Supabase (FEATURES):', featuresError);
-        throw new Error(`Erreur Supabase: ${featuresError.message}`);
+      if (userStoriesError) {
+        console.error('Erreur Supabase (User Stories):', userStoriesError);
+        throw new Error(`Erreur Supabase: ${userStoriesError.message}`);
       }
-      setFeatures(featuresData || []);
+      setUserStories(userStoriesData || []);
 
       // Récupérer les exigences
       const { data: exigencesData, error: exigencesError } = await supabase
@@ -108,26 +108,26 @@ export default function EpicsPage() {
     }
   };
 
-  // Créer un nouvel EPIC
-  const handleCreateEpic = async (e: React.FormEvent) => {
+  // Créer un nouveau besoin
+  const handleCreateBesoin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setLoading(true);
       setError(null);
       setSuccess(null);
 
-      if (!newEpic.titre) {
+      if (!newBesoin.titre) {
         throw new Error('Le titre est obligatoire');
       }
 
       const { data, error } = await supabase
         .from('epics')
         .insert([{
-          titre: newEpic.titre,
-          description: newEpic.description,
-          priorite: newEpic.priorite,
-          statut: newEpic.statut,
-          createur: newEpic.createur,
+          titre: newBesoin.titre,
+          description: newBesoin.description,
+          priorite: newBesoin.priorite,
+          statut: newBesoin.statut,
+          createur: newBesoin.createur,
         }])
         .select();
 
@@ -140,43 +140,43 @@ export default function EpicsPage() {
         throw new Error('Aucune donnée retournée après insertion');
       }
 
-      setEpics([...epics, data[0]]);
-      setNewEpic({ titre: '', description: '', priorite: 'Moyenne', statut: 'À faire', createur: '' });
-      setSuccess('EPIC ajouté avec succès !');
+      setBesoins([...besoins, data[0]]);
+      setNewBesoin({ titre: '', description: '', priorite: 'Moyenne', statut: 'À faire', createur: '' });
+      setSuccess('Besoin ajouté avec succès !');
       setTimeout(() => setSuccess(null), 3000);
 
     } catch (err) {
-      console.error('Erreur lors de la création de l\'EPIC:', err);
+      console.error('Erreur lors de la création du besoin:', err);
       setError(err instanceof Error ? err.message : 'Erreur inconnue lors de la création');
     } finally {
       setLoading(false);
     }
   };
 
-  // Créer une nouvelle FEATURE
-  const handleCreateFeature = async (e: React.FormEvent) => {
+  // Créer une nouvelle User Story
+  const handleCreateUserStory = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setLoading(true);
       setError(null);
       setSuccess(null);
 
-      if (!newFeature.titre) {
+      if (!newUserStory.titre) {
         throw new Error('Le titre est obligatoire');
       }
 
-      if (!newFeature.epic_id) {
-        throw new Error('Veuillez sélectionner un EPIC');
+      if (!newUserStory.besoin_id) {
+        throw new Error('Veuillez sélectionner un besoin');
       }
 
       const { data, error } = await supabase
         .from('features')
         .insert([{
-          titre: newFeature.titre,
-          description: newFeature.description,
-          epic_id: newFeature.epic_id,
-          priorite: newFeature.priorite,
-          statut: newFeature.statut,
+          titre: newUserStory.titre,
+          description: newUserStory.description,
+          epic_id: newUserStory.besoin_id,
+          priorite: newUserStory.priorite,
+          statut: newUserStory.statut,
         }])
         .select();
 
@@ -189,38 +189,38 @@ export default function EpicsPage() {
         throw new Error('Aucune donnée retournée après insertion');
       }
 
-      setFeatures([...features, data[0]]);
-      setNewFeature({ titre: '', description: '', epic_id: '', priorite: 'Moyenne', statut: 'À faire' });
-      setSuccess('FEATURE ajoutée avec succès !');
+      setUserStories([...userStories, data[0]]);
+      setNewUserStory({ titre: '', description: '', besoin_id: '', priorite: 'Moyenne', statut: 'À faire' });
+      setSuccess('User Story ajoutée avec succès !');
       setTimeout(() => setSuccess(null), 3000);
 
     } catch (err) {
-      console.error('Erreur lors de la création de la FEATURE:', err);
+      console.error('Erreur lors de la création de la User Story:', err);
       setError(err instanceof Error ? err.message : 'Erreur inconnue lors de la création');
     } finally {
       setLoading(false);
     }
   };
 
-  // Supprimer un EPIC
-  const handleDeleteEpic = async (id: string) => {
+  // Supprimer un besoin
+  const handleDeleteBesoin = async (id: string) => {
     try {
       setLoading(true);
       setError(null);
 
-      // Vérifier qu'il n'y a pas de FEATURES associées
-      const { data: associatedFeatures, error: checkError } = await supabase
+      // Vérifier qu'il n'y a pas de User Stories associées
+      const { data: associatedUserStories, error: checkError } = await supabase
         .from('features')
         .select('id')
         .eq('epic_id', id);
 
       if (checkError) {
-        console.error('Erreur lors de la vérification des FEATURES associées:', checkError);
+        console.error('Erreur lors de la vérification des User Stories associées:', checkError);
         throw new Error(`Erreur Supabase: ${checkError.message}`);
       }
 
-      if (associatedFeatures && associatedFeatures.length > 0) {
-        throw new Error('Impossible de supprimer cet EPIC : des FEATURES y sont associées. Supprimez d\'abord les FEATURES liées.');
+      if (associatedUserStories && associatedUserStories.length > 0) {
+        throw new Error('Impossible de supprimer ce besoin : des User Stories y sont associées. Supprimez d\'abord les User Stories liées.');
       }
 
       const { error } = await supabase
@@ -233,8 +233,8 @@ export default function EpicsPage() {
         throw new Error(`Erreur Supabase: ${error.message}`);
       }
 
-      setEpics(epics.filter(e => e.id !== id));
-      setSuccess('EPIC supprimé avec succès !');
+      setBesoins(besoins.filter(b => b.id !== id));
+      setSuccess('Besoin supprimé avec succès !');
       setTimeout(() => setSuccess(null), 3000);
 
     } catch (err) {
@@ -245,8 +245,8 @@ export default function EpicsPage() {
     }
   };
 
-  // Supprimer une FEATURE
-  const handleDeleteFeature = async (id: string) => {
+  // Supprimer une User Story
+  const handleDeleteUserStory = async (id: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -263,7 +263,7 @@ export default function EpicsPage() {
       }
 
       if (associatedExigences && associatedExigences.length > 0) {
-        throw new Error('Impossible de supprimer cette FEATURE : des User Stories y sont associées. Supprimez d\'abord les User Stories liées.');
+        throw new Error('Impossible de supprimer cette User Story : des exigences y sont associées. Supprimez d\'abord les exigences liées.');
       }
 
       const { error } = await supabase
@@ -276,8 +276,8 @@ export default function EpicsPage() {
         throw new Error(`Erreur Supabase: ${error.message}`);
       }
 
-      setFeatures(features.filter(f => f.id !== id));
-      setSuccess('FEATURE supprimée avec succès !');
+      setUserStories(userStories.filter(us => us.id !== id));
+      setSuccess('User Story supprimée avec succès !');
       setTimeout(() => setSuccess(null), 3000);
 
     } catch (err) {
@@ -288,17 +288,17 @@ export default function EpicsPage() {
     }
   };
 
-  // Filtrer les FEATURES par EPIC
-  const getFeaturesForEpic = (epicId: string) => {
-    return features.filter(f => f.epic_id === epicId);
+  // Filtrer les User Stories par besoin
+  const getUserStoriesForBesoin = (besoinId: string) => {
+    return userStories.filter(us => us.besoin_id === besoinId);
   };
 
-  // Filtrer les exigences par FEATURE
-  const getExigencesForFeature = (featureId: string) => {
-    return exigences.filter(ex => ex.feature_id === featureId);
+  // Filtrer les exigences par User Story
+  const getExigencesForUserStory = (userStoryId: string) => {
+    return exigences.filter(ex => ex.userstory_id === userStoryId);
   };
 
-  if (loading && epics.length === 0) {
+  if (loading && besoins.length === 0) {
     return (
       <div className="min-h-screen bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))] p-6">
         <div className="flex items-center justify-center h-full">
@@ -313,10 +313,10 @@ export default function EpicsPage() {
       {/* En-tête */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2 text-[rgb(var(--primary-rgb))]">
-          Méthodologie Agile : EPICs et FEATURES
+          Besoins
         </h1>
         <p className="text-[rgba(var(--secondary-rgb),0.7)]">
-          Gérez vos EPICs et FEATURES pour organiser vos projets de manière structurée.
+          Gérez vos besoins et leurs User Stories associées.
         </p>
       </div>
 
@@ -334,22 +334,22 @@ export default function EpicsPage() {
         </div>
       )}
 
-      {/* Formulaire pour ajouter un EPIC */}
+      {/* Formulaire pour ajouter un besoin */}
       <div className="card p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4 text-[rgb(var(--secondary-rgb))]">
-          Créer un nouvel EPIC
+          Créer un nouveau besoin
         </h2>
         <p className="mb-4 text-[rgba(var(--secondary-rgb),0.7)]">
-          Un <strong>EPIC</strong> est une grande initiative ou un objectif stratégique qui regroupe plusieurs FEATURES.
+          Un <strong>besoin</strong> est une demande fonctionnelle qui regroupe plusieurs User Stories.
           Exemple : "Gestion des utilisateurs", "Intégration des paiements", etc.
         </p>
-        <form onSubmit={handleCreateEpic} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <form onSubmit={handleCreateBesoin} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="form-label">Titre *</label>
             <input
               type="text"
-              value={newEpic.titre}
-              onChange={(e) => setNewEpic({ ...newEpic, titre: e.target.value })}
+              value={newBesoin.titre}
+              onChange={(e) => setNewBesoin({ ...newBesoin, titre: e.target.value })}
               placeholder="Ex: Gestion des utilisateurs"
               className="form-input"
               required
@@ -358,8 +358,8 @@ export default function EpicsPage() {
           <div>
             <label className="form-label">Priorité</label>
             <select
-              value={newEpic.priorite}
-              onChange={(e) => setNewEpic({ ...newEpic, priorite: e.target.value })}
+              value={newBesoin.priorite}
+              onChange={(e) => setNewBesoin({ ...newBesoin, priorite: e.target.value })}
               className="form-select"
             >
               <option value="Haute">Haute</option>
@@ -370,8 +370,8 @@ export default function EpicsPage() {
           <div>
             <label className="form-label">Statut</label>
             <select
-              value={newEpic.statut}
-              onChange={(e) => setNewEpic({ ...newEpic, statut: e.target.value })}
+              value={newBesoin.statut}
+              onChange={(e) => setNewBesoin({ ...newBesoin, statut: e.target.value })}
               className="form-select"
             >
               <option value="À faire">À faire</option>
@@ -383,8 +383,8 @@ export default function EpicsPage() {
             <label className="form-label">Votre nom (optionnel)</label>
             <input
               type="text"
-              value={newEpic.createur}
-              onChange={(e) => setNewEpic({ ...newEpic, createur: e.target.value })}
+              value={newBesoin.createur}
+              onChange={(e) => setNewBesoin({ ...newBesoin, createur: e.target.value })}
               placeholder="Ex: Jean Dupont (Product Owner)"
               className="form-input"
             />
@@ -392,9 +392,9 @@ export default function EpicsPage() {
           <div className="md:col-span-2">
             <label className="form-label">Description *</label>
             <textarea
-              value={newEpic.description}
-              onChange={(e) => setNewEpic({ ...newEpic, description: e.target.value })}
-              placeholder="Décrivez l'EPIC : objectif, portée, bénéfices attendus..."
+              value={newBesoin.description}
+              onChange={(e) => setNewBesoin({ ...newBesoin, description: e.target.value })}
+              placeholder="Décrivez le besoin : objectif, portée, bénéfices attendus..."
               className="form-textarea"
               rows={4}
               required
@@ -406,34 +406,34 @@ export default function EpicsPage() {
               disabled={loading}
               className="btn btn-primary"
             >
-              {loading ? 'Ajout en cours...' : 'Ajouter l\'EPIC'}
+              {loading ? 'Ajout en cours...' : 'Ajouter le besoin'}
             </button>
           </div>
         </form>
       </div>
 
-      {/* Formulaire pour ajouter une FEATURE */}
+      {/* Formulaire pour ajouter une User Story */}
       <div className="card p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4 text-[rgb(var(--secondary-rgb))]">
-          Ajouter une FEATURE à un EPIC
+          Ajouter une User Story à un besoin
         </h2>
         <p className="mb-4 text-[rgba(var(--secondary-rgb),0.7)]">
-          Une <strong>FEATURE</strong> est une fonctionnalité spécifique qui fait partie d'un EPIC.
-          Exemple : Pour l'EPIC "Gestion des utilisateurs", une FEATURE pourrait être "Authentification".
+          Une <strong>User Story</strong> est une exigence spécifique qui fait partie d'un besoin.
+          Exemple : Pour le besoin "Gestion des utilisateurs", une User Story pourrait être "Authentification".
         </p>
-        <form onSubmit={handleCreateFeature} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <form onSubmit={handleCreateUserStory} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="form-label">EPIC *</label>
+            <label className="form-label">Besoin *</label>
             <select
-              value={newFeature.epic_id}
-              onChange={(e) => setNewFeature({ ...newFeature, epic_id: e.target.value })}
+              value={newUserStory.besoin_id}
+              onChange={(e) => setNewUserStory({ ...newUserStory, besoin_id: e.target.value })}
               className="form-select"
               required
             >
-              <option value="">Sélectionnez un EPIC</option>
-              {epics.map((epic) => (
-                <option key={epic.id} value={epic.id}>
-                  {epic.titre}
+              <option value="">Sélectionnez un besoin</option>
+              {besoins.map((besoin) => (
+                <option key={besoin.id} value={besoin.id}>
+                  {besoin.titre}
                 </option>
               ))}
             </select>
@@ -442,8 +442,8 @@ export default function EpicsPage() {
             <label className="form-label">Titre *</label>
             <input
               type="text"
-              value={newFeature.titre}
-              onChange={(e) => setNewFeature({ ...newFeature, titre: e.target.value })}
+              value={newUserStory.titre}
+              onChange={(e) => setNewUserStory({ ...newUserStory, titre: e.target.value })}
               placeholder="Ex: Authentification"
               className="form-input"
               required
@@ -452,8 +452,8 @@ export default function EpicsPage() {
           <div>
             <label className="form-label">Priorité</label>
             <select
-              value={newFeature.priorite}
-              onChange={(e) => setNewFeature({ ...newFeature, priorite: e.target.value })}
+              value={newUserStory.priorite}
+              onChange={(e) => setNewUserStory({ ...newUserStory, priorite: e.target.value })}
               className="form-select"
             >
               <option value="Haute">Haute</option>
@@ -464,8 +464,8 @@ export default function EpicsPage() {
           <div>
             <label className="form-label">Statut</label>
             <select
-              value={newFeature.statut}
-              onChange={(e) => setNewFeature({ ...newFeature, statut: e.target.value })}
+              value={newUserStory.statut}
+              onChange={(e) => setNewUserStory({ ...newUserStory, statut: e.target.value })}
               className="form-select"
             >
               <option value="À faire">À faire</option>
@@ -476,9 +476,9 @@ export default function EpicsPage() {
           <div className="md:col-span-2">
             <label className="form-label">Description</label>
             <textarea
-              value={newFeature.description}
-              onChange={(e) => setNewFeature({ ...newFeature, description: e.target.value })}
-              placeholder="Décrivez la FEATURE : fonctionnalités incluses, critères de succès..."
+              value={newUserStory.description}
+              onChange={(e) => setNewUserStory({ ...newUserStory, description: e.target.value })}
+              placeholder="Décrivez la User Story : fonctionnalités incluses, critères de succès..."
               className="form-textarea"
               rows={3}
             />
@@ -486,29 +486,29 @@ export default function EpicsPage() {
           <div className="md:col-span-2">
             <button
               type="submit"
-              disabled={loading || !newFeature.epic_id}
+              disabled={loading || !newUserStory.besoin_id}
               className="btn btn-primary"
             >
-              {loading ? 'Ajout en cours...' : 'Ajouter la FEATURE'}
+              {loading ? 'Ajout en cours...' : 'Ajouter la User Story'}
             </button>
           </div>
         </form>
       </div>
 
-      {/* Liste des EPICs et FEATURES */}
+      {/* Liste des besoins et User Stories */}
       <div className="card p-6">
         <h2 className="text-xl font-semibold mb-6 text-[rgb(var(--secondary-rgb))]">
-          Liste des EPICs et FEATURES
+          Liste des besoins et User Stories
         </h2>
-        {epics.length === 0 ? (
-          <p className="text-[rgba(var(--secondary-rgb),0.7)] italic">Aucun EPIC trouvé.</p>
+        {besoins.length === 0 ? (
+          <p className="text-[rgba(var(--secondary-rgb),0.7)] italic">Aucun besoin trouvé.</p>
         ) : (
           <div className="space-y-6">
-            {epics.map((epic) => {
-              const featuresForEpic = getFeaturesForEpic(epic.id);
+            {besoins.map((besoin) => {
+              const userStoriesForBesoin = getUserStoriesForBesoin(besoin.id);
               return (
-                <div key={epic.id} className="border border-[rgba(var(--card-border-rgb),0.3)] rounded-lg p-4">
-                  {/* En-tête de l'EPIC */}
+                <div key={besoin.id} className="border border-[rgba(var(--card-border-rgb),0.3)] rounded-lg p-4">
+                  {/* En-tête du besoin */}
                   <div className="flex justify-between items-start mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
@@ -526,53 +526,53 @@ export default function EpicsPage() {
                             d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                           />
                         </svg>
-                        <h3 className="text-xl font-bold text-[rgb(var(--foreground-rgb))]">{epic.titre}</h3>
+                        <h3 className="text-xl font-bold text-[rgb(var(--foreground-rgb))]">{besoin.titre}</h3>
                       </div>
                       <p className="text-sm text-[rgba(var(--secondary-rgb),0.7)]">
-                        Priorité: {epic.priorite} | Statut: {epic.statut}
-                        {epic.createur && ` | Créé par: ${epic.createur}`}
+                        Priorité: {besoin.priorite} | Statut: {besoin.statut}
+                        {besoin.createur && ` | Créé par: ${besoin.createur}`}
                       </p>
                     </div>
                     <button
                       onClick={() => {
-                        if (confirm('Êtes-vous sûr de vouloir supprimer cet EPIC ?')) {
-                          handleDeleteEpic(epic.id);
+                        if (confirm('Êtes-vous sûr de vouloir supprimer ce besoin ?')) {
+                          handleDeleteBesoin(besoin.id);
                         }
                       }}
                       disabled={loading}
                       className="text-red-500 hover:underline disabled:opacity-50"
                     >
-                      Supprimer EPIC
+                      Supprimer besoin
                     </button>
                   </div>
                   
-                  {/* Description de l'EPIC */}
-                  <p className="mb-4 text-[rgb(var(--foreground-rgb))]">{epic.description}</p>
+                  {/* Description du besoin */}
+                  <p className="mb-4 text-[rgb(var(--foreground-rgb))]">{besoin.description}</p>
 
-                  {/* Section des FEATURES */}
+                  {/* Section des User Stories */}
                   <div className="mt-4 pt-4 border-t border-[rgba(var(--card-border-rgb),0.3)]">
                     <div className="flex justify-between items-center mb-2">
                       <h4 className="text-lg font-medium text-[rgb(var(--secondary-rgb))]">
-                        FEATURES ({featuresForEpic.length})
+                        User Stories ({userStoriesForBesoin.length})
                       </h4>
                       <Link
-                        href={`/features?epic_id=${epic.id}`}
+                        href={`/exigences?feature_id=${besoin.id}`}
                         className="btn btn-secondary text-sm"
                       >
-                        + Ajouter une FEATURE
+                        + Ajouter une User Story
                       </Link>
                     </div>
                     
-                    {featuresForEpic.length === 0 ? (
+                    {userStoriesForBesoin.length === 0 ? (
                       <p className="text-sm text-[rgba(var(--secondary-rgb),0.5)] italic mb-4">
-                        Aucune FEATURE associée à cet EPIC.
+                        Aucune User Story associée à ce besoin.
                       </p>
                     ) : (
                       <div className="space-y-3">
-                        {featuresForEpic.map((feature) => {
-                          const exigencesForFeature = getExigencesForFeature(feature.id);
+                        {userStoriesForBesoin.map((userStory) => {
+                          const exigencesForUserStory = getExigencesForUserStory(userStory.id);
                           return (
-                            <div key={feature.id} className="border border-[rgba(var(--card-border-rgb),0.2)] rounded-lg p-3">
+                            <div key={userStory.id} className="border border-[rgba(var(--card-border-rgb),0.2)] rounded-lg p-3">
                               <div className="flex justify-between items-start mb-2">
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2 mb-1">
@@ -587,19 +587,19 @@ export default function EpicsPage() {
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
                                         strokeWidth={2}
-                                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
                                       />
                                     </svg>
-                                    <h5 className="text-lg font-semibold text-[rgb(var(--foreground-rgb))]">{feature.titre}</h5>
+                                    <h5 className="text-lg font-semibold text-[rgb(var(--foreground-rgb))]">{userStory.titre}</h5>
                                   </div>
                                   <p className="text-sm text-[rgba(var(--secondary-rgb),0.7)]">
-                                    Priorité: {feature.priorite} | Statut: {feature.statut}
+                                    Priorité: {userStory.priorite} | Statut: {userStory.statut}
                                   </p>
                                 </div>
                                 <button
                                   onClick={() => {
-                                    if (confirm('Êtes-vous sûr de vouloir supprimer cette FEATURE ?')) {
-                                      handleDeleteFeature(feature.id);
+                                    if (confirm('Êtes-vous sûr de vouloir supprimer cette User Story ?')) {
+                                      handleDeleteUserStory(userStory.id);
                                     }
                                   }}
                                   disabled={loading}
@@ -609,32 +609,32 @@ export default function EpicsPage() {
                                 </button>
                               </div>
                               
-                              {/* Description de la FEATURE */}
-                              {feature.description && (
-                                <p className="text-sm text-[rgba(var(--foreground-rgb),0.8)] mb-2">{feature.description}</p>
+                              {/* Description de la User Story */}
+                              {userStory.description && (
+                                <p className="text-sm text-[rgba(var(--foreground-rgb),0.8)] mb-2">{userStory.description}</p>
                               )}
 
-                              {/* Section des User Stories */}
+                              {/* Section des exigences */}
                               <div className="mt-3 pt-3 border-t border-[rgba(var(--card-border-rgb),0.2)]">
                                 <div className="flex justify-between items-center mb-1">
                                   <h6 className="text-sm font-medium text-[rgba(var(--secondary-rgb),0.8)]">
-                                    User Stories ({exigencesForFeature.length})
+                                    Exigences ({exigencesForUserStory.length})
                                   </h6>
                                   <Link
-                                    href={`/exigences?feature_id=${feature.id}`}
+                                    href={`/exigences?feature_id=${userStory.id}`}
                                     className="btn btn-secondary text-xs"
                                   >
-                                    + Ajouter une User Story
+                                    + Ajouter une exigence
                                   </Link>
                                 </div>
                                 
-                                {exigencesForFeature.length === 0 ? (
+                                {exigencesForUserStory.length === 0 ? (
                                   <p className="text-xs text-[rgba(var(--secondary-rgb),0.5)] italic">
-                                    Aucune User Story associée à cette FEATURE.
+                                    Aucune exigence associée à cette User Story.
                                   </p>
                                 ) : (
                                   <ul className="list-disc list-inside space-y-1 mt-1">
-                                    {exigencesForFeature.map((exigence) => (
+                                    {exigencesForUserStory.map((exigence) => (
                                       <li key={exigence.id} className="text-sm text-[rgb(var(--foreground-rgb))]">
                                         <Link
                                           href={`/exigences/${exigence.id}`}

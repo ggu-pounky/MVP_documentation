@@ -15,13 +15,13 @@ type Exigence = {
   created_at: string;
 };
 
-type Feature = {
+type UserStory = {
   id: string;
   titre: string;
   epic_id: string;
 };
 
-type Epic = {
+type Besoin = {
   id: string;
   titre: string;
 };
@@ -30,35 +30,35 @@ export default function ExigencesPage() {
   const supabase = getSupabaseClient();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const featureIdFromUrl = searchParams.get('feature_id');
+  const userStoryIdFromUrl = searchParams.get('feature_id');
 
   const [exigences, setExigences] = useState<Exigence[]>([]);
-  const [features, setFeatures] = useState<Feature[]>([]);
-  const [epics, setEpics] = useState<Epic[]>([]);
+  const [userStories, setUserStories] = useState<UserStory[]>([]);
+  const [besoins, setBesoins] = useState<Besoin[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Formulaire pour les User Stories
+  // Formulaire pour les exigences
   const [newExigence, setNewExigence] = useState({
     titre: '',
     description: '',
     priorite: 'Moyenne',
     statut: 'À faire',
-    feature_id: featureIdFromUrl || '',
+    feature_id: userStoryIdFromUrl || '',
   });
 
   // Récupérer les données au chargement
   useEffect(() => {
     fetchData();
-  }, [featureIdFromUrl]);
+  }, [userStoryIdFromUrl]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Récupérer les User Stories (exigences)
+      // Récupérer les exigences
       const { data: exigencesData, error: exigencesError } = await supabase
         .from('exigences')
         .select('*')
@@ -70,27 +70,27 @@ export default function ExigencesPage() {
       }
       setExigences(exigencesData || []);
 
-      // Récupérer les FEATURES
-      const { data: featuresData, error: featuresError } = await supabase
+      // Récupérer les User Stories
+      const { data: userStoriesData, error: userStoriesError } = await supabase
         .from('features')
         .select('id, titre, epic_id');
 
-      if (featuresError) {
-        console.error('Erreur Supabase (FEATURES):', featuresError);
-        throw new Error(`Erreur Supabase: ${featuresError.message}`);
+      if (userStoriesError) {
+        console.error('Erreur Supabase (User Stories):', userStoriesError);
+        throw new Error(`Erreur Supabase: ${userStoriesError.message}`);
       }
-      setFeatures(featuresData || []);
+      setUserStories(userStoriesData || []);
 
-      // Récupérer les EPICs
-      const { data: epicsData, error: epicsError } = await supabase
+      // Récupérer les besoins
+      const { data: besoinsData, error: besoinsError } = await supabase
         .from('epics')
         .select('id, titre');
 
-      if (epicsError) {
-        console.error('Erreur Supabase (EPICs):', epicsError);
-        throw new Error(`Erreur Supabase: ${epicsError.message}`);
+      if (besoinsError) {
+        console.error('Erreur Supabase (besoins):', besoinsError);
+        throw new Error(`Erreur Supabase: ${besoinsError.message}`);
       }
-      setEpics(epicsData || []);
+      setBesoins(besoinsData || []);
 
     } catch (err) {
       console.error('Erreur lors de la récupération des données:', err);
@@ -100,7 +100,7 @@ export default function ExigencesPage() {
     }
   };
 
-  // Créer une nouvelle User Story
+  // Créer une nouvelle exigence
   const handleCreateExigence = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -112,7 +112,7 @@ export default function ExigencesPage() {
         throw new Error('Le titre est obligatoire');
       }
 
-      // Si une FEATURE est sélectionnée, l'associer à la User Story
+      // Si une User Story est sélectionnée, l'associer à l'exigence
       const exigenceToInsert = {
         titre: newExigence.titre,
         description: newExigence.description,
@@ -136,19 +136,19 @@ export default function ExigencesPage() {
       }
 
       setExigences([...exigences, data[0]]);
-      setNewExigence({ titre: '', description: '', priorite: 'Moyenne', statut: 'À faire', feature_id: featureIdFromUrl || '' });
-      setSuccess('User Story ajoutée avec succès !');
+      setNewExigence({ titre: '', description: '', priorite: 'Moyenne', statut: 'À faire', feature_id: userStoryIdFromUrl || '' });
+      setSuccess('Exigence ajoutée avec succès !');
       setTimeout(() => setSuccess(null), 3000);
 
     } catch (err) {
-      console.error('Erreur lors de la création de la User Story:', err);
+      console.error('Erreur lors de la création de l\'exigence:', err);
       setError(err instanceof Error ? err.message : 'Erreur inconnue lors de la création');
     } finally {
       setLoading(false);
     }
   };
 
-  // Mettre à jour une User Story
+  // Mettre à jour une exigence
   const handleUpdateExigence = async (id: string, updatedData: Partial<Exigence>) => {
     try {
       setLoading(true);
@@ -170,7 +170,7 @@ export default function ExigencesPage() {
       }
 
       setExigences(exigences.map(ex => ex.id === id ? data[0] : ex));
-      setSuccess('User Story mise à jour avec succès !');
+      setSuccess('Exigence mise à jour avec succès !');
       setTimeout(() => setSuccess(null), 3000);
 
     } catch (err) {
@@ -181,7 +181,7 @@ export default function ExigencesPage() {
     }
   };
 
-  // Supprimer une User Story
+  // Supprimer une exigence
   const handleDeleteExigence = async (id: string) => {
     try {
       setLoading(true);
@@ -198,7 +198,7 @@ export default function ExigencesPage() {
       }
 
       setExigences(exigences.filter(ex => ex.id !== id));
-      setSuccess('User Story supprimée avec succès !');
+      setSuccess('Exigence supprimée avec succès !');
       setTimeout(() => setSuccess(null), 3000);
 
     } catch (err) {
@@ -209,14 +209,14 @@ export default function ExigencesPage() {
     }
   };
 
-  // Filtrer les User Stories par FEATURE si une feature_id est sélectionnée
-  const filteredExigences = featureIdFromUrl 
-    ? exigences.filter(ex => ex.feature_id === featureIdFromUrl)
+  // Filtrer les exigences par User Story si une userStory_id est sélectionnée
+  const filteredExigences = userStoryIdFromUrl 
+    ? exigences.filter(ex => ex.feature_id === userStoryIdFromUrl)
     : exigences;
 
-  // Trouver la FEATURE sélectionnée
-  const selectedFeature = features.find(f => f.id === featureIdFromUrl);
-  const selectedEpic = selectedFeature ? epics.find(e => e.id === selectedFeature.epic_id) : null;
+  // Trouver la User Story sélectionnée
+  const selectedUserStory = userStories.find(us => us.id === userStoryIdFromUrl);
+  const selectedBesoin = selectedUserStory ? besoins.find(b => b.id === selectedUserStory.epic_id) : null;
 
   if (loading && exigences.length === 0) {
     return (
@@ -233,12 +233,12 @@ export default function ExigencesPage() {
       {/* En-tête */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2 text-[rgb(var(--primary-rgb))]">
-          {selectedFeature 
-            ? `User Stories pour: ${selectedEpic?.titre} → ${selectedFeature.titre}` 
-            : 'Gestion des User Stories'}
+          {selectedUserStory 
+            ? `Exigences pour: ${selectedBesoin?.titre} → ${selectedUserStory.titre}` 
+            : 'Gestion des Exigences'}
         </h1>
         <p className="text-[rgba(var(--secondary-rgb),0.7)]">
-          Gérez vos User Stories (exigences) et associez-les aux FEATURES correspondantes.
+          Gérez vos exigences et associez-les aux User Stories correspondantes.
         </p>
       </div>
 
@@ -256,16 +256,13 @@ export default function ExigencesPage() {
         </div>
       )}
 
-      {/* Formulaire pour ajouter une User Story */}
+      {/* Formulaire pour ajouter une exigence */}
       <div className="card p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4 text-[rgb(var(--secondary-rgb))]">
-          {selectedFeature ? 'Ajouter une User Story pour cette FEATURE' : 'Ajouter une User Story'}
+          {selectedUserStory ? 'Ajouter une exigence pour cette User Story' : 'Ajouter une exigence'}
         </h2>
         <p className="mb-4 text-[rgba(var(--secondary-rgb),0.7)]">
-          Une <strong>User Story</strong> suit le format : 
-          <code className="bg-[rgba(var(--background-start-rgb),0.2)] p-1 rounded">
-            "En tant que [rôle], je veux [fonctionnalité] afin de [bénéfice]."
-          </code>
+          Une <strong>exigence</strong> est une spécification technique détaillée.
         </p>
         <form onSubmit={handleCreateExigence} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
@@ -274,25 +271,25 @@ export default function ExigencesPage() {
               type="text"
               value={newExigence.titre}
               onChange={(e) => setNewExigence({ ...newExigence, titre: e.target.value })}
-              placeholder="Ex: En tant qu'utilisateur, je veux me connecter afin d'accéder à mon compte"
+              placeholder="Ex: Le système doit valider le format de l'email"
               className="form-input"
               required
             />
           </div>
-          {!selectedFeature && (
+          {!selectedUserStory && (
             <div>
-              <label className="form-label">FEATURE associée (optionnel)</label>
+              <label className="form-label">User Story associée (optionnel)</label>
               <select
                 value={newExigence.feature_id}
                 onChange={(e) => setNewExigence({ ...newExigence, feature_id: e.target.value })}
                 className="form-select"
               >
-                <option value="">Aucune FEATURE associée</option>
-                {features.map((feature) => {
-                  const epic = epics.find(e => e.id === feature.epic_id);
+                <option value="">Aucune User Story associée</option>
+                {userStories.map((userStory) => {
+                  const besoin = besoins.find(b => b.id === userStory.epic_id);
                   return (
-                    <option key={feature.id} value={feature.id}>
-                      {epic?.titre} → {feature.titre}
+                    <option key={userStory.id} value={userStory.id}>
+                      {besoin?.titre} → {userStory.titre}
                     </option>
                   );
                 })}
@@ -328,7 +325,7 @@ export default function ExigencesPage() {
             <textarea
               value={newExigence.description}
               onChange={(e) => setNewExigence({ ...newExigence, description: e.target.value })}
-              placeholder="Décrivez la User Story en détail : critères d'acceptation, exemples, etc."
+              placeholder="Décrivez l'exigence en détail : critères techniques, contraintes, etc."
               className="form-textarea"
               rows={4}
             />
@@ -339,23 +336,23 @@ export default function ExigencesPage() {
               disabled={loading}
               className="btn btn-primary"
             >
-              {loading ? 'Ajout en cours...' : 'Ajouter la User Story'}
+              {loading ? 'Ajout en cours...' : 'Ajouter l\'exigence'}
             </button>
           </div>
         </form>
       </div>
 
-      {/* Liste des User Stories */}
+      {/* Liste des exigences */}
       <div className="card p-6">
         <h2 className="text-xl font-semibold mb-6 text-[rgb(var(--secondary-rgb))]">
-          Liste des User Stories
-          {selectedFeature && ` associées à "${selectedEpic?.titre} → ${selectedFeature.titre}"`}
+          Liste des exigences
+          {selectedUserStory && ` associées à "${selectedBesoin?.titre} → ${selectedUserStory.titre}"`}
         </h2>
         {filteredExigences.length === 0 ? (
           <p className="text-[rgba(var(--secondary-rgb),0.7)] italic">
-            {selectedFeature 
-              ? 'Aucune User Story associée à cette FEATURE.' 
-              : 'Aucune User Story trouvée.'}
+            {selectedUserStory 
+              ? 'Aucune exigence associée à cette User Story.' 
+              : 'Aucune exigence trouvée.'}
           </p>
         ) : (
           <div className="table-container">
@@ -363,7 +360,7 @@ export default function ExigencesPage() {
               <thead>
                 <tr>
                   <th>Titre</th>
-                  <th>FEATURE associée</th>
+                  <th>User Story associée</th>
                   <th>Priorité</th>
                   <th>Statut</th>
                   <th>Actions</th>
@@ -371,8 +368,8 @@ export default function ExigencesPage() {
               </thead>
               <tbody>
                 {filteredExigences.map((exigence) => {
-                  const featureAssociee = features.find(f => f.id === exigence.feature_id);
-                  const epicAssocie = featureAssociee ? epics.find(e => e.id === featureAssociee.epic_id) : null;
+                  const userStoryAssociee = userStories.find(us => us.id === exigence.feature_id);
+                  const besoinAssocie = userStoryAssociee ? besoins.find(b => b.id === userStoryAssociee.epic_id) : null;
                   
                   return (
                     <tr key={exigence.id}>
@@ -387,12 +384,12 @@ export default function ExigencesPage() {
                         </Link>
                       </td>
                       <td>
-                        {featureAssociee && epicAssocie ? (
+                        {userStoryAssociee && besoinAssocie ? (
                           <Link
-                            href={`/epics#${epicAssocie.id}`}
+                            href={`/epics#${besoinAssocie.id}`}
                             className="link"
                           >
-                            {epicAssocie.titre} → {featureAssociee.titre}
+                            {besoinAssocie.titre} → {userStoryAssociee.titre}
                           </Link>
                         ) : (
                           <span className="text-[rgba(var(--secondary-rgb),0.5)]">Aucune</span>
@@ -423,7 +420,7 @@ export default function ExigencesPage() {
                         </button>
                         <button
                           onClick={() => {
-                            if (confirm('Êtes-vous sûr de vouloir supprimer cette User Story ?')) {
+                            if (confirm('Êtes-vous sûr de vouloir supprimer cette exigence ?')) {
                               handleDeleteExigence(exigence.id);
                             }
                           }}

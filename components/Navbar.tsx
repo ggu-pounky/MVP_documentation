@@ -46,7 +46,7 @@ export function Navbar() {
               href="/epics"
               className="text-[rgb(var(--foreground-rgb))] hover:text-[rgb(var(--primary-rgb))] transition-colors font-medium"
             >
-              EPICs
+              Besoins
             </Link>
             <Link
               href="/exigences"
