@@ -10,14 +10,14 @@ export default async function Home() {
 
   if (error) {
     return (
-      <div className="min-h-screen p-8 flex flex-col items-center justify-center bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))]">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))]">
         <div className="text-red-500 text-xl mb-4">Erreur : {error.message}</div>
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen p-8 bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))]">
+    <div className="min-h-screen bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))]">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-6 text-[rgb(var(--primary-rgb))]">
           Hello World avec Supabase !
@@ -53,6 +53,6 @@ export default async function Home() {
           )}
         </div>
       </div>
-    </main>
+    </div>
   );
 }
