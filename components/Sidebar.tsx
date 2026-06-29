@@ -43,7 +43,7 @@ export function Sidebar() {
           >
             Besoins
           </Link>
-          {/* Sous-éléments de Besoins : Exigences et Paramètres */}
+          {/* Sous-éléments de Besoins */}
           <div className="pl-6 mt-1 space-y-1">
             <Link
               href="/exigences"
@@ -53,7 +53,7 @@ export function Sidebar() {
                   : 'text-[rgb(var(--secondary-rgb))] hover:bg-[rgba(var(--background-start-rgb),0.1)]'
               }`}
             >
-              Gestion des Exigences
+              User Stories (Exigences)
             </Link>
             <Link
               href="/parameters"
@@ -63,7 +63,7 @@ export function Sidebar() {
                   : 'text-[rgb(var(--secondary-rgb))] hover:bg-[rgba(var(--background-start-rgb),0.1)]'
               }`}
             >
-              Gestion des Paramètres
+              Paramètres
             </Link>
           </div>
         </div>
