@@ -43,6 +43,29 @@ export function Sidebar() {
           >
             Besoins
           </Link>
+          {/* Sous-éléments de Besoins : Exigences et Paramètres */}
+          <div className="pl-6 mt-1 space-y-1">
+            <Link
+              href="/exigences"
+              className={`block px-3 py-1 rounded text-sm transition-colors ${
+                isActive('/exigences')
+                  ? 'bg-[rgba(var(--primary-rgb),0.15)] text-[rgb(var(--primary-rgb))]'
+                  : 'text-[rgb(var(--secondary-rgb))] hover:bg-[rgba(var(--background-start-rgb),0.1)]'
+              }`}
+            >
+              Gestion des Exigences
+            </Link>
+            <Link
+              href="/parameters"
+              className={`block px-3 py-1 rounded text-sm transition-colors ${
+                isActive('/parameters')
+                  ? 'bg-[rgba(var(--primary-rgb),0.15)] text-[rgb(var(--primary-rgb))]'
+                  : 'text-[rgb(var(--secondary-rgb))] hover:bg-[rgba(var(--background-start-rgb),0.1)]'
+              }`}
+            >
+              Gestion des Paramètres
+            </Link>
+          </div>
         </div>
 
         {/* Séparation au-dessus de Produits */}

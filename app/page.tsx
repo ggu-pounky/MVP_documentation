@@ -4,7 +4,7 @@ import Link from 'next/link';
 export default async function Home() {
   const supabase = getSupabaseClient();
 
-  // Récupérer les paramètres depuis Supabase (requête asynchrone)
+  // Récupérer les paramètres depuis Supabase
   const { data: parameters, error: parametersError } = await supabase
     .from('parameters')
     .select('*');
@@ -27,49 +27,19 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))] p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-6 text-[rgb(var(--primary-rgb))]">
-          Hello World avec Supabase !
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-4xl font-bold mb-8 text-[rgb(var(--primary-rgb))]">
+          Tableau de bord
         </h1>
-        
-        {/* Section Paramètres */}
-        <div className="bg-[rgb(var(--card-rgb))] border border-[rgb(var(--card-border-rgb))] rounded-xl p-6 shadow-lg mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-[rgb(var(--secondary-rgb))]">
-            Liste des paramètres :
-          </h2>
-          {parameters && parameters.length > 0 ? (
-            <ul className="space-y-3">
-              {parameters.map((param) => (
-                <li
-                  key={param.id}
-                  className="p-4 bg-[rgba(var(--background-start-rgb),0.1)] rounded-lg border border-[rgba(var(--card-border-rgb),0.3)] hover:bg-[rgba(var(--background-start-rgb),0.2)] transition-colors"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                    <strong className="text-[rgb(var(--primary-rgb))]">
-                      {param.name}:
-                    </strong>
-                    <span className="text-[rgb(var(--foreground-rgb))]">
-                      {param.value}
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-[rgba(var(--secondary-rgb),0.7)] italic">
-              Aucun paramètre trouvé. <Link href="/parameters" className="text-[rgb(var(--primary-rgb))] underline">Ajoutez-en ici</Link> !
-            </p>
-          )}
-        </div>
 
         {/* Section Exigences */}
-        <div className="bg-[rgb(var(--card-rgb))] border border-[rgb(var(--card-border-rgb))] rounded-xl p-6 shadow-lg">
+        <div className="bg-[rgb(var(--card-rgb))] border border-[rgb(var(--card-border-rgb))] rounded-xl p-6 shadow-lg mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-semibold text-[rgb(var(--secondary-rgb))]">
-              Liste des exigences :
+              Exigences
             </h2>
             <Link
-              href="/parameters"
+              href="/exigences"
               className="px-4 py-2 bg-[rgb(var(--primary-rgb))] text-white rounded hover:bg-[rgba(var(--primary-rgb),0.8)] transition-colors"
             >
               Gérer les exigences
@@ -100,7 +70,46 @@ export default async function Home() {
             </div>
           ) : (
             <p className="text-[rgba(var(--secondary-rgb),0.7)] italic">
-              Aucune exigence trouvée. <Link href="/parameters" className="text-[rgb(var(--primary-rgb))] underline">Ajoutez-en ici</Link> !
+              Aucune exigence trouvée. <Link href="/exigences" className="text-[rgb(var(--primary-rgb))] underline">Ajoutez-en ici</Link> !
+            </p>
+          )}
+        </div>
+
+        {/* Section Paramètres */}
+        <div className="bg-[rgb(var(--card-rgb))] border border-[rgb(var(--card-border-rgb))] rounded-xl p-6 shadow-lg">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold text-[rgb(var(--secondary-rgb))]">
+              Paramètres
+            </h2>
+            <Link
+              href="/parameters"
+              className="px-4 py-2 bg-[rgb(var(--primary-rgb))] text-white rounded hover:bg-[rgba(var(--primary-rgb),0.8)] transition-colors"
+            >
+              Gérer les paramètres
+            </Link>
+          </div>
+          {parameters && parameters.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[rgb(var(--card-border-rgb))]">
+                    <th className="text-left p-3 font-medium">Nom</th>
+                    <th className="text-left p-3 font-medium">Valeur</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {parameters.map((param) => (
+                    <tr key={param.id} className="border-b border-[rgba(var(--card-border-rgb),0.3)]">
+                      <td className="p-3">{param.name}</td>
+                      <td className="p-3">{param.value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-[rgba(var(--secondary-rgb),0.7)] italic">
+              Aucun paramètre trouvé. <Link href="/parameters" className="text-[rgb(var(--primary-rgb))] underline">Ajoutez-en ici</Link> !
             </p>
           )}
         </div>
