@@ -26,6 +26,56 @@ type Besoin = {
   titre: string;
 };
 
+// Recommandations IREB pour les exigences
+const getIREBRecommendations = (exigence: Exigence): { titre: string; description: string; conseils: string[] } => {
+  const conseils: string[] = [];
+  let titreAmeliore = exigence.titre;
+  let descriptionAmelioree = exigence.description;
+
+  // 1. Vérifier que le titre est clair et concis
+  if (!exigence.titre || exigence.titre.length < 10) {
+    conseils.push("Le titre doit être plus descriptif et concis (10-50 caractères).");
+    titreAmeliore = `En tant que [rôle], je veux [action] afin de [bénéfice].`;
+  }
+
+  // 2. Vérifier que la description contient des critères d'acceptation
+  if (!exigence.description || !exigence.description.includes("Critères d'acceptation") && 
+      !exigence.description.includes("Doit") && !exigence.description.includes("Doit pouvoir")) {
+    conseils.push("Ajoutez des critères d'acceptation clairs. Exemple: 'Le système doit valider que...'");
+    descriptionAmelioree = `${exigence.description || ''} \n\nCritères d'acceptation:\n- [ ] Critère 1\n- [ ] Critère 2`;
+  }
+
+  // 3. Vérifier la complétude (qui, quoi, pourquoi)
+  if (!exigence.titre.match(/en tant que/i) && !exigence.description.match(/en tant que/i)) {
+    conseils.push("Utilisez le format standard: 'En tant que [rôle], je veux [fonctionnalité] afin de [bénéfice].'");
+  }
+
+  // 4. Vérifier l'unicité et l'atomicité
+  if (exigence.titre.includes("et") || exigence.titre.includes(",")) {
+    conseils.push("Une exigence doit être atomique (une seule fonctionnalité par exigence). Divisez-la si nécessaire.");
+  }
+
+  // 5. Vérifier la testabilité
+  if (!exigence.description || !exigence.description.match(/mesurable|vérifiable|testable/i)) {
+    conseils.push("L'exigence doit être testable. Ajoutez: 'Le système doit permettre de vérifier que...'");
+  }
+
+  // 6. Vérifier l'absence d'ambiguïté
+  if (exigence.titre.includes("peut-être") || exigence.titre.includes("si possible") || 
+      exigence.description.includes("peut-être") || exigence.description.includes("si possible")) {
+    conseils.push("Évitez les termes ambigus comme 'peut-être' ou 'si possible'. Soyez précis.");
+  }
+
+  // 7. Conseils généraux IREB
+  conseils.push("Conseil IREB: Une bonne exigence doit être SMART (Spécifique, Mesurable, Atteignable, Réaliste, Temporelle).");
+
+  return {
+    titre: titreAmeliore,
+    description: descriptionAmelioree,
+    conseils: conseils.length > 0 ? conseils : ["Cette exigence semble bien formulée selon les standards IREB."]
+  };
+};
+
 export default function ExigencesPage() {
   const supabase = getSupabaseClient();
   const router = useRouter();
@@ -38,6 +88,11 @@ export default function ExigencesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // État pour la modale d'amélioration
+  const [showImprovementModal, setShowImprovementModal] = useState(false);
+  const [selectedExigenceForImprovement, setSelectedExigenceForImprovement] = useState<Exigence | null>(null);
+  const [improvementSuggestions, setImprovementSuggestions] = useState<{ titre: string; description: string; conseils: string[] } | null>(null);
 
   // Formulaire pour les exigences
   const [newExigence, setNewExigence] = useState({
@@ -70,7 +125,7 @@ export default function ExigencesPage() {
       }
       setExigences(exigencesData || []);
 
-      // Récupérer les FEATURES (anciennement User Stories)
+      // Récupérer les FEATURES
       const { data: featuresData, error: featuresError } = await supabase
         .from('features')
         .select('id, titre, epic_id');
@@ -208,6 +263,52 @@ export default function ExigencesPage() {
     }
   };
 
+  // Ouvrir la modale d'amélioration pour une exigence
+  const handleImproveExigence = (exigence: Exigence) => {
+    setSelectedExigenceForImprovement(exigence);
+    const suggestions = getIREBRecommendations(exigence);
+    setImprovementSuggestions(suggestions);
+    setShowImprovementModal(true);
+  };
+
+  // Appliquer les améliorations suggérées
+  const handleApplyImprovements = async () => {
+    if (!selectedExigenceForImprovement || !improvementSuggestions) return;
+
+    try {
+      setLoading(true);
+      const { error } = await supabase
+        .from('exigences')
+        .update({
+          titre: improvementSuggestions.titre,
+          description: improvementSuggestions.description,
+        })
+        .eq('id', selectedExigenceForImprovement.id);
+
+      if (error) {
+        console.error('Erreur Supabase:', error);
+        throw new Error(`Erreur Supabase: ${error.message}`);
+      }
+
+      // Mettre à jour localement
+      setExigences(exigences.map(ex => 
+        ex.id === selectedExigenceForImprovement.id 
+          ? { ...ex, titre: improvementSuggestions.titre, description: improvementSuggestions.description }
+          : ex
+      ));
+      
+      setShowImprovementModal(false);
+      setSuccess('Exigence améliorée avec succès selon les recommandations IREB !');
+      setTimeout(() => setSuccess(null), 3000);
+
+    } catch (err) {
+      console.error('Erreur lors de l\'application des améliorations:', err);
+      setError(err instanceof Error ? err.message : 'Erreur inconnue lors de l\'amélioration');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Filtrer les exigences par FEATURE si une feature_id est sélectionnée
   const filteredExigences = featureIdFromUrl 
     ? exigences.filter(ex => ex.feature_id === featureIdFromUrl)
@@ -238,6 +339,9 @@ export default function ExigencesPage() {
         </h1>
         <p className="text-[rgba(var(--secondary-rgb),0.7)]">
           Gérez vos exigences et associez-les aux FEATURES correspondantes.
+          <span className="ml-2 text-[rgba(var(--primary-rgb),0.7)]">
+            🤖 Utilisez l'IA pour améliorer vos exigences selon les standards IREB.
+          </span>
         </p>
       </div>
 
@@ -415,6 +519,28 @@ export default function ExigencesPage() {
                           Modifier
                         </button>
                         <button
+                          onClick={() => handleImproveExigence(exigence)}
+                          disabled={loading}
+                          className="text-[rgb(var(--primary-rgb))] hover:underline text-sm flex items-center gap-1"
+                          title="Améliorer avec l'IA selon les recommandations IREB"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                            />
+                          </svg>
+                          Améliorer
+                        </button>
+                        <button
                           onClick={() => {
                             if (confirm('Êtes-vous sûr de vouloir supprimer cette exigence ?')) {
                               handleDeleteExigence(exigence.id);
@@ -434,6 +560,73 @@ export default function ExigencesPage() {
           </div>
         )}
       </div>
+
+      {/* Modale d'amélioration avec IA (IREB) */}
+      {showImprovementModal && selectedExigenceForImprovement && improvementSuggestions && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[rgb(var(--card-rgb))] border border-[rgb(var(--card-border-rgb))] rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-[rgb(var(--primary-rgb))]">
+                🤖 Amélioration de l'exigence avec l'IA (IREB)
+              </h2>
+              <button
+                onClick={() => setShowImprovementModal(false)}
+                className="text-[rgb(var(--secondary-rgb))] hover:text-[rgb(var(--foreground-rgb))] text-2xl"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <h3 className="font-medium text-[rgb(var(--secondary-rgb))] mb-2">Exigence actuelle :</h3>
+              <div className="bg-[rgba(var(--background-start-rgb),0.1)] p-4 rounded-lg mb-4">
+                <p className="font-medium text-[rgb(var(--foreground-rgb))]">{selectedExigenceForImprovement.titre}</p>
+                {selectedExigenceForImprovement.description && (
+                  <p className="text-[rgba(var(--secondary-rgb),0.8)] mt-2">{selectedExigenceForImprovement.description}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <h3 className="font-medium text-[rgb(var(--secondary-rgb))] mb-2">Suggestions d'amélioration :</h3>
+              <div className="bg-[rgba(var(--accent-rgb),0.1)] p-4 rounded-lg mb-4">
+                <p className="font-medium text-[rgb(var(--accent-rgb))]">Titre amélioré :</p>
+                <p className="text-[rgb(var(--foreground-rgb))] mt-1">{improvementSuggestions.titre}</p>
+              </div>
+              
+              <div className="bg-[rgba(var(--primary-rgb),0.1)] p-4 rounded-lg mb-4">
+                <p className="font-medium text-[rgb(var(--primary-rgb))]">Description améliorée :</p>
+                <p className="text-[rgb(var(--foreground-rgb))] mt-1 whitespace-pre-wrap">{improvementSuggestions.description}</p>
+              </div>
+
+              <div className="bg-[rgba(var(--warning-rgb),0.1)] p-4 rounded-lg">
+                <p className="font-medium text-[rgb(var(--warning-rgb))]">Recommandations IREB :</p>
+                <ul className="list-disc list-inside mt-2 space-y-1 text-[rgb(var(--foreground-rgb))]">
+                  {improvementSuggestions.conseils.map((conseil, index) => (
+                    <li key={index}>{conseil}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setShowImprovementModal(false)}
+                className="btn btn-secondary"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleApplyImprovements}
+                disabled={loading}
+                className="btn btn-primary"
+              >
+                {loading ? 'Application en cours...' : 'Appliquer les améliorations'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
