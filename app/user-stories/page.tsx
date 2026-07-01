@@ -245,7 +245,7 @@ export default function UserStoriesPage() {
       };
 
       // Try the new 'user_stories' table first
-      let data, error;
+      let data: any, error: any;
       const { data: newData, error: newError } = await supabase
         .from('user_stories')
         .insert([userStoryToInsert])
@@ -304,7 +304,7 @@ export default function UserStoriesPage() {
       setError(null);
 
       // Try the new 'user_stories' table first
-      let data, error;
+      let data: any, error: any;
       const { data: newData, error: newError } = await supabase
         .from('user_stories')
         .update(updatedData)
