@@ -176,12 +176,17 @@ export default function UserStoriesPage() {
         // Fallback: try the old 'features' table
         const { data: epicsOld, error: epicsOldError } = await supabase
           .from('features')
-          .select('id, titre, epic_id as besoin_id');
+          .select('id, titre, epic_id');
         
         if (epicsOldError) {
           throw new Error(`Erreur Supabase: ${epicsOldError.message}`);
         }
-        epicsData = epicsOld || [];
+        // Map epic_id to besoin_id to match Epic type
+        epicsData = epicsOld?.map(epic => ({
+          id: epic.id,
+          titre: epic.titre,
+          besoin_id: epic.epic_id
+        })) || [];
       } else {
         epicsData = epicsNew || [];
       }
