@@ -109,12 +109,18 @@ export default function BesoinsPage() {
         // Fallback: try the old 'exigences' table
         const { data: userStoriesDataFallback, error: userStoriesErrorFallback } = await supabase
           .from('exigences')
-          .select('id, titre, feature_id as epic_id');
+          .select('id, titre, feature_id');
         
         if (userStoriesErrorFallback) {
           throw new Error(`Erreur Supabase: ${userStoriesError.message}`);
         }
-        setUserStories(userStoriesDataFallback || []);
+        // Map feature_id to epic_id to match UserStory type
+        const mappedUserStories = userStoriesDataFallback?.map(story => ({
+          id: story.id,
+          titre: story.titre,
+          epic_id: story.feature_id
+        })) || [];
+        setUserStories(mappedUserStories);
       } else {
         setUserStories(userStoriesData || []);
       }
