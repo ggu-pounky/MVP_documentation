@@ -1,9 +1,21 @@
-export default function MatriceExigencesPage() {
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+export default function RedirectPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // Rediriger vers la nouvelle page matrice USER STORIES
+    router.push('/produits/matrice-user-stories');
+  }, [router]);
+
   return (
-    <div className="min-h-screen bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))] p-8">
-      <h1 className="text-3xl font-bold mb-6 text-[rgb(var(--primary-rgb))]">Matrice de traçabilité EXIGENCES</h1>
-      <div className="bg-[rgb(var(--card-rgb))] border border-[rgb(var(--card-border-rgb))] rounded-xl p-6 shadow-lg min-h-[80vh]">
-        {/* Contenu vide pour l'instant */}
+    <div className="min-h-screen bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))] flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold mb-4">Redirection en cours...</h1>
+        <p>Vous allez être redirigé vers la page Matrice USER STORIES.</p>
       </div>
     </div>
   );

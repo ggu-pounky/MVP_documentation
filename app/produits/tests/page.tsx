@@ -4,19 +4,19 @@ import { useState, useEffect } from 'react';
 import Link from "next/link";
 import { getSupabaseClient } from '@/lib/supabase';
 
-type Exigence = {
+type UserStory = {
   id: string;
   titre: string;
   description: string;
   priorite: string;
   statut: string;
-  feature_id: string | null;
+  epic_id: string | null;
 };
 
-type Feature = {
+type Epic = {
   id: string;
   titre: string;
-  epic_id: string;
+  besoin_id: string;
 };
 
 type Besoin = {
@@ -30,53 +30,53 @@ type TestCase = {
   description: string;
   etapes: string[];
   resultatAttendu: string;
-  exigence_id: string;
+  user_story_id: string;
 };
 
-// Génération de tests basés sur une exigence
-const generateTestCases = (exigence: Exigence): TestCase[] => {
+// Génération de tests basés sur une USER STORY
+const generateTestCases = (userStory: UserStory): TestCase[] => {
   const testCases: TestCase[] = [];
   
   // 1. Test de validation positive
-  if (exigence.titre.toLowerCase().includes('valider') || 
-      exigence.titre.toLowerCase().includes('vérifier') ||
-      exigence.description.toLowerCase().includes('valider')) {
+  if (userStory.titre.toLowerCase().includes('valider') || 
+      userStory.titre.toLowerCase().includes('vérifier') ||
+      userStory.description.toLowerCase().includes('valider')) {
     testCases.push({
       id: `test-${Date.now()}-1`,
-      titre: `Test de validation positive pour: ${exigence.titre}`,
+      titre: `Test de validation positive pour: ${userStory.titre}`,
       description: `Vérifier que la fonctionnalité fonctionne correctement avec des entrées valides.`,
       etapes: [
         `1. Accéder à l'interface concernée`,
-        `2. Saisir des données valides (ex: ${exigence.titre.includes('email') ? 'email@domaine.com' : 'valeur valide'})`,
+        `2. Saisir des données valides (ex: ${userStory.titre.includes('email') ? 'email@domaine.com' : 'valeur valide'})`,
         `3. Valider le formulaire`,
       ],
       resultatAttendu: `La fonctionnalité doit s'exécuter avec succès et afficher un message de confirmation.`,
-      exigence_id: exigence.id,
+      user_story_id: userStory.id,
     });
   }
 
   // 2. Test de validation négative
-  if (exigence.titre.toLowerCase().includes('valider') || 
-      exigence.titre.toLowerCase().includes('vérifier')) {
+  if (userStory.titre.toLowerCase().includes('valider') || 
+      userStory.titre.toLowerCase().includes('vérifier')) {
     testCases.push({
       id: `test-${Date.now()}-2`,
-      titre: `Test de validation négative pour: ${exigence.titre}`,
+      titre: `Test de validation négative pour: ${userStory.titre}`,
       description: `Vérifier que la fonctionnalité gère correctement les entrées invalides.`,
       etapes: [
         `1. Accéder à l'interface concernée`,
-        `2. Saisir des données invalides (ex: ${exigence.titre.includes('email') ? 'email-invalide' : 'valeur invalide'})`,
+        `2. Saisir des données invalides (ex: ${userStory.titre.includes('email') ? 'email-invalide' : 'valeur invalide'})`,
         `3. Valider le formulaire`,
       ],
       resultatAttendu: `Un message d'erreur clair doit être affiché et la fonctionnalité ne doit pas s'exécuter.`,
-      exigence_id: exigence.id,
+      user_story_id: userStory.id,
     });
   }
 
   // 3. Test de performance (si applicable)
-  if (exigence.priorite === 'Haute') {
+  if (userStory.priorite === 'Haute') {
     testCases.push({
       id: `test-${Date.now()}-3`,
-      titre: `Test de performance pour: ${exigence.titre}`,
+      titre: `Test de performance pour: ${userStory.titre}`,
       description: `Vérifier que la fonctionnalité répond dans un temps acceptable sous charge normale.`,
       etapes: [
         `1. Simuler une charge normale (ex: 100 utilisateurs simultanés)`,
@@ -84,16 +84,16 @@ const generateTestCases = (exigence: Exigence): TestCase[] => {
         `3. Mesurer le temps de réponse`,
       ],
       resultatAttendu: `Le temps de réponse doit être inférieur à 2 secondes.`,
-      exigence_id: exigence.id,
+      user_story_id: userStory.id,
     });
   }
 
   // 4. Test de sécurité (si applicable)
-  if (exigence.description.toLowerCase().includes('sécurité') || 
-      exigence.description.toLowerCase().includes('authentification')) {
+  if (userStory.description.toLowerCase().includes('sécurité') || 
+      userStory.description.toLowerCase().includes('authentification')) {
     testCases.push({
       id: `test-${Date.now()}-4`,
-      titre: `Test de sécurité pour: ${exigence.titre}`,
+      titre: `Test de sécurité pour: ${userStory.titre}`,
       description: `Vérifier que la fonctionnalité est sécurisée contre les attaques courantes.`,
       etapes: [
         `1. Tenter une injection SQL (ex: ' OR '1'='1)`,
@@ -101,14 +101,14 @@ const generateTestCases = (exigence: Exigence): TestCase[] => {
         `3. Vérifier les permissions d'accès`,
       ],
       resultatAttendu: `Aucune vulnérabilité ne doit être exploitée. Les données doivent rester sécurisées.`,
-      exigence_id: exigence.id,
+      user_story_id: userStory.id,
     });
   }
 
   // 5. Test d'accessibilité (si applicable)
   testCases.push({
     id: `test-${Date.now()}-5`,
-    titre: `Test d'accessibilité pour: ${exigence.titre}`,
+    titre: `Test d'accessibilité pour: ${userStory.titre}`,
     description: `Vérifier que la fonctionnalité est accessible à tous les utilisateurs, y compris ceux utilisant des technologies d'assistance.`,
     etapes: [
       `1. Utiliser un lecteur d'écran (ex: NVDA, JAWS)`,
@@ -116,14 +116,14 @@ const generateTestCases = (exigence: Exigence): TestCase[] => {
       `3. Vérifier les contrastes de couleurs`,
     ],
     resultatAttendu: `La fonctionnalité doit être entièrement accessible et conforme aux standards WCAG.`,
-    exigence_id: exigence.id,
+    user_story_id: userStory.id,
   });
 
   // Si aucun test n'a été généré, ajouter un test par défaut
   if (testCases.length === 0) {
     testCases.push({
       id: `test-${Date.now()}-default`,
-      titre: `Test de base pour: ${exigence.titre}`,
+      titre: `Test de base pour: ${userStory.titre}`,
       description: `Test de base pour vérifier le fonctionnement général de la fonctionnalité.`,
       etapes: [
         `1. Accéder à la fonctionnalité`,
@@ -131,7 +131,7 @@ const generateTestCases = (exigence: Exigence): TestCase[] => {
         `3. Vérifier le résultat`,
       ],
       resultatAttendu: `La fonctionnalité doit fonctionner comme attendu.`,
-      exigence_id: exigence.id,
+      user_story_id: userStory.id,
     });
   }
 
@@ -140,15 +140,15 @@ const generateTestCases = (exigence: Exigence): TestCase[] => {
 
 export default function TestsPage() {
   const supabase = getSupabaseClient();
-  const [exigences, setExigences] = useState<Exigence[]>([]);
-  const [features, setFeatures] = useState<Feature[]>([]);
+  const [userStories, setUserStories] = useState<UserStory[]>([]);
+  const [epics, setEpics] = useState<Epic[]>([]);
   const [besoins, setBesoins] = useState<Besoin[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   // État pour la génération de tests
-  const [selectedExigence, setSelectedExigence] = useState<Exigence | null>(null);
+  const [selectedUserStory, setSelectedUserStory] = useState<UserStory | null>(null);
   const [generatedTests, setGeneratedTests] = useState<TestCase[]>([]);
   const [showTestsModal, setShowTestsModal] = useState(false);
 
@@ -162,28 +162,28 @@ export default function TestsPage() {
       setLoading(true);
       setError(null);
 
-      // Récupérer les exigences
-      const { data: exigencesData, error: exigencesError } = await supabase
-        .from('exigences')
+      // Récupérer les USER STORIES
+      const { data: userStoriesData, error: userStoriesError } = await supabase
+        .from('user_stories')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (exigencesError) {
-        console.error('Erreur Supabase (exigences):', exigencesError);
-        throw new Error(`Erreur Supabase: ${exigencesError.message}`);
+      if (userStoriesError) {
+        console.error('Erreur Supabase (user_stories):', userStoriesError);
+        throw new Error(`Erreur Supabase: ${userStoriesError.message}`);
       }
-      setExigences(exigencesData || []);
+      setUserStories(userStoriesData || []);
 
-      // Récupérer les FEATURES
-      const { data: featuresData, error: featuresError } = await supabase
-        .from('features')
-        .select('id, titre, epic_id');
+      // Récupérer les EPICS
+      const { data: epicsData, error: epicsError } = await supabase
+        .from('epics')
+        .select('id, titre, besoin_id');
 
-      if (featuresError) {
-        console.error('Erreur Supabase (FEATURES):', featuresError);
-        throw new Error(`Erreur Supabase: ${featuresError.message}`);
+      if (epicsError) {
+        console.error('Erreur Supabase (EPICS):', epicsError);
+        throw new Error(`Erreur Supabase: ${epicsError.message}`);
       }
-      setFeatures(featuresData || []);
+      setEpics(epicsData || []);
 
       // Récupérer les besoins
       const { data: besoinsData, error: besoinsError } = await supabase
@@ -204,23 +204,23 @@ export default function TestsPage() {
     }
   };
 
-  // Générer des tests pour une exigence
-  const handleGenerateTests = (exigence: Exigence) => {
-    setSelectedExigence(exigence);
-    const tests = generateTestCases(exigence);
+  // Générer des tests pour une USER STORY
+  const handleGenerateTests = (userStory: UserStory) => {
+    setSelectedUserStory(userStory);
+    const tests = generateTestCases(userStory);
     setGeneratedTests(tests);
     setShowTestsModal(true);
   };
 
-  // Formater le nom complet d'une exigence (Besoin → FEATURE → Exigence)
-  const getExigenceFullName = (exigence: Exigence) => {
-    const feature = features.find(f => f.id === exigence.feature_id);
-    if (!feature) return exigence.titre;
+  // Formater le nom complet d'une USER STORY (Besoin → EPIC → USER STORY)
+  const getUserStoryFullName = (userStory: UserStory) => {
+    const epic = epics.find(e => e.id === userStory.epic_id);
+    if (!epic) return userStory.titre;
     
-    const besoin = besoins.find(b => b.id === feature.epic_id);
-    if (!besoin) return `${feature.titre} → ${exigence.titre}`;
+    const besoin = besoins.find(b => b.id === epic.besoin_id);
+    if (!besoin) return `${epic.titre} → ${userStory.titre}`;
     
-    return `${besoin.titre} → ${feature.titre} → ${exigence.titre}`;
+    return `${besoin.titre} → ${epic.titre} → ${userStory.titre}`;
   };
 
   if (loading) {
@@ -241,7 +241,7 @@ export default function TestsPage() {
           Génération de Tests
         </h1>
         <p className="text-[rgba(var(--secondary-rgb),0.7)]">
-          Sélectionnez une exigence pour générer automatiquement des cas de test.
+          Sélectionnez une USER STORY pour générer automatiquement des cas de test.
         </p>
       </div>
 
@@ -259,100 +259,100 @@ export default function TestsPage() {
         </div>
       )}
 
-      {/* Sélecteur d'exigence */}
+      {/* Sélecteur de USER STORY */}
       <div className="card p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4 text-[rgb(var(--secondary-rgb))]">
-          Sélectionner une exigence
+          Sélectionner une USER STORY
         </h2>
         <p className="mb-4 text-[rgba(var(--secondary-rgb),0.7)]">
-          Choisissez une exigence dans la liste ci-dessous pour générer des cas de test adaptés.
+          Choisissez une USER STORY dans la liste ci-dessous pour générer des cas de test adaptés.
         </p>
         
-        {exigences.length === 0 ? (
+        {userStories.length === 0 ? (
           <p className="text-[rgba(var(--secondary-rgb),0.7)] italic">
-            Aucune exigence trouvée. <Link href="/exigences" className="text-[rgb(var(--primary-rgb))] underline">Ajoutez-en ici</Link>.
+            Aucune USER STORY trouvée. <Link href="/user-stories" className="text-[rgb(var(--primary-rgb))] underline">Ajoutez-en ici</Link>.
           </p>
         ) : (
           <div className="space-y-4">
             <select
               onChange={(e) => {
-                const selectedExigence = exigences.find(ex => ex.id === e.target.value);
-                if (selectedExigence) {
-                  handleGenerateTests(selectedExigence);
+                const selectedUserStory = userStories.find(us => us.id === e.target.value);
+                if (selectedUserStory) {
+                  handleGenerateTests(selectedUserStory);
                 }
               }}
               className="w-full p-3 rounded-lg bg-[rgb(var(--background-start-rgb))] border border-[rgb(var(--card-border-rgb))] text-[rgb(var(--foreground-rgb))]"
               defaultValue=""
             >
               <option value="" disabled>
-                Sélectionnez une exigence...
+                Sélectionnez une USER STORY...
               </option>
-              {exigences.map((exigence) => (
-                <option key={exigence.id} value={exigence.id}>
-                  {getExigenceFullName(exigence)}
+              {userStories.map((userStory) => (
+                <option key={userStory.id} value={userStory.id}>
+                  {getUserStoryFullName(userStory)}
                 </option>
               ))}
             </select>
             
             <button
               onClick={() => {
-                if (exigences.length > 0) {
-                  handleGenerateTests(exigences[0]);
+                if (userStories.length > 0) {
+                  handleGenerateTests(userStories[0]);
                 }
               }}
-              disabled={exigences.length === 0}
+              disabled={userStories.length === 0}
               className="btn btn-primary w-full"
             >
-              Générer des tests pour l'exigence sélectionnée
+              Générer des tests pour la USER STORY sélectionnée
             </button>
           </div>
         )}
       </div>
 
-      {/* Liste des exigences avec bouton de génération rapide */}
+      {/* Liste des USER STORIES avec bouton de génération rapide */}
       <div className="card p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4 text-[rgb(var(--secondary-rgb))]">
-          Liste des exigences
+          Liste des USER STORIES
         </h2>
-        {exigences.length === 0 ? (
+        {userStories.length === 0 ? (
           <p className="text-[rgba(var(--secondary-rgb),0.7)] italic">
-            Aucune exigence trouvée.
+            Aucune USER STORY trouvée.
           </p>
         ) : (
           <div className="table-container">
             <table className="table">
               <thead>
                 <tr>
-                  <th>Exigence</th>
+                  <th>USER STORY</th>
                   <th>Priorité</th>
                   <th>Statut</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {exigences.map((exigence) => (
-                  <tr key={exigence.id}>
+                {userStories.map((userStory) => (
+                  <tr key={userStory.id}>
                     <td>
-                      <div className="font-medium">{getExigenceFullName(exigence)}</div>
-                      {exigence.description && (
+                      <div className="font-medium">{getUserStoryFullName(userStory)}</div>
+                      {userStory.description && (
                         <div className="text-sm text-[rgba(var(--secondary-rgb),0.7)] truncate max-w-xs">
-                          {exigence.description.substring(0, 50)}{exigence.description.length > 50 ? '...' : ''}
+                          {userStory.description.substring(0, 50)}{userStory.description.length > 50 ? '...' : ''}
                         </div>
                       )}
                     </td>
                     <td>
-                      <span className={`badge ${exigence.priorite === 'Haute' ? 'badge-danger' : exigence.priorite === 'Moyenne' ? 'badge-warning' : 'badge-secondary'}`}>
-                        {exigence.priorite}
+                      <span className={`badge ${userStory.priorite === 'Haute' ? 'badge-danger' : userStory.priorite === 'Moyenne' ? 'badge-warning' : 'badge-secondary'}`}>
+                        {userStory.priorite}
                       </span>
                     </td>
                     <td>
-                      <span className={`badge ${exigence.statut === 'Terminé' ? 'badge-success' : exigence.statut === 'En cours' ? 'badge-warning' : 'badge-secondary'}`}>
-                        {exigence.statut}
+                      <span className={`badge ${userStory.statut === 'Terminé' ? 'badge-success' : userStory.statut === 'En cours' ? 'badge-warning' : 'badge-secondary'}`}>
+                        {userStory.statut}
                       </span>
                     </td>
                     <td>
                       <button
-                        onClick={() => handleGenerateTests(exigence)}
+                        onClick={() => handleGenerateTests(userStory)}
                         className="btn btn-primary text-sm"
                       >
                         Générer des tests
@@ -367,27 +367,27 @@ export default function TestsPage() {
       </div>
 
       {/* Modale d'affichage des tests générés */}
-      {showTestsModal && selectedExigence && (
+      {showTestsModal && selectedUserStory && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-[rgb(var(--card-rgb))] border border-[rgb(var(--card-border-rgb))] rounded-xl p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold text-[rgb(var(--primary-rgb))]">
-                🧪 Tests générés pour: {getExigenceFullName(selectedExigence)}
+                🧪 Tests générés pour: {getUserStoryFullName(selectedUserStory)}
               </h2>
               <button
                 onClick={() => setShowTestsModal(false)}
                 className="text-[rgb(var(--secondary-rgb))] hover:text-[rgb(var(--foreground-rgb))] text-2xl"
               >
-                &times;
+                ×
               </button>
             </div>
 
             <div className="mb-4">
-              <h3 className="font-medium text-[rgb(var(--secondary-rgb))] mb-2">Exigence source :</h3>
+              <h3 className="font-medium text-[rgb(var(--secondary-rgb))] mb-2">USER STORY source :</h3>
               <div className="bg-[rgba(var(--background-start-rgb),0.1)] p-4 rounded-lg">
-                <p className="font-medium text-[rgb(var(--foreground-rgb))]">{selectedExigence.titre}</p>
-                {selectedExigence.description && (
-                  <p className="text-[rgba(var(--secondary-rgb),0.8)] mt-2">{selectedExigence.description}</p>
+                <p className="font-medium text-[rgb(var(--foreground-rgb))]">{selectedUserStory.titre}</p>
+                {selectedUserStory.description && (
+                  <p className="text-[rgba(var(--secondary-rgb),0.8)] mt-2">{selectedUserStory.description}</p>
                 )}
               </div>
             </div>

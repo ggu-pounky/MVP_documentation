@@ -99,9 +99,9 @@ export function Sidebar() {
           {/* Sous-éléments de Produits */}
           <div className="pl-6 mt-1 space-y-1">
             <Link
-              href="/exigences"
+              href="/user-stories"
               className={`sidebar-link flex items-center gap-3 text-sm ${
-                isActive('/exigences') ? 'active' : ''
+                isActive('/user-stories') ? 'active' : ''
               }`}
             >
               <svg
@@ -118,7 +118,7 @@ export function Sidebar() {
                   d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
                 />
               </svg>
-              <span>Exigences</span>
+              <span>USERStories</span>
             </Link>
             <Link
               href="/produits/developpement"
@@ -174,9 +174,9 @@ export function Sidebar() {
             </p>
             <div className="pl-6 mt-1 space-y-1">
               <Link
-                href="/produits/matrice-exigences"
+                href="/produits/matrice-user-stories"
                 className={`sidebar-link flex items-center gap-3 text-xs ${
-                  isActive('/produits/matrice-exigences') ? 'active' : ''
+                  isActive('/produits/matrice-user-stories') ? 'active' : ''
                 }`}
               >
                 <svg
@@ -193,7 +193,7 @@ export function Sidebar() {
                     d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
                   />
                 </svg>
-                <span>EXIGENCES</span>
+                <span>USERSTORIES</span>
               </Link>
               <Link
                 href="/produits/matrice-tests"

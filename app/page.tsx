@@ -4,18 +4,18 @@ import Link from 'next/link';
 export default async function Home() {
   const supabase = getSupabaseClient();
 
-  // Récupérer les Besoins, FEATURES et Exigences depuis Supabase
-  const { data: epics, error: epicsError } = await supabase
+  // Récupérer les Besoins, EPICS et USER STORIES depuis Supabase
+  const { data: besoins, error: besoinsError } = await supabase
     .from('epics')
     .select('*')
     .order('date_creation', { ascending: false });
 
-  const { data: features, error: featuresError } = await supabase
-    .from('features')
+  const { data: epics, error: epicsError } = await supabase
+    .from('epics')
     .select('*');
 
-  const { data: exigences, error: exigencesError } = await supabase
-    .from('exigences')
+  const { data: userStories, error: userStoriesError } = await supabase
+    .from('user_stories')
     .select('*')
     .order('created_at', { ascending: false });
 
@@ -23,20 +23,20 @@ export default async function Home() {
     .from('parameters')
     .select('*');
 
-  if (epicsError || featuresError || exigencesError || parametersError) {
+  if (besoinsError || epicsError || userStoriesError || parametersError) {
     return (
       <div className="min-h-screen p-8 flex flex-col items-center justify-center bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))]">
         <div className="text-red-500 text-xl mb-4">
-          Erreur : {epicsError?.message || featuresError?.message || exigencesError?.message || parametersError?.message}
+          Erreur : {besoinsError?.message || epicsError?.message || userStoriesError?.message || parametersError?.message}
         </div>
       </div>
     );
   }
 
   // Compter les éléments
+  const besoinCount = besoins?.length || 0;
   const epicCount = epics?.length || 0;
-  const featureCount = features?.length || 0;
-  const userStoryCount = exigences?.length || 0;
+  const userStoryCount = userStories?.length || 0;
   const parameterCount = parameters?.length || 0;
 
   return (
@@ -47,7 +47,7 @@ export default async function Home() {
           Bienvenue dans Gestion Agile
         </h1>
         <p className="text-[rgba(var(--secondary-rgb),0.7)]">
-          Gérez vos projets avec la méthodologie Agile : Besoins, FEATURES et Exigences.
+          Gérez vos projets avec la méthodologie Agile : Besoins, EPICS et USER STORIES.
         </p>
       </div>
 
@@ -73,7 +73,7 @@ export default async function Home() {
               </svg>
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-[rgb(var(--foreground-rgb))]">{epicCount}</h3>
+              <h3 className="text-2xl font-bold text-[rgb(var(--foreground-rgb))]">{besoinCount}</h3>
               <p className="text-[rgba(var(--secondary-rgb),0.7)]">Besoins</p>
             </div>
           </div>
@@ -85,7 +85,7 @@ export default async function Home() {
           </Link>
         </div>
 
-        {/* Carte FEATURES */}
+        {/* Carte EPICS */}
         <div className="card p-6">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-12 h-12 bg-[rgba(var(--accent-rgb),0.1)] rounded-lg flex items-center justify-center">
@@ -105,19 +105,19 @@ export default async function Home() {
               </svg>
             </div>
             <div>
-              <h3 className="text-2xl font-bold text-[rgb(var(--foreground-rgb))]">{featureCount}</h3>
-              <p className="text-[rgba(var(--secondary-rgb),0.7)]">FEATURES</p>
+              <h3 className="text-2xl font-bold text-[rgb(var(--foreground-rgb))]">{epicCount}</h3>
+              <p className="text-[rgba(var(--secondary-rgb),0.7)]">EPICS</p>
             </div>
           </div>
           <Link
             href="/epics"
             className="btn btn-primary text-sm"
           >
-            Voir les FEATURES
+            Voir les EPICS
           </Link>
         </div>
 
-        {/* Carte Exigences */}
+        {/* Carte USER STORIES */}
         <div className="card p-6">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-12 h-12 bg-[rgba(var(--warning-rgb),0.1)] rounded-lg flex items-center justify-center">
@@ -138,14 +138,14 @@ export default async function Home() {
             </div>
             <div>
               <h3 className="text-2xl font-bold text-[rgb(var(--foreground-rgb))]">{userStoryCount}</h3>
-              <p className="text-[rgba(var(--secondary-rgb),0.7)]">Exigences</p>
+              <p className="text-[rgba(var(--secondary-rgb),0.7)]">USER STORIES</p>
             </div>
           </div>
           <Link
-            href="/exigences"
+            href="/user-stories"
             className="btn btn-primary text-sm"
           >
-            Voir les Exigences
+            Voir les USER STORIES
           </Link>
         </div>
 
@@ -189,7 +189,7 @@ export default async function Home() {
       </div>
 
       {/* Section Derniers Besoins */}
-      {epicCount > 0 && (
+      {besoinCount > 0 && (
         <div className="card p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-[rgb(var(--secondary-rgb))]">
@@ -203,14 +203,14 @@ export default async function Home() {
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {epics?.slice(0, 3).map((epic) => {
-              const featuresForEpic = features?.filter(f => f.epic_id === epic.id) || [];
-              const userStoriesForEpic = exigences?.filter(ex => 
-                featuresForEpic.some(f => f.id === ex.feature_id)
+            {besoins?.slice(0, 3).map((besoin) => {
+              const epicsForBesoin = epics?.filter(e => e.besoin_id === besoin.id) || [];
+              const userStoriesForBesoin = userStories?.filter(us => 
+                epicsForBesoin.some(e => e.id === us.epic_id)
               ) || [];
               
               return (
-                <div key={epic.id} className="card p-4">
+                <div key={besoin.id} className="card p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -226,23 +226,23 @@ export default async function Home() {
                         d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
                       />
                     </svg>
-                    <h3 className="font-semibold text-[rgb(var(--foreground-rgb))]">{epic.titre}</h3>
+                    <h3 className="font-semibold text-[rgb(var(--foreground-rgb))]">{besoin.titre}</h3>
                   </div>
                   <p className="text-sm text-[rgba(var(--secondary-rgb),0.7)] mb-3">
-                    {epic.description.length > 100 
-                      ? `${epic.description.substring(0, 100)}...` 
-                      : epic.description}
+                    {besoin.description.length > 100 
+                      ? `${besoin.description.substring(0, 100)}...` 
+                      : besoin.description}
                   </p>
                   <div className="flex items-center gap-4 text-xs">
-                    <span className="badge badge-primary">{featuresForEpic.length} FEATURES</span>
-                    <span className="badge badge-success">{userStoriesForEpic.length} Exigences</span>
-                    <span className={`badge ${epic.priorite === 'Haute' ? 'badge-danger' : epic.priorite === 'Moyenne' ? 'badge-warning' : 'badge-secondary'}`}>
-                      {epic.priorite}
+                    <span className="badge badge-primary">{epicsForBesoin.length} EPICS</span>
+                    <span className="badge badge-success">{userStoriesForBesoin.length} USER STORIES</span>
+                    <span className={`badge ${besoin.priorite === 'Haute' ? 'badge-danger' : besoin.priorite === 'Moyenne' ? 'badge-warning' : 'badge-secondary'}`}>
+                      {besoin.priorite}
                     </span>
                   </div>
                   <div className="mt-3">
                     <Link
-                      href={`/epics#${epic.id}`}
+                      href={`/epics#${besoin.id}`}
                       className="btn btn-secondary text-xs w-full"
                     >
                       Voir les détails
@@ -255,18 +255,18 @@ export default async function Home() {
         </div>
       )}
 
-      {/* Section Dernières Exigences */}
+      {/* Section Dernières USER STORIES */}
       {userStoryCount > 0 && (
         <div className="card p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-[rgb(var(--secondary-rgb))]">
-              Dernières Exigences
+              Dernières USER STORIES
             </h2>
             <Link
-              href="/exigences"
+              href="/user-stories"
               className="btn btn-primary text-sm"
             >
-              Voir toutes les Exigences
+              Voir toutes les USER STORIES
             </Link>
           </div>
           <div className="table-container">
@@ -274,48 +274,48 @@ export default async function Home() {
               <thead>
                 <tr>
                   <th>Titre</th>
-                  <th>FEATURE</th>
+                  <th>EPIC</th>
                   <th>Priorité</th>
                   <th>Statut</th>
                 </tr>
               </thead>
               <tbody>
-                {exigences?.slice(0, 5).map((exigence) => {
-                  const feature = features?.find(f => f.id === exigence.feature_id);
-                  const epic = feature ? epics?.find(e => e.id === feature.epic_id) : null;
+                {userStories?.slice(0, 5).map((userStory) => {
+                  const epic = epics?.find(e => e.id === userStory.epic_id);
+                  const besoin = epic ? besoins?.find(b => b.id === epic.besoin_id) : null;
                   
                   return (
-                    <tr key={exigence.id}>
+                    <tr key={userStory.id}>
                       <td>
                         <Link
-                          href={`/exigences/${exigence.id}`}
+                          href={`/user-stories/${userStory.id}`}
                           className="link"
                         >
-                          {exigence.titre.length > 50 
-                            ? `${exigence.titre.substring(0, 50)}...` 
-                            : exigence.titre}
+                          {userStory.titre.length > 50 
+                            ? `${userStory.titre.substring(0, 50)}...` 
+                            : userStory.titre}
                         </Link>
                       </td>
                       <td>
-                        {feature && epic ? (
+                        {epic && besoin ? (
                           <Link
-                            href={`/epics#${epic.id}`}
+                            href={`/epics#${besoin.id}`}
                             className="link"
                           >
-                            {epic.titre} → {feature.titre}
+                            {besoin.titre} → {epic.titre}
                           </Link>
                         ) : (
-                          <span className="text-[rgba(var(--secondary-rgb),0.5)]">Aucune</span>
+                          <span className="text-[rgba(var(--secondary-rgb),0.5)]">Aucun</span>
                         )}
                       </td>
                       <td>
-                        <span className={`badge ${exigence.priorite === 'Haute' ? 'badge-danger' : exigence.priorite === 'Moyenne' ? 'badge-warning' : 'badge-secondary'}`}>
-                          {exigence.priorite}
+                        <span className={`badge ${userStory.priorite === 'Haute' ? 'badge-danger' : userStory.priorite === 'Moyenne' ? 'badge-warning' : 'badge-secondary'}`}>
+                          {userStory.priorite}
                         </span>
                       </td>
                       <td>
-                        <span className={`badge ${exigence.statut === 'Terminé' ? 'badge-success' : exigence.statut === 'En cours' ? 'badge-warning' : 'badge-secondary'}`}>
-                          {exigence.statut}
+                        <span className={`badge ${userStory.statut === 'Terminé' ? 'badge-success' : userStory.statut === 'En cours' ? 'badge-warning' : 'badge-secondary'}`}>
+                          {userStory.statut}
                         </span>
                       </td>
                     </tr>

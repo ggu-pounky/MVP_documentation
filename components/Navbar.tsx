@@ -49,10 +49,10 @@ export function Navbar() {
               Besoins
             </Link>
             <Link
-              href="/exigences"
+              href="/user-stories"
               className="text-[rgb(var(--foreground-rgb))] hover:text-[rgb(var(--primary-rgb))] transition-colors font-medium"
             >
-              User Stories
+              USER STORIES
             </Link>
             <Link
               href="/parameters"

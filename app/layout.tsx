@@ -8,7 +8,7 @@ import { Sidebar } from '@/components/Sidebar';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Gestion Agile - EPICs, FEATURES & User Stories',
+  title: 'Gestion Agile - Besoins, EPICs & USER STORIES',
   description: 'Application de gestion de projet Agile avec Next.js et Supabase',
 };
 
