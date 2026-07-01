@@ -4,35 +4,90 @@ import Link from 'next/link';
 export default async function Home() {
   const supabase = getSupabaseClient();
 
-  // Récupérer les Besoins, EPICS et USER STORIES depuis Supabase
-  const { data: besoins, error: besoinsError } = await supabase
-    .from('epics')
-    .select('*')
-    .order('date_creation', { ascending: false });
+  try {
+    // Try the new table structure first
+    const { data: besoins, error: besoinsError } = await supabase
+      .from('besoins')
+      .select('*')
+      .order('date_creation', { ascending: false });
 
-  const { data: epics, error: epicsError } = await supabase
-    .from('epics')
-    .select('*');
+    const { data: epics, error: epicsError } = await supabase
+      .from('epics')
+      .select('*');
 
-  const { data: userStories, error: userStoriesError } = await supabase
-    .from('user_stories')
-    .select('*')
-    .order('created_at', { ascending: false });
+    const { data: userStories, error: userStoriesError } = await supabase
+      .from('user_stories')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-  const { data: parameters, error: parametersError } = await supabase
-    .from('parameters')
-    .select('*');
+    const { data: parameters, error: parametersError } = await supabase
+      .from('parameters')
+      .select('*');
 
-  if (besoinsError || epicsError || userStoriesError || parametersError) {
+    if (!besoinsError && !epicsError && !userStoriesError && !parametersError) {
+      // New table structure is working
+      return renderHomePage(besoins || [], epics || [], userStories || [], parameters || []);
+    }
+  } catch (e) {
+    console.log('New table structure not available, trying old structure...');
+  }
+
+  // Fallback to old table structure
+  try {
+    const { data: besoins, error: besoinsError } = await supabase
+      .from('epics')
+      .select('*')
+      .order('date_creation', { ascending: false });
+
+    const { data: features, error: featuresError } = await supabase
+      .from('features')
+      .select('*');
+
+    const { data: exigences, error: exigencesError } = await supabase
+      .from('exigences')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    const { data: parameters, error: parametersError } = await supabase
+      .from('parameters')
+      .select('*');
+
+    if (besoinsError || featuresError || exigencesError || parametersError) {
+      return (
+        <div className="min-h-screen p-8 flex flex-col items-center justify-center bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))]">
+          <div className="text-red-500 text-xl mb-4">
+            Erreur : {besoinsError?.message || featuresError?.message || exigencesError?.message || parametersError?.message}
+          </div>
+          <p className="text-[rgba(var(--secondary-rgb),0.7)] mt-4">
+            Veuillez exécuter le script SQL de migration pour créer les tables nécessaires.
+          </p>
+        </div>
+      );
+    }
+
+    // Convert old data to new format for rendering
+    const convertedBesoins = besoins || [];
+    const convertedEpics = features || [];
+    const convertedUserStories = exigences || [];
+    const convertedParameters = parameters || [];
+
+    return renderHomePage(convertedBesoins, convertedEpics, convertedUserStories, convertedParameters, true);
+
+  } catch (e) {
     return (
       <div className="min-h-screen p-8 flex flex-col items-center justify-center bg-[rgb(var(--background-start-rgb))] text-[rgb(var(--foreground-rgb))]">
         <div className="text-red-500 text-xl mb-4">
-          Erreur : {besoinsError?.message || epicsError?.message || userStoriesError?.message || parametersError?.message}
+          Erreur de connexion à la base de données
         </div>
+        <p className="text-[rgba(var(--secondary-rgb),0.7)] mt-4">
+          Veuillez vérifier votre configuration Supabase.
+        </p>
       </div>
     );
   }
+}
 
+function renderHomePage(besoins: any[], epics: any[], userStories: any[], parameters: any[], useOldStructure: boolean = false) {
   // Compter les éléments
   const besoinCount = besoins?.length || 0;
   const epicCount = epics?.length || 0;
@@ -49,6 +104,16 @@ export default async function Home() {
         <p className="text-[rgba(var(--secondary-rgb),0.7)]">
           Gérez vos projets avec la méthodologie Agile : Besoins, EPICS et USER STORIES.
         </p>
+        {useOldStructure && (
+          <div className="mt-4 p-4 bg-[rgba(var(--warning-rgb),0.1)] border border-[rgb(var(--warning-rgb))] rounded-lg">
+            <p className="text-sm text-[rgb(var(--warning-rgb))]">
+              ⚠️ Vous utilisez l'ancienne structure de base de données. 
+              <Link href="/sql/003_final_schema.sql" className="text-[rgb(var(--primary-rgb))] underline">
+                Exécutez ce script SQL
+              </Link> pour migrer vers la nouvelle structure.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Statistiques */}
@@ -204,10 +269,18 @@ export default async function Home() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {besoins?.slice(0, 3).map((besoin) => {
-              const epicsForBesoin = epics?.filter(e => e.besoin_id === besoin.id) || [];
-              const userStoriesForBesoin = userStories?.filter(us => 
-                epicsForBesoin.some(e => e.id === us.epic_id)
-              ) || [];
+              // For old structure, epics are actually features
+              const epicsForBesoin = useOldStructure 
+                ? epics?.filter((e: any) => e.epic_id === besoin.id) || []
+                : epics?.filter((e: any) => e.besoin_id === besoin.id) || [];
+              
+              const userStoriesForBesoin = useOldStructure
+                ? userStories?.filter((us: any) => 
+                    epicsForBesoin.some((e: any) => e.id === us.feature_id)
+                  ) || []
+                : userStories?.filter((us: any) => 
+                    epicsForBesoin.some((e: any) => e.id === us.epic_id)
+                  ) || [];
               
               return (
                 <div key={besoin.id} className="card p-4">
@@ -281,8 +354,13 @@ export default async function Home() {
               </thead>
               <tbody>
                 {userStories?.slice(0, 5).map((userStory) => {
-                  const epic = epics?.find(e => e.id === userStory.epic_id);
-                  const besoin = epic ? besoins?.find(b => b.id === epic.besoin_id) : null;
+                  const epic = useOldStructure
+                    ? epics?.find((e: any) => e.id === userStory.feature_id)
+                    : epics?.find((e: any) => e.id === userStory.epic_id);
+                  
+                  const besoin = epic ? besoins?.find((b: any) => 
+                    useOldStructure ? b.id === epic.epic_id : b.id === epic.besoin_id
+                  ) : null;
                   
                   return (
                     <tr key={userStory.id}>

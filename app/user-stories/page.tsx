@@ -137,39 +137,79 @@ export default function UserStoriesPage() {
       setLoading(true);
       setError(null);
 
-      // Récupérer les USER STORIES
-      const { data: userStoriesData, error: userStoriesError } = await supabase
+      // Try the new 'user_stories' table first
+      let userStoriesData: UserStory[] = [];
+      let userStoriesError = null;
+      
+      const { data: userStoriesNew, error: userStoriesNewError } = await supabase
         .from('user_stories')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (userStoriesError) {
-        console.error('Erreur Supabase (user_stories):', userStoriesError);
-        throw new Error(`Erreur Supabase: ${userStoriesError.message}`);
+      if (userStoriesNewError) {
+        console.log('user_stories table not found, trying exigences...');
+        // Fallback: try the old 'exigences' table
+        const { data: userStoriesOld, error: userStoriesOldError } = await supabase
+          .from('exigences')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (userStoriesOldError) {
+          throw new Error(`Erreur Supabase: ${userStoriesOldError.message}`);
+        }
+        userStoriesData = userStoriesOld || [];
+      } else {
+        userStoriesData = userStoriesNew || [];
       }
-      setUserStories(userStoriesData || []);
+      setUserStories(userStoriesData);
 
-      // Récupérer les EPICS
-      const { data: epicsData, error: epicsError } = await supabase
+      // Try the new 'epics' table
+      let epicsData: Epic[] = [];
+      let epicsError = null;
+      
+      const { data: epicsNew, error: epicsNewError } = await supabase
         .from('epics')
         .select('id, titre, besoin_id');
 
-      if (epicsError) {
-        console.error('Erreur Supabase (EPICS):', epicsError);
-        throw new Error(`Erreur Supabase: ${epicsError.message}`);
+      if (epicsNewError) {
+        console.log('epics table not found, trying features...');
+        // Fallback: try the old 'features' table
+        const { data: epicsOld, error: epicsOldError } = await supabase
+          .from('features')
+          .select('id, titre, epic_id as besoin_id');
+        
+        if (epicsOldError) {
+          throw new Error(`Erreur Supabase: ${epicsOldError.message}`);
+        }
+        epicsData = epicsOld || [];
+      } else {
+        epicsData = epicsNew || [];
       }
-      setEpics(epicsData || []);
+      setEpics(epicsData);
 
-      // Récupérer les besoins
-      const { data: besoinsData, error: besoinsError } = await supabase
-        .from('epics')
+      // Try the new 'besoins' table first
+      let besoinsData: Besoin[] = [];
+      let besoinsError = null;
+      
+      const { data: besoinsNew, error: besoinsNewError } = await supabase
+        .from('besoins')
         .select('id, titre');
 
-      if (besoinsError) {
-        console.error('Erreur Supabase (besoins):', besoinsError);
-        throw new Error(`Erreur Supabase: ${besoinsError.message}`);
+      if (besoinsNewError) {
+        console.log('besoins table not found, trying epics...');
+        // Fallback: try the old 'epics' table (which was used for besoins)
+        const { data: besoinsOld, error: besoinsOldError } = await supabase
+          .from('epics')
+          .select('id, titre');
+        
+        if (besoinsOldError) {
+          throw new Error(`Erreur Supabase: ${besoinsOldError.message}`);
+        }
+        besoinsData = besoinsOld || [];
+      } else {
+        besoinsData = besoinsNew || [];
       }
-      setBesoins(besoinsData || []);
+      setBesoins(besoinsData);
 
     } catch (err) {
       console.error('Erreur lors de la récupération des données:', err);
@@ -199,10 +239,36 @@ export default function UserStoriesPage() {
         epic_id: newUserStory.epic_id,
       };
 
-      const { data, error } = await supabase
+      // Try the new 'user_stories' table first
+      let data, error;
+      const { data: newData, error: newError } = await supabase
         .from('user_stories')
         .insert([userStoryToInsert])
         .select();
+
+      if (newError) {
+        console.log('user_stories table not found, trying exigences...');
+        // Fallback: try the old 'exigences' table
+        const { data: oldData, error: oldError } = await supabase
+          .from('exigences')
+          .insert([{
+            titre: userStoryToInsert.titre,
+            description: userStoryToInsert.description,
+            priorite: userStoryToInsert.priorite,
+            statut: userStoryToInsert.statut,
+            feature_id: userStoryToInsert.epic_id,
+          }])
+          .select();
+        
+        if (oldError) {
+          throw new Error(`Erreur Supabase: ${oldError.message}`);
+        }
+        data = oldData;
+        error = oldError;
+      } else {
+        data = newData;
+        error = newError;
+      }
 
       if (error) {
         console.error('Erreur Supabase:', error);
@@ -232,11 +298,32 @@ export default function UserStoriesPage() {
       setLoading(true);
       setError(null);
 
-      const { data, error } = await supabase
+      // Try the new 'user_stories' table first
+      let data, error;
+      const { data: newData, error: newError } = await supabase
         .from('user_stories')
         .update(updatedData)
         .eq('id', id)
         .select();
+
+      if (newError) {
+        console.log('user_stories table not found, trying exigences...');
+        // Fallback: try the old 'exigences' table
+        const { data: oldData, error: oldError } = await supabase
+          .from('exigences')
+          .update(updatedData)
+          .eq('id', id)
+          .select();
+        
+        if (oldError) {
+          throw new Error(`Erreur Supabase: ${oldError.message}`);
+        }
+        data = oldData;
+        error = oldError;
+      } else {
+        data = newData;
+        error = newError;
+      }
 
       if (error) {
         console.error('Erreur Supabase:', error);
@@ -265,10 +352,25 @@ export default function UserStoriesPage() {
       setLoading(true);
       setError(null);
 
-      const { error } = await supabase
+      // Try the new 'user_stories' table first
+      let error;
+      const { error: newError } = await supabase
         .from('user_stories')
         .delete()
         .eq('id', id);
+
+      if (newError) {
+        console.log('user_stories table not found, trying exigences...');
+        // Fallback: try the old 'exigences' table
+        const { error: oldError } = await supabase
+          .from('exigences')
+          .delete()
+          .eq('id', id);
+        
+        error = oldError;
+      } else {
+        error = newError;
+      }
 
       if (error) {
         console.error('Erreur Supabase:', error);
@@ -301,13 +403,32 @@ export default function UserStoriesPage() {
 
     try {
       setLoading(true);
-      const { error } = await supabase
+      
+      // Try the new 'user_stories' table first
+      let error;
+      const { error: newError } = await supabase
         .from('user_stories')
         .update({
           titre: improvementSuggestions.titre,
           description: improvementSuggestions.description,
         })
         .eq('id', selectedUserStoryForImprovement.id);
+
+      if (newError) {
+        console.log('user_stories table not found, trying exigences...');
+        // Fallback: try the old 'exigences' table
+        const { error: oldError } = await supabase
+          .from('exigences')
+          .update({
+            titre: improvementSuggestions.titre,
+            description: improvementSuggestions.description,
+          })
+          .eq('id', selectedUserStoryForImprovement.id);
+        
+        error = oldError;
+      } else {
+        error = newError;
+      }
 
       if (error) {
         console.error('Erreur Supabase:', error);
@@ -365,14 +486,41 @@ export default function UserStoriesPage() {
           epic_id: newUserStory.epic_id,
         };
 
-        const { data, error } = await supabase
+        // Try the new 'user_stories' table first
+        let data, error;
+        const { data: newData, error: newError } = await supabase
           .from('user_stories')
           .insert([userStoryToInsert])
           .select();
 
+        if (newError) {
+          console.log('user_stories table not found, trying exigences...');
+          // Fallback: try the old 'exigences' table
+          const { data: oldData, error: oldError } = await supabase
+            .from('exigences')
+            .insert([{
+              titre: userStoryToInsert.titre,
+              description: userStoryToInsert.description,
+              priorite: userStoryToInsert.priorite,
+              statut: userStoryToInsert.statut,
+              feature_id: userStoryToInsert.epic_id,
+            }])
+            .select();
+          
+          if (oldError) {
+            console.error('Erreur Supabase:', oldError);
+            continue; // Skip this suggestion and continue with others
+          }
+          data = oldData;
+          error = oldError;
+        } else {
+          data = newData;
+          error = newError;
+        }
+
         if (error) {
           console.error('Erreur Supabase:', error);
-          throw new Error(`Erreur Supabase: ${error.message}`);
+          continue;
         }
 
         if (data && data.length > 0) {

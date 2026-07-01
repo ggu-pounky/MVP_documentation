@@ -18,7 +18,6 @@ type Epic = {
   id: string;
   titre: string;
   description: string;
-  parent_epic_id: string | null;
   besoin_id: string;
   priorite: string;
   statut: string;
@@ -67,19 +66,29 @@ export default function BesoinsPage() {
       setLoading(true);
       setError(null);
 
-      // Récupérer les besoins
+      // Récupérer les besoins depuis la table 'besoins'
       const { data: besoinsData, error: besoinsError } = await supabase
-        .from('epics')
+        .from('besoins')
         .select('*')
         .order('date_creation', { ascending: false });
 
       if (besoinsError) {
         console.error('Erreur Supabase (besoins):', besoinsError);
-        throw new Error(`Erreur Supabase: ${besoinsError.message}`);
+        // Fallback: try the old 'epics' table
+        const { data: besoinsDataFallback, error: besoinsErrorFallback } = await supabase
+          .from('epics')
+          .select('*')
+          .order('date_creation', { ascending: false });
+        
+        if (besoinsErrorFallback) {
+          throw new Error(`Erreur Supabase: ${besoinsError.message}`);
+        }
+        setBesoins(besoinsDataFallback || []);
+      } else {
+        setBesoins(besoinsData || []);
       }
-      setBesoins(besoinsData || []);
 
-      // Récupérer les EPICS
+      // Récupérer les EPICS depuis la table 'epics'
       const { data: epicsData, error: epicsError } = await supabase
         .from('epics')
         .select('*');
@@ -90,16 +99,25 @@ export default function BesoinsPage() {
       }
       setEpics(epicsData || []);
 
-      // Récupérer les USER STORIES
+      // Récupérer les USER STORIES depuis la table 'user_stories'
       const { data: userStoriesData, error: userStoriesError } = await supabase
         .from('user_stories')
         .select('id, titre, epic_id');
 
       if (userStoriesError) {
         console.error('Erreur Supabase (user_stories):', userStoriesError);
-        throw new Error(`Erreur Supabase: ${userStoriesError.message}`);
+        // Fallback: try the old 'exigences' table
+        const { data: userStoriesDataFallback, error: userStoriesErrorFallback } = await supabase
+          .from('exigences')
+          .select('id, titre, feature_id as epic_id');
+        
+        if (userStoriesErrorFallback) {
+          throw new Error(`Erreur Supabase: ${userStoriesError.message}`);
+        }
+        setUserStories(userStoriesDataFallback || []);
+      } else {
+        setUserStories(userStoriesData || []);
       }
-      setUserStories(userStoriesData || []);
 
     } catch (err) {
       console.error('Erreur lors de la récupération des données:', err);
@@ -121,8 +139,9 @@ export default function BesoinsPage() {
         throw new Error('Le titre est obligatoire');
       }
 
+      // Try the new 'besoins' table first
       const { data, error } = await supabase
-        .from('epics')
+        .from('besoins')
         .insert([{
           titre: newBesoin.titre,
           description: newBesoin.description,
@@ -133,15 +152,36 @@ export default function BesoinsPage() {
         .select();
 
       if (error) {
-        console.error('Erreur Supabase:', error);
-        throw new Error(`Erreur Supabase: ${error.message}`);
+        console.error('Erreur Supabase (besoins):', error);
+        // Fallback: try the old 'epics' table
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('epics')
+          .insert([{
+            titre: newBesoin.titre,
+            description: newBesoin.description,
+            priorite: newBesoin.priorite,
+            statut: newBesoin.statut,
+            createur: newBesoin.createur,
+          }])
+          .select();
+        
+        if (fallbackError) {
+          throw new Error(`Erreur Supabase: ${fallbackError.message}`);
+        }
+        
+        if (!fallbackData || fallbackData.length === 0) {
+          throw new Error('Aucune donnée retournée après insertion');
+        }
+        
+        setBesoins([...besoins, fallbackData[0]]);
+      } else {
+        if (!data || data.length === 0) {
+          throw new Error('Aucune donnée retournée après insertion');
+        }
+        
+        setBesoins([...besoins, data[0]]);
       }
-
-      if (!data || data.length === 0) {
-        throw new Error('Aucune donnée retournée après insertion');
-      }
-
-      setBesoins([...besoins, data[0]]);
+      
       setNewBesoin({ titre: '', description: '', priorite: 'Moyenne', statut: 'À faire', createur: '' });
       setSuccess('Besoin ajouté avec succès !');
       setTimeout(() => setSuccess(null), 3000);
@@ -175,7 +215,6 @@ export default function BesoinsPage() {
         .insert([{
           titre: newEpic.titre,
           description: newEpic.description,
-          parent_epic_id: null,
           besoin_id: newEpic.besoin_id,
           priorite: newEpic.priorite,
           statut: newEpic.statut,
@@ -225,14 +264,23 @@ export default function BesoinsPage() {
         throw new Error('Impossible de supprimer ce besoin : des EPICS y sont associés. Supprimez d\'abord les EPICS liés.');
       }
 
+      // Try the new 'besoins' table first
       const { error } = await supabase
-        .from('epics')
+        .from('besoins')
         .delete()
         .eq('id', id);
 
       if (error) {
-        console.error('Erreur Supabase:', error);
-        throw new Error(`Erreur Supabase: ${error.message}`);
+        console.error('Erreur Supabase (besoins):', error);
+        // Fallback: try the old 'epics' table
+        const { error: fallbackError } = await supabase
+          .from('epics')
+          .delete()
+          .eq('id', id);
+        
+        if (fallbackError) {
+          throw new Error(`Erreur Supabase: ${fallbackError.message}`);
+        }
       }
 
       setBesoins(besoins.filter(b => b.id !== id));
@@ -261,11 +309,23 @@ export default function BesoinsPage() {
 
       if (checkError) {
         console.error('Erreur lors de la vérification des USER STORIES associés:', checkError);
-        throw new Error(`Erreur Supabase: ${checkError.message}`);
-      }
-
-      if (associatedUserStories && associatedUserStories.length > 0) {
-        throw new Error('Impossible de supprimer cet EPIC : des USER STORIES y sont associés. Supprimez d\'abord les USER STORIES liés.');
+        // Fallback: try the old 'exigences' table
+        const { data: associatedUserStoriesFallback, error: checkErrorFallback } = await supabase
+          .from('exigences')
+          .select('id')
+          .eq('feature_id', id);
+        
+        if (checkErrorFallback) {
+          throw new Error(`Erreur Supabase: ${checkError.message}`);
+        }
+        
+        if (associatedUserStoriesFallback && associatedUserStoriesFallback.length > 0) {
+          throw new Error('Impossible de supprimer cet EPIC : des USER STORIES y sont associés. Supprimez d\'abord les USER STORIES liés.');
+        }
+      } else {
+        if (associatedUserStories && associatedUserStories.length > 0) {
+          throw new Error('Impossible de supprimer cet EPIC : des USER STORIES y sont associés. Supprimez d\'abord les USER STORIES liés.');
+        }
       }
 
       const { error } = await supabase
