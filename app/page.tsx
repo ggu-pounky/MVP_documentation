@@ -6,7 +6,13 @@ import Link from 'next/link';
 
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [data, setData] = useState({
+  const [data, setData] = useState<{
+    besoins: any[],
+    epics: any[],
+    userStories: any[],
+    parameters: any[],
+    useOldStructure: boolean
+  }>({
     besoins: [],
     epics: [],
     userStories: [],
