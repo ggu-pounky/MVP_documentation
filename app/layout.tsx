@@ -4,6 +4,7 @@ import './globals.css';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { Navbar } from '@/components/Navbar';
 import { Sidebar } from '@/components/Sidebar';
+import { HamburgerButton } from '@/components/HamburgerButton';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -21,10 +22,11 @@ export default function RootLayout({
     <html lang="fr" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider>
+          <HamburgerButton />
           <Navbar />
           <div className="flex pt-16 min-h-screen">
             <Sidebar />
-            <main className="flex-1 ml-64 p-6 bg-[rgb(var(--background-start-rgb))]">
+            <main className="flex-1 main-content bg-[rgb(var(--background-start-rgb))]">
               {children}
             </main>
           </div>

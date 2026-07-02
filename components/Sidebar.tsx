@@ -12,19 +12,39 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="fixed left-0 top-16 bottom-0 w-72 sidebar z-40 overflow-y-auto">
+    <aside className="sidebar">
       <div className="p-4">
+        {/* Logo */}
+        <div className="logo">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="logo-icon"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+            />
+          </svg>
+          <span>Gestion Agile</span>
+        </div>
+
+        {/* Séparation */}
+        <div className="border-t border-[rgb(var(--card-border-rgb))] my-2" />
+
         {/* Accueil */}
         <div className="mb-4">
           <Link
             href="/"
-            className={`sidebar-link flex items-center gap-3 ${
-              isActive('/') ? 'active' : ''
-            }`}
+            className={`nav-item ${isActive('/') ? 'active' : ''}`}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 flex-shrink-0"
+              className="nav-item-icon"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -47,13 +67,11 @@ export function Sidebar() {
         <div className="mb-4">
           <Link
             href="/epics"
-            className={`sidebar-link flex items-center gap-3 ${
-              isActive('/epics') ? 'active' : ''
-            }`}
+            className={`nav-item ${isActive('/epics') ? 'active' : ''}`}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 flex-shrink-0"
+              className="nav-item-icon"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -76,13 +94,11 @@ export function Sidebar() {
         <div className="mb-4">
           <Link
             href="/produits"
-            className={`sidebar-link flex items-center gap-3 ${
-              isActive('/produits') ? 'active' : ''
-            }`}
+            className={`nav-item ${isActive('/produits') ? 'active' : ''}`}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 flex-shrink-0"
+              className="nav-item-icon"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -100,13 +116,11 @@ export function Sidebar() {
           <div className="pl-6 mt-1 space-y-1">
             <Link
               href="/user-stories"
-              className={`sidebar-link flex items-center gap-3 text-sm ${
-                isActive('/user-stories') ? 'active' : ''
-              }`}
+              className={`nav-item text-sm ${isActive('/user-stories') ? 'active' : ''}`}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 flex-shrink-0"
+                className="nav-item-icon h-4 w-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -122,13 +136,11 @@ export function Sidebar() {
             </Link>
             <Link
               href="/produits/developpement"
-              className={`sidebar-link flex items-center gap-3 text-sm ${
-                isActive('/produits/developpement') ? 'active' : ''
-              }`}
+              className={`nav-item text-sm ${isActive('/produits/developpement') ? 'active' : ''}`}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 flex-shrink-0"
+                className="nav-item-icon h-4 w-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -144,13 +156,11 @@ export function Sidebar() {
             </Link>
             <Link
               href="/produits/tests"
-              className={`sidebar-link flex items-center gap-3 text-sm ${
-                isActive('/produits/tests') ? 'active' : ''
-              }`}
+              className={`nav-item text-sm ${isActive('/produits/tests') ? 'active' : ''}`}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 flex-shrink-0"
+                className="nav-item-icon h-4 w-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -175,13 +185,11 @@ export function Sidebar() {
             <div className="pl-6 mt-1 space-y-1">
               <Link
                 href="/produits/matrice-user-stories"
-                className={`sidebar-link flex items-center gap-3 text-xs ${
-                  isActive('/produits/matrice-user-stories') ? 'active' : ''
-                }`}
+                className={`nav-item text-xs ${isActive('/produits/matrice-user-stories') ? 'active' : ''}`}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 flex-shrink-0"
+                  className="nav-item-icon h-4 w-4"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -197,13 +205,11 @@ export function Sidebar() {
               </Link>
               <Link
                 href="/produits/matrice-tests"
-                className={`sidebar-link flex items-center gap-3 text-xs ${
-                  isActive('/produits/matrice-tests') ? 'active' : ''
-                }`}
+                className={`nav-item text-xs ${isActive('/produits/matrice-tests') ? 'active' : ''}`}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 flex-shrink-0"
+                  className="nav-item-icon h-4 w-4"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -219,13 +225,11 @@ export function Sidebar() {
               </Link>
               <Link
                 href="/produits/matrice-code"
-                className={`sidebar-link flex items-center gap-3 text-xs ${
-                  isActive('/produits/matrice-code') ? 'active' : ''
-                }`}
+                className={`nav-item text-xs ${isActive('/produits/matrice-code') ? 'active' : ''}`}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 flex-shrink-0"
+                  className="nav-item-icon h-4 w-4"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -250,13 +254,11 @@ export function Sidebar() {
         <div className="mb-4">
           <Link
             href="/reversibilite"
-            className={`sidebar-link flex items-center gap-3 ${
-              isActive('/reversibilite') ? 'active' : ''
-            }`}
+            className={`nav-item ${isActive('/reversibilite') ? 'active' : ''}`}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 flex-shrink-0"
+              className="nav-item-icon"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -274,13 +276,11 @@ export function Sidebar() {
           <div className="pl-6 mt-1">
             <Link
               href="/reversibilite/prm"
-              className={`sidebar-link flex items-center gap-3 text-sm ${
-                isActive('/reversibilite/prm') ? 'active' : ''
-              }`}
+              className={`nav-item text-sm ${isActive('/reversibilite/prm') ? 'active' : ''}`}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 flex-shrink-0"
+                className="nav-item-icon h-4 w-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -289,7 +289,7 @@ export function Sidebar() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
               <span>PRM</span>
@@ -301,13 +301,11 @@ export function Sidebar() {
         <div className="mb-4">
           <Link
             href="/maintenance"
-            className={`sidebar-link flex items-center gap-3 ${
-              isActive('/maintenance') ? 'active' : ''
-            }`}
+            className={`nav-item ${isActive('/maintenance') ? 'active' : ''}`}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 flex-shrink-0"
+              className="nav-item-icon"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -325,13 +323,11 @@ export function Sidebar() {
           <div className="pl-6 mt-1">
             <Link
               href="/maintenance/analyse-impact"
-              className={`sidebar-link flex items-center gap-3 text-sm ${
-                isActive('/maintenance/analyse-impact') ? 'active' : ''
-              }`}
+              className={`nav-item text-sm ${isActive('/maintenance/analyse-impact') ? 'active' : ''}`}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 flex-shrink-0"
+                className="nav-item-icon h-4 w-4"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
