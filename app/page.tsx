@@ -3,21 +3,7 @@
 import { useState, useEffect } from 'react'
 import BesoinForm from '@/components/BesoinForm'
 import BesoinList from '@/components/BesoinList'
-
-type Besoin = {
-  id: string
-  titre: string
-  description: string | null
-  statut: string
-  created_at: string
-  updated_at: string
-}
-
-type BesoinFormData = {
-  titre: string
-  description: string | null
-  statut: string
-}
+import type { Besoin, BesoinFormData } from '@/types/besoin'
 
 export default function Home() {
   const [besoins, setBesoins] = useState<Besoin[]>([])

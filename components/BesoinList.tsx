@@ -1,13 +1,6 @@
 'use client'
 
-type Besoin = {
-  id: string
-  titre: string
-  description: string | null
-  statut: string
-  created_at: string
-  updated_at: string
-}
+import type { Besoin } from '@/types/besoin'
 
 type BesoinListProps = {
   besoins: Besoin[]
@@ -16,7 +9,7 @@ type BesoinListProps = {
 }
 
 export default function BesoinList({ besoins, onEdit, onDelete }: BesoinListProps) {
-  const getStatutColor = (statut: string) => {
+  const getStatutColor = (statut: string): string => {
     switch (statut) {
       case 'Terminé':
         return 'bg-green-100 text-green-800'

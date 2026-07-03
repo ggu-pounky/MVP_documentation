@@ -1,19 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-
-type Besoin = {
-  id: string
-  titre: string
-  description: string | null
-  statut: string
-  created_at: string
-  updated_at: string
-}
+import type { Besoin, BesoinFormData } from '@/types/besoin'
 
 type BesoinFormProps = {
   besoin?: Besoin | null
-  onSubmit: (data: { titre: string; description: string | null; statut: string; id?: string }) => Promise<void>
+  onSubmit: (data: BesoinFormData) => Promise<void>
   onCancel: () => void
 }
 
