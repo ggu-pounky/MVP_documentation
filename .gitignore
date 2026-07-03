@@ -2,10 +2,10 @@
 backend/__pycache__/
 backend/*.pyc
 
-# Frontend
-frontend/node_modules/
-frontend/.next/
-frontend/out/
+# Frontend (Next.js)
+/node_modules
+/.next/
+/out/
 
 # IDE
 .idea/
@@ -19,3 +19,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Build
+build/

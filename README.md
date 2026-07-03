@@ -12,16 +12,18 @@ MVP_documentation/
 │   ├── main.py          # Backend FastAPI avec données en mémoire
 │   └── requirements.txt # Dépendances Python
 │
-├── frontend/
-│   ├── app/
-│   │   └── page.tsx     # Page principale
-│   ├── components/
-│   │   ├── BesoinForm.tsx # Formulaire de création/modification
-│   │   └── BesoinList.tsx # Liste des besoins
-│   ├── package.json     # Dépendances Node.js
-│   ├── tsconfig.json    # Configuration TypeScript
-│   └── ...
+├── app/
+│   └── page.tsx         # Page principale Next.js
 │
+├── components/
+│   ├── BesoinForm.tsx   # Formulaire de création/modification
+│   └── BesoinList.tsx   # Liste des besoins
+│
+├── package.json         # Dépendances Node.js
+├── tsconfig.json        # Configuration TypeScript
+├── tailwind.config.js   # Configuration Tailwind CSS
+├── postcss.config.js    # Configuration PostCSS
+├── next.config.js       # Configuration Next.js
 ├── .gitignore           # Fichiers à ignorer
 └── README.md            # Documentation
 ```
@@ -69,17 +71,12 @@ MVP_documentation/
 
 ### 2️⃣ Frontend (Next.js)
 
-1. Accède au dossier `frontend` :
-   ```bash
-   cd frontend
-   ```
-
-2. Installe les dépendances :
+1. Installe les dépendances :
    ```bash
    npm install
    ```
 
-3. Lance le serveur de développement :
+2. Lance le serveur de développement :
    ```bash
    npm run dev
    ```
@@ -142,7 +139,7 @@ Le frontend utilise par défaut l'URL du backend : `http://localhost:8000`.
 
 Pour modifier cette URL (ex: en production), modifie directement dans le code :
 ```typescript
-// frontend/app/page.tsx
+// app/page.tsx
 const API_URL = 'http://ton-backend-url:8000/besoins'
 ```
 
@@ -150,13 +147,50 @@ const API_URL = 'http://ton-backend-url:8000/besoins'
 
 ## 📦 Déploiement
 
-### Backend
+### Déploiement complet sur Vercel
+
+Pour déployer **à la fois le frontend et le backend** sur Vercel :
+
+1. **Crée un fichier `vercel.json`** à la racine :
+   ```json
+   {
+     "version": 2,
+     "builds": [
+       {
+         "src": "backend/main.py",
+         "use": "@vercel/python"
+       },
+       {
+         "src": "package.json",
+         "use": "@vercel/nextjs"
+       }
+     ],
+     "routes": [
+       {
+         "src": "/api/(.*)",
+         "dest": "backend/main.py"
+       },
+       {
+         "src": "/(.*)",
+         "dest": "$"
+       }
+     ]
+   }
+   ```
+
+2. **Modifie le `API_URL`** dans `app/page.tsx` :
+   ```typescript
+   const API_URL = '/api/besoins'
+   ```
+
+3. Pousse sur GitHub et importe sur Vercel.
+
+### Backend seul
 Utilise n'importe quel service de déploiement Python :
 - [Railway](https://railway.app/)
 - [Render](https://render.com/)
-- [Docker](https://www.docker.com/)
 
-### Frontend
+### Frontend seul
 Utilise n'importe quel service de déploiement Next.js :
 - [Vercel](https://vercel.com/) (recommandé)
 - [Netlify](https://www.netlify.com/)
