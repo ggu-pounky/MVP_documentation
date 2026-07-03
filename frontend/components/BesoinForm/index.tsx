@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Select } from "../ui/Select";
+import { Textarea } from "../ui/Textarea";
 import { STATUTS } from "@/lib/types/besoin";
 import { createBesoin, updateBesoin } from "@/lib/api/besoins";
 
@@ -37,7 +38,7 @@ export const BesoinForm = ({ initialData }: BesoinFormProps) => {
     }
   }, [initialData]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
@@ -101,14 +102,13 @@ export const BesoinForm = ({ initialData }: BesoinFormProps) => {
         placeholder="Ex: Améliorer l'interface utilisateur"
       />
 
-      <Input
+      <Textarea
         label="Description"
         name="description"
         value={formData.description}
         onChange={handleChange}
         placeholder="Décrivez le besoin en détail"
         rows={4}
-        as="textarea"
       />
 
       <Select
