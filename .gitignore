@@ -1,17 +1,18 @@
-# Backend
-backend/__pycache__/
-backend/*.pyc
-
-# Frontend (Next.js)
+# Dependencies
 /node_modules
+/.pnp
+.pnp.js
+
+# Next.js
 /.next/
 /out/
+
+# Build
+/build
 
 # IDE
 .idea/
 .vscode/
-*.swp
-*.swo
 
 # OS
 .DS_Store
@@ -20,5 +21,11 @@ Thumbs.db
 # Logs
 *.log
 
-# Build
-build/
+# Python
+__pycache__/
+*.py[cod]
+
+# Environment
+.env
+.env.local
+.env.*.local
