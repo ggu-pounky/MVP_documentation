@@ -1,27 +1,28 @@
+"use client";
+
 import React from "react";
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
 
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
-  options: { value: string; label: string }[];
+  options: SelectOption[];
   error?: string;
 }
 
-export const Select: React.FC<SelectProps> = ({
-  label,
-  options,
-  error,
-  className = "",
-  ...props
-}) => {
+export const Select: React.FC<SelectProps> = ({ label, options, error, className = "", ...props }) => {
   return (
-    <div className="mb-4">
+    <div className="form-group">
       {label && (
         <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor={props.id}>
           {label}
         </label>
       )}
       <select
-        className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${error ? "border-red-500" : "border-gray-300"} ${className}`}
+        className={`w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-[#3498DB] focus:border-[#3498DB] ${error ? "border-red-500" : ""} ${className}`}
         {...props}
       >
         {options.map((option) => (

@@ -71,59 +71,65 @@ export default function BesoinDetailPage() {
     );
   }
 
+  // Fonction pour obtenir la classe du badge en fonction du statut
+  const getBadgeClass = (statut: string) => {
+    switch (statut) {
+      case "À faire":
+        return "badge-todo";
+      case "En cours":
+        return "badge-in-progress";
+      case "Terminé":
+        return "badge-done";
+      case "Annulé":
+        return "badge-cancelled";
+      default:
+        return "badge-todo";
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="content">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{besoin.titre}</h1>
+          <h1 className="text-2xl font-bold text-[#2C3E50]">{besoin.titre}</h1>
           <p className="text-gray-600">
             Créé le {new Date(besoin.created_at).toLocaleDateString("fr-FR")}
           </p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => router.push(`/besoins/${besoin.id}/edit`)}>
-            Éditer
-          </Button>
+          <Button onClick={() => router.push(`/besoins/${besoin.id}/edit`)}>Éditer</Button>
           <Button variant="danger" onClick={handleDelete}>
             Supprimer
           </Button>
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">Description</h2>
-          <p className="text-gray-700">{besoin.description || "Aucune description"}</p>
-        </div>
+      <div className="form-container">
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold text-[#2C3E50]">Description</h2>
+            <p className="text-gray-700 mt-2">{besoin.description || "Aucune description"}</p>
+          </div>
 
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">Statut</h2>
-          <span
-            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-              besoin.statut === "Terminé"
-                ? "bg-green-100 text-green-800"
-                : besoin.statut === "En cours"
-                ? "bg-yellow-100 text-yellow-800"
-                : besoin.statut === "À faire"
-                ? "bg-blue-100 text-blue-800"
-                : "bg-gray-100 text-gray-800"
-            }`}
-          >
-            {besoin.statut}
-          </span>
-        </div>
+          <div>
+            <h2 className="text-lg font-semibold text-[#2C3E50]">Statut</h2>
+            <span className={`badge ${getBadgeClass(besoin.statut)} mt-2 inline-block`}>
+              {besoin.statut}
+            </span>
+          </div>
 
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">Date de mise à jour</h2>
-          <p className="text-gray-700">
-            {new Date(besoin.updated_at).toLocaleDateString("fr-FR")}
-          </p>
-        </div>
+          <div>
+            <h2 className="text-lg font-semibold text-[#2C3E50]">Date de mise à jour</h2>
+            <p className="text-gray-700 mt-2">
+              {new Date(besoin.updated_at).toLocaleDateString("fr-FR")}
+            </p>
+          </div>
 
-        <div className="pt-4">
-          <Button variant="secondary" onClick={() => router.push("/besoins")}>
-            Retour à la liste
-          </Button>
+          <div className="pt-4">
+            <Button variant="secondary" onClick={() => router.push("/besoins")}>
+              Retour à la liste
+            </Button>
+          </div>
         </div>
       </div>
     </div>

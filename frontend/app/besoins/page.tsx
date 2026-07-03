@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { BesoinTable } from "@/components/BesoinTable";
 import { fetchBesoins, deleteBesoin } from "@/lib/api/besoins";
 import { Besoin } from "@/lib/types/besoin";
+import { Button } from "@/components/ui/Button";
 
 export default function BesoinsPage() {
   const [besoins, setBesoins] = useState<Besoin[]>([]);
@@ -60,10 +61,15 @@ export default function BesoinsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Liste des Besoins</h1>
-        <p className="text-gray-600">Gérez vos besoins et suivez leur statut.</p>
+    <div className="content">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-[#2C3E50]">Liste des Besoins</h1>
+          <p className="text-gray-600">Gérez vos besoins et suivez leur statut.</p>
+        </div>
+        <Button onClick={() => (window.location.href = "/besoins/new")}>
+          Créer un besoin
+        </Button>
       </div>
       <BesoinTable besoins={besoins} onDelete={handleDelete} />
     </div>

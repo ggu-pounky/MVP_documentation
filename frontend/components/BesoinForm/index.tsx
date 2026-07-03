@@ -62,14 +62,12 @@ export const BesoinForm = ({ initialData }: BesoinFormProps) => {
     setIsSubmitting(true);
     try {
       if (initialData?.id) {
-        // Mise à jour d'un besoin existant
         await updateBesoin(initialData.id, {
           titre: formData.titre,
           description: formData.description,
           statut: formData.statut,
         });
       } else {
-        // Création d'un nouveau besoin
         await createBesoin({
           titre: formData.titre,
           description: formData.description,
@@ -92,45 +90,60 @@ export const BesoinForm = ({ initialData }: BesoinFormProps) => {
   }));
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <Input
-        label="Titre"
-        name="titre"
-        value={formData.titre}
-        onChange={handleChange}
-        error={errors.titre}
-        placeholder="Ex: Améliorer l'interface utilisateur"
-      />
+    <div className="form-container">
+      <h2 className="form-title">
+        {initialData?.id ? "Éditer le besoin" : "Créer un nouveau besoin"}
+      </h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="form-group">
+          <label htmlFor="titre">Titre *</label>
+          <Input
+            id="titre"
+            name="titre"
+            value={formData.titre}
+            onChange={handleChange}
+            error={errors.titre}
+            placeholder="Ex: Améliorer l'interface utilisateur"
+          />
+        </div>
 
-      <Textarea
-        label="Description"
-        name="description"
-        value={formData.description}
-        onChange={handleChange}
-        placeholder="Décrivez le besoin en détail"
-        rows={4}
-      />
+        <div className="form-group">
+          <label htmlFor="description">Description</label>
+          <Textarea
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            placeholder="Décrivez le besoin en détail"
+            rows={4}
+          />
+        </div>
 
-      <Select
-        label="Statut"
-        name="statut"
-        value={formData.statut}
-        onChange={handleChange}
-        options={statutOptions}
-      />
+        <div className="form-group">
+          <label htmlFor="statut">Statut *</label>
+          <Select
+            id="statut"
+            name="statut"
+            value={formData.statut}
+            onChange={handleChange}
+            options={statutOptions}
+          />
+        </div>
 
-      <div className="flex gap-4">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "En cours..." : initialData?.id ? "Mettre à jour" : "Créer"}
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => router.push("/besoins")}
-        >
-          Annuler
-        </Button>
-      </div>
-    </form>
+        <div className="form-actions">
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "En cours..." : initialData?.id ? "Mettre à jour" : "Créer"}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => router.push("/besoins")}
+            className="cancel-button"
+          >
+            Annuler
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 };
