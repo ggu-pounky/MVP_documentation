@@ -1,72 +1,100 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
-from typing import List
+from pydantic import BaseModel
+from typing import List, Optional
+from datetime import datetime
+import uuid
 
-from . import crud, models, schemas
-from .database import engine, get_db
+app = FastAPI()
 
-# Création des tables dans la base de données
-models.Base.metadata.create_all(bind=engine)
-
-# Initialisation de l'application FastAPI
-app = FastAPI(
-    title="API de Gestion des Besoins",
-    description="API pour gérer les besoins (CRUD)",
-    version="1.0.0",
-)
-
-# Configuration CORS (pour permettre les requêtes depuis ton frontend Next.js)
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En développement, autorise toutes les origines
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],  # Autorise toutes les méthodes (GET, POST, PUT, DELETE)
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Modèle Besoin
+class Besoin(BaseModel):
+    id: str
+    titre: str
+    description: Optional[str] = None
+    statut: str = "À faire"
+    created_at: str
+    updated_at: str
 
-# Endpoint pour récupérer tous les besoins
-@app.get("/besoins/", response_model=List[schemas.BesoinResponse])
-def read_besoins(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    besoins = crud.get_besoins(db, skip=skip, limit=limit)
+class BesoinCreate(BaseModel):
+    titre: str
+    description: Optional[str] = None
+    statut: str = "À faire"
+
+class BesoinUpdate(BaseModel):
+    titre: Optional[str] = None
+    description: Optional[str] = None
+    statut: Optional[str] = None
+
+# Données en mémoire
+besoins_db = []
+
+# Données initiales
+def init_data():
+    besoins = [
+        {"id": str(uuid.uuid4()), "titre": "Améliorer l'interface utilisateur", "description": "Rendre l'interface plus intuitive et moderne.", "statut": "En cours", "created_at": datetime.now().isoformat(), "updated_at": datetime.now().isoformat()},
+        {"id": str(uuid.uuid4()), "titre": "Ajouter une API de paiement", "description": "Intégrer Stripe pour les transactions.", "statut": "À faire", "created_at": datetime.now().isoformat(), "updated_at": datetime.now().isoformat()},
+        {"id": str(uuid.uuid4()), "titre": "Optimiser les performances", "description": "Réduire le temps de chargement des pages.", "statut": "Terminé", "created_at": datetime.now().isoformat(), "updated_at": datetime.now().isoformat()},
+    ]
     return besoins
 
+besoins_db = init_data()
 
-# Endpoint pour récupérer un besoin par son ID
-@app.get("/besoins/{besoin_id}", response_model=schemas.BesoinResponse)
-def read_besoin(besoin_id: int, db: Session = Depends(get_db)):
-    db_besoin = crud.get_besoin(db, besoin_id=besoin_id)
-    if db_besoin is None:
-        raise HTTPException(status_code=404, detail="Besoin non trouvé")
-    return db_besoin
+# Endpoints
+@app.get("/besoins", response_model=List[Besoin])
+def get_besoins():
+    return besoins_db
 
+@app.get("/besoins/{besoin_id}", response_model=Besoin)
+def get_besoin(besoin_id: str):
+    for besoin in besoins_db:
+        if besoin["id"] == besoin_id:
+            return besoin
+    raise HTTPException(status_code=404, detail="Besoin non trouvé")
 
-# Endpoint pour créer un nouveau besoin
-@app.post("/besoins/", response_model=schemas.BesoinResponse)
-def create_besoin(besoin: schemas.BesoinCreate, db: Session = Depends(get_db)):
-    return crud.create_besoin(db=db, besoin=besoin)
+@app.post("/besoins", response_model=Besoin)
+def create_besoin(besoin: BesoinCreate):
+    now = datetime.now().isoformat()
+    new_besoin = {
+        "id": str(uuid.uuid4()),
+        "titre": besoin.titre,
+        "description": besoin.description,
+        "statut": besoin.statut,
+        "created_at": now,
+        "updated_at": now,
+    }
+    besoins_db.append(new_besoin)
+    return new_besoin
 
+@app.put("/besoins/{besoin_id}", response_model=Besoin)
+def update_besoin(besoin_id: str, besoin: BesoinUpdate):
+    for i, b in enumerate(besoins_db):
+        if b["id"] == besoin_id:
+            updated_besoin = b.copy()
+            if besoin.titre is not None:
+                updated_besoin["titre"] = besoin.titre
+            if besoin.description is not None:
+                updated_besoin["description"] = besoin.description
+            if besoin.statut is not None:
+                updated_besoin["statut"] = besoin.statut
+            updated_besoin["updated_at"] = datetime.now().isoformat()
+            besoins_db[i] = updated_besoin
+            return updated_besoin
+    raise HTTPException(status_code=404, detail="Besoin non trouvé")
 
-# Endpoint pour mettre à jour un besoin
-@app.put("/besoins/{besoin_id}", response_model=schemas.BesoinResponse)
-def update_besoin(besoin_id: int, besoin: schemas.BesoinUpdate, db: Session = Depends(get_db)):
-    db_besoin = crud.update_besoin(db, besoin_id=besoin_id, besoin=besoin)
-    if db_besoin is None:
-        raise HTTPException(status_code=404, detail="Besoin non trouvé")
-    return db_besoin
-
-
-# Endpoint pour supprimer un besoin
-@app.delete("/besoins/{besoin_id}", response_model=schemas.BesoinResponse)
-def delete_besoin(besoin_id: int, db: Session = Depends(get_db)):
-    db_besoin = crud.delete_besoin(db, besoin_id=besoin_id)
-    if db_besoin is None:
-        raise HTTPException(status_code=404, detail="Besoin non trouvé")
-    return db_besoin
-
-
-# Endpoint racine pour vérifier que l'API fonctionne
-@app.get("/")
-def read_root():
-    return {"message": "API de Gestion des Besoins - Fonctionnelle !"}
+@app.delete("/besoins/{besoin_id}")
+def delete_besoin(besoin_id: str):
+    for i, b in enumerate(besoins_db):
+        if b["id"] == besoin_id:
+            besoins_db.pop(i)
+            return {"message": "Besoin supprimé"}
+    raise HTTPException(status_code=404, detail="Besoin non trouvé")
