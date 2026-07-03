@@ -29,7 +29,6 @@ export default function BesoinForm({ besoin, onSubmit, onCancel }: BesoinFormPro
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     await onSubmit({
-      id: besoin?.id,
       titre,
       description: description || null,
       statut,

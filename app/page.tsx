@@ -29,31 +29,27 @@ export default function Home() {
     }
   }
 
-  const handleCreate = async (data: BesoinFormData) => {
+  const handleSubmit = async (data: BesoinFormData) => {
     try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
-      const newBesoin = await response.json()
-      setBesoins([...besoins, newBesoin])
-      setShowForm(false)
-      setEditingBesoin(null)
-    } catch (error) {
-      console.error('Erreur:', error)
-    }
-  }
-
-  const handleUpdate = async (data: BesoinFormData & { id: string }) => {
-    try {
-      const response = await fetch(`${API_URL}/${data.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
-      const updatedBesoin = await response.json()
-      setBesoins(besoins.map(b => b.id === data.id ? updatedBesoin : b))
+      if (editingBesoin) {
+        // Update existing besoin
+        const response = await fetch(`${API_URL}/${editingBesoin.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        })
+        const updatedBesoin = await response.json()
+        setBesoins(besoins.map(b => b.id === editingBesoin.id ? updatedBesoin : b))
+      } else {
+        // Create new besoin
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        })
+        const newBesoin = await response.json()
+        setBesoins([...besoins, newBesoin])
+      }
       setShowForm(false)
       setEditingBesoin(null)
     } catch (error) {
@@ -95,7 +91,7 @@ export default function Home() {
         {showForm && (
           <BesoinForm
             besoin={editingBesoin}
-            onSubmit={editingBesoin ? handleUpdate : handleCreate}
+            onSubmit={handleSubmit}
             onCancel={() => {
               setShowForm(false)
               setEditingBesoin(null)
