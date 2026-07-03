@@ -6,6 +6,7 @@ import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Select } from "../ui/Select";
 import { STATUTS } from "@/lib/types/besoin";
+import { createBesoin, updateBesoin } from "@/lib/api/besoins";
 
 interface BesoinFormProps {
   initialData?: {
@@ -59,21 +60,20 @@ export const BesoinForm = ({ initialData }: BesoinFormProps) => {
 
     setIsSubmitting(true);
     try {
-      const url = initialData?.id
-        ? `/api/besoins/${initialData.id}`
-        : "/api/besoins";
-      const method = initialData?.id ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Échec de l'opération");
+      if (initialData?.id) {
+        // Mise à jour d'un besoin existant
+        await updateBesoin(initialData.id, {
+          titre: formData.titre,
+          description: formData.description,
+          statut: formData.statut,
+        });
+      } else {
+        // Création d'un nouveau besoin
+        await createBesoin({
+          titre: formData.titre,
+          description: formData.description,
+          statut: formData.statut,
+        });
       }
 
       router.push("/besoins");
