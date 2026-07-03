@@ -13,7 +13,7 @@ type Besoin = {
 
 type BesoinFormProps = {
   besoin?: Besoin | null
-  onSubmit: (data: any) => Promise<void>
+  onSubmit: (data: { titre: string; description: string | null; statut: string; id?: string }) => Promise<void>
   onCancel: () => void
 }
 
@@ -37,6 +37,7 @@ export default function BesoinForm({ besoin, onSubmit, onCancel }: BesoinFormPro
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     await onSubmit({
+      id: besoin?.id,
       titre,
       description: description || null,
       statut,

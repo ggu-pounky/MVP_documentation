@@ -13,6 +13,12 @@ type Besoin = {
   updated_at: string
 }
 
+type BesoinFormData = {
+  titre: string
+  description: string | null
+  statut: string
+}
+
 export default function Home() {
   const [besoins, setBesoins] = useState<Besoin[]>([])
   const [loading, setLoading] = useState(true)
@@ -37,30 +43,32 @@ export default function Home() {
     }
   }
 
-  const handleCreate = async (besoin: Omit<Besoin, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleCreate = async (data: BesoinFormData) => {
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(besoin),
+        body: JSON.stringify(data),
       })
       const newBesoin = await response.json()
       setBesoins([...besoins, newBesoin])
       setShowForm(false)
+      setEditingBesoin(null)
     } catch (error) {
       console.error('Erreur:', error)
     }
   }
 
-  const handleUpdate = async (id: string, besoin: Partial<Besoin>) => {
+  const handleUpdate = async (data: BesoinFormData & { id: string }) => {
     try {
-      const response = await fetch(`${API_URL}/${id}`, {
+      const response = await fetch(`${API_URL}/${data.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(besoin),
+        body: JSON.stringify(data),
       })
       const updatedBesoin = await response.json()
-      setBesoins(besoins.map(b => b.id === id ? updatedBesoin : b))
+      setBesoins(besoins.map(b => b.id === data.id ? updatedBesoin : b))
+      setShowForm(false)
       setEditingBesoin(null)
     } catch (error) {
       console.error('Erreur:', error)
