@@ -10,9 +10,10 @@ type EpicFormProps = {
   besoins: Besoin[]
   onSubmit: (data: EpicFormData) => Promise<void>
   onCancel: () => void
+  onGenerateAI?: (besoin: Besoin) => void  // Nouvelle prop pour la génération IA
 }
 
-export default function EpicForm({ epic, besoins, onSubmit, onCancel }: EpicFormProps) {
+export default function EpicForm({ epic, besoins, onSubmit, onCancel, onGenerateAI }: EpicFormProps) {
   const [titre, setTitre] = useState('')
   const [description, setDescription] = useState('')
   const [statut, setStatut] = useState<'À faire' | 'En cours' | 'Terminé' | 'Annulé'>('À faire')
@@ -45,6 +46,9 @@ export default function EpicForm({ epic, besoins, onSubmit, onCancel }: EpicForm
       besoinId,
     })
   }
+
+  // Trouver le besoin sélectionné pour la génération IA
+  const selectedBesoin = besoins.find((b) => b.id === besoinId)
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow mb-4">
@@ -115,6 +119,16 @@ export default function EpicForm({ epic, besoins, onSubmit, onCancel }: EpicForm
         >
           Annuler
         </button>
+        {/* Bouton Générer par IA (visible si on crée une nouvelle EPIC et qu'un besoin est sélectionné) */}
+        {onGenerateAI && !epic && selectedBesoin && (
+          <button
+            type="button"
+            onClick={() => onGenerateAI(selectedBesoin)}
+            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+          >
+            Générer par IA
+          </button>
+        )}
       </div>
     </form>
   )

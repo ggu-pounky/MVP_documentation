@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import EpicForm from '@/components/EpicForm'
 import EpicList from '@/components/EpicList'
+import EpicAIGeneratorModal from '@/components/EpicAIGeneratorModal'
 import type { Epic, EpicFormData } from '@/types/epic'
 import type { Besoin } from '@/types/besoin'
 
@@ -13,6 +14,8 @@ export default function EpicsPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingEpic, setEditingEpic] = useState<Epic | null>(null)
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [showAIGenerator, setShowAIGenerator] = useState(false)
+  const [selectedBesoinForAI, setSelectedBesoinForAI] = useState<Besoin | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
   // Charger les données depuis localStorage
@@ -45,6 +48,33 @@ export default function EpicsPage() {
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
     setNotification({ message, type })
     setTimeout(() => setNotification(null), 3000)
+  }
+
+  // Ouvrir la modale de génération IA pour un besoin
+  const openAIGenerator = (besoin: Besoin) => {
+    setSelectedBesoinForAI(besoin)
+    setShowAIGenerator(true)
+  }
+
+  // Générer des epics à partir des suggestions IA
+  const handleGenerateFromAI = (generatedEpics: { titre: string; description: string }[]) => {
+    if (!selectedBesoinForAI) return
+
+    const newEpics: Epic[] = generatedEpics.map((epicData) => ({
+      id: generateId(),
+      titre: epicData.titre,
+      description: epicData.description,
+      statut: 'À faire',
+      besoinId: selectedBesoinForAI.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }))
+
+    setEpics([...epics, ...newEpics])
+    showNotification(`${newEpics.length} EPIC(s) générée(s) avec succès !`)
+    setShowAIGenerator(false)
+    setSelectedBesoinForAI(null)
+    setShowForm(false)
   }
 
   const handleSubmit = async (data: EpicFormData) => {
@@ -151,6 +181,7 @@ export default function EpicsPage() {
             setShowForm(false)
             setEditingEpic(null)
           }}
+          onGenerateAI={openAIGenerator}
         />
       )}
 
@@ -163,6 +194,18 @@ export default function EpicsPage() {
           onDelete={handleDelete}
         />
       </div>
+
+      {/* Modale de génération IA */}
+      {showAIGenerator && (
+        <EpicAIGeneratorModal
+          besoin={selectedBesoinForAI}
+          onClose={() => {
+            setShowAIGenerator(false)
+            setSelectedBesoinForAI(null)
+          }}
+          onGenerate={handleGenerateFromAI}
+        />
+      )}
     </div>
   )
 }
