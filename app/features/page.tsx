@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import FeatureForm from '@/components/FeatureForm'
 import FeatureList from '@/components/FeatureList'
+import FeatureAIGeneratorModal from '@/components/FeatureAIGeneratorModal'
 import type { Feature, FeatureFormData } from '@/types/feature'
 import type { Besoin } from '@/types/besoin'
 
@@ -13,6 +14,8 @@ export default function FeaturesPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingFeature, setEditingFeature] = useState<Feature | null>(null)
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [showAIGenerator, setShowAIGenerator] = useState(false)
+  const [selectedBesoinForAI, setSelectedBesoinForAI] = useState<Besoin | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
   // Charger les données depuis localStorage
@@ -45,6 +48,33 @@ export default function FeaturesPage() {
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
     setNotification({ message, type })
     setTimeout(() => setNotification(null), 3000)
+  }
+
+  // Ouvrir la modale de génération IA pour un besoin spécifique
+  const openAIGenerator = (besoin: Besoin) => {
+    setSelectedBesoinForAI(besoin)
+    setShowAIGenerator(true)
+  }
+
+  // Générer des features à partir des suggestions IA
+  const handleGenerateFromAI = (generatedFeatures: { titre: string; description: string }[]) => {
+    if (!selectedBesoinForAI) return
+
+    const newFeatures: Feature[] = generatedFeatures.map((featureData) => ({
+      id: generateId(),
+      titre: featureData.titre,
+      description: featureData.description,
+      priorite: 'Moyenne', // Priorité par défaut
+      statut: 'À faire',   // Statut par défaut
+      besoinId: selectedBesoinForAI.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }))
+
+    setFeatures([...features, ...newFeatures])
+    showNotification(`${newFeatures.length} Feature(s) générée(s) avec succès !`)
+    setShowAIGenerator(false)
+    setSelectedBesoinForAI(null)
   }
 
   const handleSubmit = async (data: FeatureFormData) => {
@@ -111,7 +141,34 @@ export default function FeaturesPage() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Gestion des Features</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Gestion des Features</h1>
+        {/* Bouton Génération IA (visible si des besoins existent) */}
+        {besoins.length > 0 && (
+          <div className="flex gap-2">
+            <select
+              onChange={(e) => {
+                const besoinId = e.target.value
+                if (besoinId) {
+                  const besoin = besoins.find((b) => b.id === besoinId)
+                  if (besoin) openAIGenerator(besoin)
+                }
+              }}
+              defaultValue=""
+              className="p-2 border rounded"
+            >
+              <option value="" disabled>
+                Génération IA pour...
+              </option>
+              {besoins.map((besoin) => (
+                <option key={besoin.id} value={besoin.id}>
+                  {besoin.titre}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
 
       {/* Notification */}
       {notification && (
@@ -165,6 +222,18 @@ export default function FeaturesPage() {
           onDelete={handleDelete}
         />
       </div>
+
+      {/* Modale de génération IA */}
+      {showAIGenerator && (
+        <FeatureAIGeneratorModal
+          besoin={selectedBesoinForAI}
+          onClose={() => {
+            setShowAIGenerator(false)
+            setSelectedBesoinForAI(null)
+          }}
+          onGenerate={handleGenerateFromAI}
+        />
+      )}
     </div>
   )
 }
