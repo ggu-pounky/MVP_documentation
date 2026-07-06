@@ -9,11 +9,11 @@ export default function Sidebar() {
   const isActive = (path: string) => pathname === path
 
   return (
-    <aside className="w-64 bg-gray-800 text-white min-h-screen p-4">
+    <aside className="w-64 bg-gray-800 text-white min-h-screen p-4 flex flex-col">
       <div className="mb-8">
         <h1 className="text-xl font-bold">MVP Documentation</h1>
       </div>
-      <nav className="space-y-2">
+      <nav className="space-y-2 flex-1">
         <Link
           href="/"
           className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
@@ -42,6 +42,17 @@ export default function Sidebar() {
           <span>Exigences</span>
         </Link>
       </nav>
+      <div className="mt-auto">
+        <Link
+          href="/prd"
+          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
+            isActive('/prd') ? 'bg-gray-700' : 'hover:bg-gray-700'
+          }`}
+        >
+          <span>📄</span>
+          <span>PRD</span>
+        </Link>
+      </div>
     </aside>
   )
 }
