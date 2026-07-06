@@ -75,7 +75,7 @@ export default function FeaturesPage() {
     showNotification(`${newFeatures.length} Feature(s) générée(s) avec succès !`)
     setShowAIGenerator(false)
     setSelectedBesoinForAI(null)
-    setShowForm(false) // Fermer le formulaire après génération
+    setShowForm(false)
   }
 
   const handleSubmit = async (data: FeatureFormData) => {
@@ -178,7 +178,7 @@ export default function FeaturesPage() {
       {showForm && (
         <FeatureForm
           feature={editingFeature}
-          besoins={besoins.map((b) => ({ id: b.id, titre: b.titre }))}
+          besoins={besoins}  // Passer directement les objets Besoin
           onSubmit={handleSubmit}
           onCancel={() => {
             setShowForm(false)

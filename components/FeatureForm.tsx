@@ -7,10 +7,10 @@ import type { Besoin } from '@/types/besoin'
 
 type FeatureFormProps = {
   feature?: Feature | null
-  besoins: { id: string; titre: string }[]
+  besoins: Besoin[]  // Changé pour recevoir directement les objets Besoin
   onSubmit: (data: FeatureFormData) => Promise<void>
   onCancel: () => void
-  onGenerateAI?: (besoin: Besoin) => void  // Nouvelle prop pour la génération IA
+  onGenerateAI?: (besoin: Besoin) => void
 }
 
 export default function FeatureForm({ feature, besoins, onSubmit, onCancel, onGenerateAI }: FeatureFormProps) {
