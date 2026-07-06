@@ -41,6 +41,15 @@ export default function Sidebar() {
           <span>📋</span>
           <span>Exigences</span>
         </Link>
+        <Link
+          href="/tests"
+          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
+            isActive('/tests') ? 'bg-gray-700' : 'hover:bg-gray-700'
+          }`}
+        >
+          <span>🧪</span>
+          <span>Tests</span>
+        </Link>
       </nav>
       <div className="mt-auto">
         <Link
