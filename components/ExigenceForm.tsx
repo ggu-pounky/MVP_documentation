@@ -3,15 +3,24 @@
 import { useState, useEffect } from 'react'
 import type { Exigence, ExigenceFormData } from '@/types/exigence'
 import { statutsExigence } from '@/types/exigence'
+import type { Feature } from '@/types/feature'
+
+type FeatureInfo = {
+  id: string
+  besoinTitre: string
+  titre: string
+  description?: string
+}
 
 type ExigenceFormProps = {
   exigence?: Exigence | null
-  features: { id: string; besoinTitre: string; titre: string }[]
+  features: FeatureInfo[]
   onSubmit: (data: ExigenceFormData) => Promise<void>
   onCancel: () => void
+  onGenerateAI?: (feature: FeatureInfo) => void
 }
 
-export default function ExigenceForm({ exigence, features, onSubmit, onCancel }: ExigenceFormProps) {
+export default function ExigenceForm({ exigence, features, onSubmit, onCancel, onGenerateAI }: ExigenceFormProps) {
   const [titre, setTitre] = useState('')
   const [description, setDescription] = useState('')
   const [statut, setStatut] = useState<'À faire' | 'En cours' | 'Terminé' | 'Annulé' | 'Validé'>('À faire')
@@ -44,6 +53,9 @@ export default function ExigenceForm({ exigence, features, onSubmit, onCancel }:
       featureId,
     })
   }
+
+  // Trouver la feature sélectionnée pour la génération IA
+  const selectedFeature = features.find((f) => f.id === featureId)
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow mb-4">
@@ -114,6 +126,16 @@ export default function ExigenceForm({ exigence, features, onSubmit, onCancel }:
         >
           Annuler
         </button>
+        {/* Bouton Générer par IA (visible si on crée une nouvelle exigence et qu'une feature est sélectionnée) */}
+        {onGenerateAI && !exigence && selectedFeature && (
+          <button
+            type="button"
+            onClick={() => onGenerateAI(selectedFeature)}
+            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+          >
+            Générer par IA
+          </button>
+        )}
       </div>
     </form>
   )

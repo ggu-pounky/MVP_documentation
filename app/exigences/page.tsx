@@ -3,10 +3,18 @@
 import { useState, useEffect, useRef } from 'react'
 import ExigenceForm from '@/components/ExigenceForm'
 import ExigenceList from '@/components/ExigenceList'
+import ExigenceAIGeneratorModal from '@/components/ExigenceAIGeneratorModal'
 import type { Exigence, ExigenceFormData } from '@/types/exigence'
 import type { Besoin } from '@/types/besoin'
 import type { Feature } from '@/types/feature'
 import type { Epic } from '@/types/epic'
+
+type FeatureInfo = {
+  id: string
+  besoinTitre: string
+  titre: string
+  description?: string
+}
 
 export default function ExigencesPage() {
   const [exigences, setExigences] = useState<Exigence[]>([])
@@ -17,6 +25,8 @@ export default function ExigencesPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingExigence, setEditingExigence] = useState<Exigence | null>(null)
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [showAIGenerator, setShowAIGenerator] = useState(false)
+  const [selectedFeatureForAI, setSelectedFeatureForAI] = useState<FeatureInfo | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
   // Charger les données depuis localStorage
@@ -59,15 +69,41 @@ export default function ExigencesPage() {
     setTimeout(() => setNotification(null), 3000)
   }
 
+  // Ouvrir la modale de génération IA pour une feature
+  const openAIGenerator = (feature: FeatureInfo) => {
+    setSelectedFeatureForAI(feature)
+    setShowAIGenerator(true)
+  }
+
+  // Générer des exigences à partir des suggestions IA
+  const handleGenerateFromAI = (generatedExigences: { titre: string; description: string }[]) => {
+    if (!selectedFeatureForAI) return
+
+    const newExigences: Exigence[] = generatedExigences.map((exigenceData) => ({
+      id: generateId(),
+      titre: exigenceData.titre,
+      description: exigenceData.description,
+      statut: 'À faire',
+      featureId: selectedFeatureForAI.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }))
+
+    setExigences([...exigences, ...newExigences])
+    showNotification(`${newExigences.length} exigence(s) générée(s) avec succès !`)
+    setShowAIGenerator(false)
+    setSelectedFeatureForAI(null)
+    setShowForm(false)
+  }
+
   // Préparer la liste des features avec leurs informations complètes
   const featuresWithInfo = features.map((feature) => {
     const besoin = besoins.find((b) => b.id === feature.besoinId)
-    const epic = epics.find((e) => e.id === feature.epicId)
     return {
       id: feature.id,
       titre: feature.titre,
       besoinTitre: besoin ? besoin.titre : 'Inconnu',
-      epicTitre: epic ? epic.titre : 'Aucune',
+      description: feature.description || undefined,
     }
   })
 
@@ -175,6 +211,7 @@ export default function ExigencesPage() {
             setShowForm(false)
             setEditingExigence(null)
           }}
+          onGenerateAI={openAIGenerator}
         />
       )}
 
@@ -187,6 +224,18 @@ export default function ExigencesPage() {
           onDelete={handleDelete}
         />
       </div>
+
+      {/* Modale de génération IA */}
+      {showAIGenerator && (
+        <ExigenceAIGeneratorModal
+          feature={selectedFeatureForAI}
+          onClose={() => {
+            setShowAIGenerator(false)
+            setSelectedFeatureForAI(null)
+          }}
+          onGenerate={handleGenerateFromAI}
+        />
+      )}
     </div>
   )
 }
