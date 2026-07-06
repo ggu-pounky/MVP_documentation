@@ -23,11 +23,17 @@ export default function BesoinList({ besoins, onEdit, onDelete }: BesoinListProp
   }
 
   if (besoins.length === 0) {
-    return <div className="text-gray-500">Aucun besoin trouvé.</div>
+    return (
+      <div className="bg-white p-6 rounded shadow text-center text-gray-500">
+        <p>Aucun besoin enregistré pour le moment.</p>
+        <p className="mt-2 text-sm">Utilisez le bouton "Ajouter un besoin" pour commencer.</p>
+      </div>
+    )
   }
 
   return (
     <div className="bg-white rounded shadow overflow-hidden">
+      <h2 className="p-4 text-lg font-semibold border-b">Liste des besoins ({besoins.length})</h2>
       <table className="w-full">
         <thead className="bg-gray-100">
           <tr>

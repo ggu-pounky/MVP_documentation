@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import BesoinForm from '@/components/BesoinForm'
 import BesoinList from '@/components/BesoinList'
 import type { Besoin, BesoinFormData } from '@/types/besoin'
@@ -10,59 +10,82 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingBesoin, setEditingBesoin] = useState<Besoin | null>(null)
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const listRef = useRef<HTMLDivElement>(null)
 
-  const API_URL = 'http://localhost:8000/besoins'
-
+  // Charger les besoins depuis localStorage
   useEffect(() => {
-    fetchBesoins()
+    const savedBesoins = localStorage.getItem('besoins')
+    if (savedBesoins) {
+      setBesoins(JSON.parse(savedBesoins))
+    }
+    setLoading(false)
   }, [])
 
-  const fetchBesoins = async () => {
-    try {
-      const response = await fetch(API_URL)
-      const data = await response.json()
-      setBesoins(data)
-    } catch (error) {
-      console.error('Erreur:', error)
-    } finally {
-      setLoading(false)
+  // Sauvegarder dans localStorage
+  useEffect(() => {
+    if (!loading) {
+      localStorage.setItem('besoins', JSON.stringify(besoins))
     }
+  }, [besoins, loading])
+
+  // Générer un ID unique
+  const generateId = (): string => {
+    return Date.now().toString(36) + Math.random().toString(36).substring(2)
+  }
+
+  // Afficher une notification temporaire
+  const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
+    setNotification({ message, type })
+    setTimeout(() => setNotification(null), 3000)
   }
 
   const handleSubmit = async (data: BesoinFormData) => {
     try {
       if (editingBesoin) {
-        // Update existing besoin
-        const response = await fetch(`${API_URL}/${editingBesoin.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        })
-        const updatedBesoin = await response.json()
-        setBesoins(besoins.map(b => b.id === editingBesoin.id ? updatedBesoin : b))
+        setBesoins(
+          besoins.map((b) =>
+            b.id === editingBesoin.id
+              ? {
+                  ...b,
+                  titre: data.titre,
+                  description: data.description,
+                  statut: data.statut,
+                  updated_at: new Date().toISOString(),
+                }
+              : b
+          )
+        )
+        showNotification('Besoin modifié avec succès !')
       } else {
-        // Create new besoin
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        })
-        const newBesoin = await response.json()
+        const newBesoin: Besoin = {
+          id: generateId(),
+          titre: data.titre,
+          description: data.description,
+          statut: data.statut,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }
         setBesoins([...besoins, newBesoin])
+        showNotification('Besoin créé avec succès !')
+        // Scroll vers la liste après création
+        setTimeout(() => listRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
       }
       setShowForm(false)
       setEditingBesoin(null)
     } catch (error) {
       console.error('Erreur:', error)
+      showNotification('Une erreur est survenue', 'error')
     }
   }
 
   const handleDelete = async (id: string) => {
     try {
-      await fetch(`${API_URL}/${id}`, { method: 'DELETE' })
-      setBesoins(besoins.filter(b => b.id !== id))
+      setBesoins(besoins.filter((b) => b.id !== id))
+      showNotification('Besoin supprimé avec succès !')
     } catch (error) {
       console.error('Erreur:', error)
+      showNotification('Une erreur est survenue', 'error')
     }
   }
 
@@ -77,7 +100,18 @@ export default function Home() {
     <main className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">Gestion des Besoins</h1>
-        
+
+        {/* Notification */}
+        {notification && (
+          <div
+            className={`mb-4 p-4 rounded ${
+              notification.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}
+          >
+            {notification.message}
+          </div>
+        )}
+
         <button
           onClick={() => {
             setEditingBesoin(null)
@@ -99,11 +133,14 @@ export default function Home() {
           />
         )}
 
-        <BesoinList
-          besoins={besoins}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
+        {/* Liste des besoins avec référence pour le scroll */}
+        <div ref={listRef}>
+          <BesoinList
+            besoins={besoins}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        </div>
       </div>
     </main>
   )
