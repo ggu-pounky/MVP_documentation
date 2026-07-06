@@ -6,10 +6,12 @@ import FeatureList from '@/components/FeatureList'
 import FeatureAIGeneratorModal from '@/components/FeatureAIGeneratorModal'
 import type { Feature, FeatureFormData } from '@/types/feature'
 import type { Besoin } from '@/types/besoin'
+import type { Epic } from '@/types/epic'
 
 export default function FeaturesPage() {
   const [features, setFeatures] = useState<Feature[]>([])
   const [besoins, setBesoins] = useState<Besoin[]>([])
+  const [epics, setEpics] = useState<Epic[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingFeature, setEditingFeature] = useState<Feature | null>(null)
@@ -22,12 +24,16 @@ export default function FeaturesPage() {
   useEffect(() => {
     const savedBesoins = localStorage.getItem('besoins')
     const savedFeatures = localStorage.getItem('features')
+    const savedEpics = localStorage.getItem('epics')
     
     if (savedBesoins) {
       setBesoins(JSON.parse(savedBesoins))
     }
     if (savedFeatures) {
       setFeatures(JSON.parse(savedFeatures))
+    }
+    if (savedEpics) {
+      setEpics(JSON.parse(savedEpics))
     }
     setLoading(false)
   }, [])
@@ -67,6 +73,7 @@ export default function FeaturesPage() {
       priorite: 'Moyenne',
       statut: 'À faire',
       besoinId: selectedBesoinForAI.id,
+      epicId: null, // Pas d'EPIC par défaut pour les features générées par IA
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }))
@@ -92,6 +99,7 @@ export default function FeaturesPage() {
                   priorite: data.priorite,
                   statut: data.statut,
                   besoinId: data.besoinId,
+                  epicId: data.epicId || null,
                   updated_at: new Date().toISOString(),
                 }
               : f
@@ -107,6 +115,7 @@ export default function FeaturesPage() {
           priorite: data.priorite,
           statut: data.statut,
           besoinId: data.besoinId,
+          epicId: data.epicId || null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }
@@ -139,6 +148,11 @@ export default function FeaturesPage() {
   }
 
   if (loading) return <div className="p-4">Chargement...</div>
+
+  // Filtrer les EPICS par besoin pour le sélecteur
+  const epicsByBesoin = (besoinId: string) => {
+    return epics.filter((e) => e.besoinId === besoinId)
+  }
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -178,7 +192,8 @@ export default function FeaturesPage() {
       {showForm && (
         <FeatureForm
           feature={editingFeature}
-          besoins={besoins}  // Passer directement les objets Besoin
+          besoins={besoins}
+          epics={epics} // Passer les EPICS pour le sélecteur
           onSubmit={handleSubmit}
           onCancel={() => {
             setShowForm(false)
@@ -193,6 +208,7 @@ export default function FeaturesPage() {
         <FeatureList
           features={features}
           besoins={besoins}
+          epics={epics}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />

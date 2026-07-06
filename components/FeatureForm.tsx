@@ -4,21 +4,24 @@ import { useState, useEffect } from 'react'
 import type { Feature, FeatureFormData } from '@/types/feature'
 import { priorites, statutsFeature } from '@/types/feature'
 import type { Besoin } from '@/types/besoin'
+import type { Epic } from '@/types/epic'
 
 type FeatureFormProps = {
   feature?: Feature | null
-  besoins: Besoin[]  // Changé pour recevoir directement les objets Besoin
+  besoins: Besoin[]
+  epics?: Epic[]  // Ajout des EPICS pour le sélecteur
   onSubmit: (data: FeatureFormData) => Promise<void>
   onCancel: () => void
   onGenerateAI?: (besoin: Besoin) => void
 }
 
-export default function FeatureForm({ feature, besoins, onSubmit, onCancel, onGenerateAI }: FeatureFormProps) {
+export default function FeatureForm({ feature, besoins, epics = [], onSubmit, onCancel, onGenerateAI }: FeatureFormProps) {
   const [titre, setTitre] = useState('')
   const [description, setDescription] = useState('')
   const [priorite, setPriorite] = useState<'Faible' | 'Moyenne' | 'Élevée' | 'Critique'>('Moyenne')
   const [statut, setStatut] = useState<'À faire' | 'En cours' | 'Terminé' | 'Annulé'>('À faire')
   const [besoinId, setBesoinId] = useState('')
+  const [epicId, setEpicId] = useState<string | null>(null)
 
   useEffect(() => {
     if (feature) {
@@ -27,12 +30,14 @@ export default function FeatureForm({ feature, besoins, onSubmit, onCancel, onGe
       setPriorite(feature.priorite)
       setStatut(feature.statut)
       setBesoinId(feature.besoinId)
+      setEpicId(feature.epicId || null)
     } else {
       setTitre('')
       setDescription('')
       setPriorite('Moyenne')
       setStatut('À faire')
       setBesoinId('')
+      setEpicId(null)
     }
   }, [feature])
 
@@ -48,8 +53,12 @@ export default function FeatureForm({ feature, besoins, onSubmit, onCancel, onGe
       priorite,
       statut,
       besoinId,
+      epicId,
     })
   }
+
+  // Filtrer les EPICS par besoin sélectionné
+  const epicsForSelectedBesoin = besoinId ? epics.filter((e) => e.besoinId === besoinId) : []
 
   // Trouver le besoin sélectionné pour la génération IA
   const selectedBesoin = besoins.find((b) => b.id === besoinId)
@@ -60,7 +69,10 @@ export default function FeatureForm({ feature, besoins, onSubmit, onCancel, onGe
         <label className="block text-sm font-medium mb-1">Besoin *</label>
         <select
           value={besoinId}
-          onChange={(e) => setBesoinId(e.target.value)}
+          onChange={(e) => {
+            setBesoinId(e.target.value)
+            setEpicId(null) // Réinitialiser l'EPIC si le besoin change
+          }}
           required
           className="w-full p-2 border rounded"
         >
@@ -68,6 +80,23 @@ export default function FeatureForm({ feature, besoins, onSubmit, onCancel, onGe
           {besoins.map((besoin) => (
             <option key={besoin.id} value={besoin.id}>
               {besoin.titre}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium mb-1">EPIC (optionnel)</label>
+        <select
+          value={epicId || ''}
+          onChange={(e) => setEpicId(e.target.value || null)}
+          className="w-full p-2 border rounded"
+          disabled={!besoinId}
+        >
+          <option value="">-- Aucune EPIC --</option>
+          {epicsForSelectedBesoin.map((epic) => (
+            <option key={epic.id} value={epic.id}>
+              {epic.titre}
             </option>
           ))}
         </select>

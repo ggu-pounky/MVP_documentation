@@ -24,6 +24,15 @@ export default function Sidebar() {
           <span>Besoins</span>
         </Link>
         <Link
+          href="/epics"
+          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
+            isActive('/epics') ? 'bg-gray-700' : 'hover:bg-gray-700'
+          }`}
+        >
+          <span>📜</span>
+          <span>EPICS</span>
+        </Link>
+        <Link
           href="/features"
           className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
             isActive('/features') ? 'bg-gray-700' : 'hover:bg-gray-700'

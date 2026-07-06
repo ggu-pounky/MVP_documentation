@@ -7,6 +7,7 @@ export type Feature = {
   priorite: 'Faible' | 'Moyenne' | 'Élevée' | 'Critique'
   statut: 'À faire' | 'En cours' | 'Terminé' | 'Annulé'
   besoinId: string  // Référence au besoin parent
+  epicId: string | null  // Référence à l'EPIC parente (nullable pour rétrocompatibilité)
   created_at: string
   updated_at: string
 }
@@ -17,6 +18,7 @@ export type FeatureFormData = {
   priorite: 'Faible' | 'Moyenne' | 'Élevée' | 'Critique'
   statut: 'À faire' | 'En cours' | 'Terminé' | 'Annulé'
   besoinId: string
+  epicId?: string | null
 }
 
 // Priorités disponibles pour le sélecteur

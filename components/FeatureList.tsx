@@ -1,18 +1,27 @@
 'use client'
 
 import type { Feature } from '@/types/feature'
+import type { Besoin } from '@/types/besoin'
+import type { Epic } from '@/types/epic'
 
 type FeatureListProps = {
   features: Feature[]
-  besoins: { id: string; titre: string }[]
+  besoins: Besoin[]
+  epics?: Epic[]  // Ajout des EPICS pour l'affichage
   onEdit: (feature: Feature) => void
   onDelete: (id: string) => void
 }
 
-export default function FeatureList({ features, besoins, onEdit, onDelete }: FeatureListProps) {
+export default function FeatureList({ features, besoins, epics = [], onEdit, onDelete }: FeatureListProps) {
   const getBesoinTitre = (besoinId: string) => {
     const besoin = besoins.find((b) => b.id === besoinId)
     return besoin ? besoin.titre : 'Inconnu'
+  }
+
+  const getEpicTitre = (epicId: string | null) => {
+    if (!epicId) return 'Aucune'
+    const epic = epics.find((e) => e.id === epicId)
+    return epic ? epic.titre : 'Inconnu'
   }
 
   const getPrioriteColor = (priorite: string): string => {
@@ -58,10 +67,12 @@ export default function FeatureList({ features, besoins, onEdit, onDelete }: Fea
       <table className="w-full">
         <thead className="bg-gray-100">
           <tr>
-            <th className="p-3 text-left">Nom du Besoin</th>
+            <th className="p-3 text-left">Besoin</th>
+            <th className="p-3 text-left">EPIC</th>
             <th className="p-3 text-left">Titre</th>
             <th className="p-3 text-left">Priorité</th>
             <th className="p-3 text-left">Statut</th>
+            <th className="p-3 text-left">Description</th>
             <th className="p-3 text-left">Actions</th>
           </tr>
         </thead>
@@ -69,6 +80,7 @@ export default function FeatureList({ features, besoins, onEdit, onDelete }: Fea
           {features.map((feature) => (
             <tr key={feature.id} className="border-t">
               <td className="p-3">{getBesoinTitre(feature.besoinId)}</td>
+              <td className="p-3">{getEpicTitre(feature.epicId)}</td>
               <td className="p-3">{feature.titre}</td>
               <td className="p-3">
                 <span className={`px-2 py-1 rounded-full text-xs ${getPrioriteColor(feature.priorite)}`}>
@@ -80,6 +92,7 @@ export default function FeatureList({ features, besoins, onEdit, onDelete }: Fea
                   {feature.statut}
                 </span>
               </td>
+              <td className="p-3">{feature.description || '-'}</td>
               <td className="p-3">
                 <div className="flex gap-2">
                   <button

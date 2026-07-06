@@ -1,52 +1,40 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import ExigenceForm from '@/components/ExigenceForm'
-import ExigenceList from '@/components/ExigenceList'
-import type { Exigence, ExigenceFormData } from '@/types/exigence'
+import EpicForm from '@/components/EpicForm'
+import EpicList from '@/components/EpicList'
+import type { Epic, EpicFormData } from '@/types/epic'
 import type { Besoin } from '@/types/besoin'
-import type { Feature } from '@/types/feature'
-import type { Epic } from '@/types/epic'
 
-export default function ExigencesPage() {
-  const [exigences, setExigences] = useState<Exigence[]>([])
-  const [besoins, setBesoins] = useState<Besoin[]>([])
-  const [features, setFeatures] = useState<Feature[]>([])
+export default function EpicsPage() {
   const [epics, setEpics] = useState<Epic[]>([])
+  const [besoins, setBesoins] = useState<Besoin[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [editingExigence, setEditingExigence] = useState<Exigence | null>(null)
+  const [editingEpic, setEditingEpic] = useState<Epic | null>(null)
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
   // Charger les données depuis localStorage
   useEffect(() => {
     const savedBesoins = localStorage.getItem('besoins')
-    const savedFeatures = localStorage.getItem('features')
     const savedEpics = localStorage.getItem('epics')
-    const savedExigences = localStorage.getItem('exigences')
     
     if (savedBesoins) {
       setBesoins(JSON.parse(savedBesoins))
     }
-    if (savedFeatures) {
-      setFeatures(JSON.parse(savedFeatures))
-    }
     if (savedEpics) {
       setEpics(JSON.parse(savedEpics))
-    }
-    if (savedExigences) {
-      setExigences(JSON.parse(savedExigences))
     }
     setLoading(false)
   }, [])
 
-  // Sauvegarder les exigences dans localStorage
+  // Sauvegarder les epics dans localStorage
   useEffect(() => {
     if (!loading) {
-      localStorage.setItem('exigences', JSON.stringify(exigences))
+      localStorage.setItem('epics', JSON.stringify(epics))
     }
-  }, [exigences, loading])
+  }, [epics, loading])
 
   // Générer un ID unique
   const generateId = (): string => {
@@ -59,55 +47,43 @@ export default function ExigencesPage() {
     setTimeout(() => setNotification(null), 3000)
   }
 
-  // Préparer la liste des features avec leurs informations complètes
-  const featuresWithInfo = features.map((feature) => {
-    const besoin = besoins.find((b) => b.id === feature.besoinId)
-    const epic = epics.find((e) => e.id === feature.epicId)
-    return {
-      id: feature.id,
-      titre: feature.titre,
-      besoinTitre: besoin ? besoin.titre : 'Inconnu',
-      epicTitre: epic ? epic.titre : 'Aucune',
-    }
-  })
-
-  const handleSubmit = async (data: ExigenceFormData) => {
+  const handleSubmit = async (data: EpicFormData) => {
     try {
-      if (editingExigence) {
-        // Mettre à jour une exigence existante
-        setExigences(
-          exigences.map((e) =>
-            e.id === editingExigence.id
+      if (editingEpic) {
+        // Mettre à jour une epic existante
+        setEpics(
+          epics.map((e) =>
+            e.id === editingEpic.id
               ? {
                   ...e,
                   titre: data.titre,
                   description: data.description,
                   statut: data.statut,
-                  featureId: data.featureId,
+                  besoinId: data.besoinId,
                   updated_at: new Date().toISOString(),
                 }
               : e
           )
         )
-        showNotification('Exigence modifiée avec succès !')
+        showNotification('EPIC modifiée avec succès !')
       } else {
-        // Créer une nouvelle exigence
-        const newExigence: Exigence = {
+        // Créer une nouvelle epic
+        const newEpic: Epic = {
           id: generateId(),
           titre: data.titre,
           description: data.description,
           statut: data.statut,
-          featureId: data.featureId,
+          besoinId: data.besoinId,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }
-        setExigences([...exigences, newExigence])
-        showNotification('Exigence créée avec succès !')
+        setEpics([...epics, newEpic])
+        showNotification('EPIC créée avec succès !')
         // Scroll vers la liste après création
         setTimeout(() => listRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
       }
       setShowForm(false)
-      setEditingExigence(null)
+      setEditingEpic(null)
     } catch (error) {
       console.error('Erreur:', error)
       showNotification('Une erreur est survenue', 'error')
@@ -116,16 +92,16 @@ export default function ExigencesPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      setExigences(exigences.filter((e) => e.id !== id))
-      showNotification('Exigence supprimée avec succès !')
+      setEpics(epics.filter((e) => e.id !== id))
+      showNotification('EPIC supprimée avec succès !')
     } catch (error) {
       console.error('Erreur:', error)
       showNotification('Une erreur est survenue', 'error')
     }
   }
 
-  const handleEdit = (exigence: Exigence) => {
-    setEditingExigence(exigence)
+  const handleEdit = (epic: Epic) => {
+    setEditingEpic(epic)
     setShowForm(true)
   }
 
@@ -133,7 +109,7 @@ export default function ExigencesPage() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Gestion des Exigences</h1>
+      <h1 className="text-2xl font-bold mb-6">Gestion des EPICS</h1>
 
       {/* Notification */}
       {notification && (
@@ -146,43 +122,43 @@ export default function ExigencesPage() {
         </div>
       )}
 
-      {/* Bouton pour ajouter une exigence (désactivé si aucune feature) */}
+      {/* Bouton pour ajouter une epic (désactivé si aucun besoin) */}
       <button
         onClick={() => {
-          if (features.length === 0) {
-            showNotification('Veuillez d\'abord créer une Feature', 'error')
+          if (besoins.length === 0) {
+            showNotification('Veuillez d\'abord créer un besoin', 'error')
             return
           }
-          setEditingExigence(null)
+          setEditingEpic(null)
           setShowForm(!showForm)
         }}
-        disabled={features.length === 0}
+        disabled={besoins.length === 0}
         className={`mb-4 px-4 py-2 rounded ${
-          features.length === 0
+          besoins.length === 0
             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
             : 'bg-blue-500 text-white hover:bg-blue-600'
         }`}
       >
-        {showForm ? 'Annuler' : 'Ajouter une Exigence'}
+        {showForm ? 'Annuler' : 'Ajouter une EPIC'}
       </button>
 
       {showForm && (
-        <ExigenceForm
-          exigence={editingExigence}
-          features={featuresWithInfo}
+        <EpicForm
+          epic={editingEpic}
+          besoins={besoins}
           onSubmit={handleSubmit}
           onCancel={() => {
             setShowForm(false)
-            setEditingExigence(null)
+            setEditingEpic(null)
           }}
         />
       )}
 
-      {/* Liste des exigences avec référence pour le scroll */}
+      {/* Liste des epics avec référence pour le scroll */}
       <div ref={listRef}>
-        <ExigenceList
-          exigences={exigences}
-          features={featuresWithInfo}
+        <EpicList
+          epics={epics}
+          besoins={besoins}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
