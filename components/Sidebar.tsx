@@ -50,6 +50,19 @@ export default function Sidebar() {
           <span>📋</span>
           <span>Exigences</span>
         </Link>
+        {/* PRD link placed between Exigences and Tests */}
+        <Link
+          href="/prd"
+          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
+            isActive('/prd') ? 'bg-gray-700' : 'hover:bg-gray-700'
+          }`}
+        >
+          <span>📄</span>
+          <span className="flex flex-col">
+            <span className="text-xs text-gray-400">documentation</span>
+            <span>PRD</span>
+          </span>
+        </Link>
         <Link
           href="/tests"
           className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
@@ -58,16 +71,6 @@ export default function Sidebar() {
         >
           <span>🧪</span>
           <span>Tests</span>
-        </Link>
-        {/* PRD link moved up - removed mt-auto to bring it higher */}
-        <Link
-          href="/prd"
-          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
-            isActive('/prd') ? 'bg-gray-700' : 'hover:bg-gray-700'
-          }`}
-        >
-          <span>📄</span>
-          <span>PRD</span>
         </Link>
       </nav>
     </aside>
