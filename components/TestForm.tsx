@@ -4,21 +4,30 @@ import { useState, useEffect } from 'react'
 import type { Test, TestFormData } from '@/types/test'
 import { prioritesTest, statutsTest } from '@/types/test'
 
-type TestFormProps = {
-  test?: Test | null
-  exigences: { id: string; titre: string; featureTitre: string; besoinTitre: string }[]
-  onSubmit: (data: TestFormData) => Promise<void>
-  onCancel: () => void
+type ExigenceInfo = {
+  id: string
+  titre: string
+  featureTitre: string
+  besoinTitre: string
+  description?: string
 }
 
-export default function TestForm({ test, exigences, onSubmit, onCancel }: TestFormProps) {
+type TestFormProps = {
+  test?: Test | null
+  exigences: ExigenceInfo[]
+  onSubmit: (data: TestFormData) => Promise<void>
+  onCancel: () => void
+  onGenerateAI?: (exigence: ExigenceInfo) => void
+}
+
+export default function TestForm({ test, exigences, onSubmit, onCancel, onGenerateAI }: TestFormProps) {
   const [titre, setTitre] = useState('')
   const [description, setDescription] = useState('')
   const [exigenceId, setExigenceId] = useState('')
   const [isTNR, setIsTNR] = useState(false)
   const [isAutomatisable, setIsAutomatisable] = useState(false)
-  const [priorite, setPriorite] = useState<'Faible' | 'Moyenne' | 'Élevée' | 'Critique'>('Moyenne')
-  const [statut, setStatut] = useState<'À faire' | 'En cours' | 'Terminé' | 'Annulé' | 'Validé'>('À faire')
+  const [priorite, setPriorite] = useState<'Faible' | 'Moyenne' | '\u00c9lev\u00e9e' | 'Critique'>('Moyenne')
+  const [statut, setStatut] = useState<'\u00c0 faire' | 'En cours' | 'Termin\u00e9' | 'Annul\u00e9' | 'Valid\u00e9'>('\u00c0 faire')
 
   useEffect(() => {
     if (test) {
@@ -36,14 +45,14 @@ export default function TestForm({ test, exigences, onSubmit, onCancel }: TestFo
       setIsTNR(false)
       setIsAutomatisable(false)
       setPriorite('Moyenne')
-      setStatut('À faire')
+      setStatut('\u00c0 faire')
     }
   }, [test])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!exigenceId) {
-      alert('Veuillez sélectionner une exigence')
+      alert('Veuillez s\u00e9lectionner une exigence')
       return
     }
     await onSubmit({
@@ -57,6 +66,9 @@ export default function TestForm({ test, exigences, onSubmit, onCancel }: TestFo
     })
   }
 
+  // Trouver l'exigence s\u00e9lectionn\u00e9e pour la g\u00e9n\u00e9ration IA
+  const selectedExigence = exigences.find((e) => e.id === exigenceId)
+
   return (
     <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow mb-4">
       <div className="mb-4">
@@ -67,10 +79,10 @@ export default function TestForm({ test, exigences, onSubmit, onCancel }: TestFo
           required
           className="w-full p-2 border rounded"
         >
-          <option value="">-- Sélectionnez une exigence --</option>
+          <option value="">-- S\u00e9lectionnez une exigence --</option>
           {exigences.map((exigence) => (
             <option key={exigence.id} value={exigence.id}>
-              {exigence.besoinTitre} → {exigence.featureTitre} → {exigence.titre}
+              {exigence.besoinTitre} \u2192 {exigence.featureTitre} \u2192 {exigence.titre}
             </option>
           ))}
         </select>
@@ -98,10 +110,10 @@ export default function TestForm({ test, exigences, onSubmit, onCancel }: TestFo
       </div>
 
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Priorité</label>
+        <label className="block text-sm font-medium mb-1">Priorit\u00e9</label>
         <select
           value={priorite}
-          onChange={(e) => setPriorite(e.target.value as 'Faible' | 'Moyenne' | 'Élevée' | 'Critique')}
+          onChange={(e) => setPriorite(e.target.value as 'Faible' | 'Moyenne' | '\u00c9lev\u00e9e' | 'Critique')}
           className="w-full p-2 border rounded"
         >
           {prioritesTest.map((p) => (
@@ -116,7 +128,7 @@ export default function TestForm({ test, exigences, onSubmit, onCancel }: TestFo
         <label className="block text-sm font-medium mb-1">Statut</label>
         <select
           value={statut}
-          onChange={(e) => setStatut(e.target.value as 'À faire' | 'En cours' | 'Terminé' | 'Annulé' | 'Validé')}
+          onChange={(e) => setStatut(e.target.value as '\u00c0 faire' | 'En cours' | 'Termin\u00e9' | 'Annul\u00e9' | 'Valid\u00e9')}
           className="w-full p-2 border rounded"
         >
           {statutsTest.map((s) => (
@@ -144,7 +156,7 @@ export default function TestForm({ test, exigences, onSubmit, onCancel }: TestFo
             onChange={(e) => setIsAutomatisable(e.target.checked)}
             className="w-4 h-4"
           />
-          <span className="text-sm font-medium">À automatiser</span>
+          <span className="text-sm font-medium">\u00c0 automatiser</span>
         </label>
       </div>
 
@@ -153,7 +165,7 @@ export default function TestForm({ test, exigences, onSubmit, onCancel }: TestFo
           type="submit"
           className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
         >
-          {test ? 'Modifier' : 'Créer'}
+          {test ? 'Modifier' : 'Cr\u00e9er'}
         </button>
         <button
           type="button"
@@ -162,6 +174,16 @@ export default function TestForm({ test, exigences, onSubmit, onCancel }: TestFo
         >
           Annuler
         </button>
+        {/* Bouton G\u00e9n\u00e9rer par IA (visible si on cr\u00e9e un nouveau test et qu'une exigence est s\u00e9lectionn\u00e9e) */}
+        {onGenerateAI && !test && selectedExigence && (
+          <button
+            type="button"
+            onClick={() => onGenerateAI(selectedExigence)}
+            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+          >
+            G\u00e9n\u00e9rer par IA
+          </button>
+        )}
       </div>
     </form>
   )

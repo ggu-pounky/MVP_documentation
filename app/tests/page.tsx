@@ -3,10 +3,19 @@
 import { useState, useEffect, useRef } from 'react'
 import TestForm from '@/components/TestForm'
 import TestList from '@/components/TestList'
+import TestAIGeneratorModal from '@/components/TestAIGeneratorModal'
 import type { Test, TestFormData } from '@/types/test'
 import type { Besoin } from '@/types/besoin'
 import type { Feature } from '@/types/feature'
 import type { Exigence } from '@/types/exigence'
+
+type ExigenceInfo = {
+  id: string
+  titre: string
+  featureTitre: string
+  besoinTitre: string
+  description?: string
+}
 
 export default function TestsPage() {
   const [tests, setTests] = useState<Test[]>([])
@@ -17,6 +26,8 @@ export default function TestsPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingTest, setEditingTest] = useState<Test | null>(null)
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [showAIGenerator, setShowAIGenerator] = useState(false)
+  const [selectedExigenceForAI, setSelectedExigenceForAI] = useState<ExigenceInfo | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
   // Charger les données depuis localStorage
@@ -52,6 +63,36 @@ export default function TestsPage() {
     setTimeout(() => setNotification(null), 3000)
   }
 
+  // Ouvrir la modale de génération IA pour une exigence
+  const openAIGenerator = (exigence: ExigenceInfo) => {
+    setSelectedExigenceForAI(exigence)
+    setShowAIGenerator(true)
+  }
+
+  // Générer des tests à partir des suggestions IA
+  const handleGenerateFromAI = (generatedTests: { titre: string; description: string }[]) => {
+    if (!selectedExigenceForAI) return
+
+    const newTests: Test[] = generatedTests.map((testData) => ({
+      id: generateId(),
+      titre: testData.titre,
+      description: testData.description,
+      exigenceId: selectedExigenceForAI.id,
+      isTNR: false,
+      isAutomatisable: false,
+      priorite: 'Moyenne',
+      statut: '\u00c0 faire',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }))
+
+    setTests([...tests, ...newTests])
+    showNotification(`${newTests.length} test(s) g\u00e9n\u00e9r\u00e9(s) avec succ\u00e8s !`)
+    setShowAIGenerator(false)
+    setSelectedExigenceForAI(null)
+    setShowForm(false)
+  }
+
   // Préparer la liste des exigences avec leurs informations complètes
   const exigencesWithInfo = exigences.map((exigence) => {
     const feature = features.find((f) => f.id === exigence.featureId)
@@ -61,13 +102,14 @@ export default function TestsPage() {
       titre: exigence.titre,
       featureTitre: feature ? feature.titre : 'Inconnu',
       besoinTitre: besoin ? besoin.titre : 'Inconnu',
+      description: exigence.description || undefined,
     }
   })
 
   const handleSubmit = async (data: TestFormData) => {
     try {
       if (editingTest) {
-        // Mettre à jour un test existant
+        // Mettre \u00e0 jour un test existant
         setTests(
           tests.map((t) =>
             t.id === editingTest.id
@@ -85,9 +127,9 @@ export default function TestsPage() {
               : t
           )
         )
-        showNotification('Test modifié avec succès !')
+        showNotification('Test modifi\u00e9 avec succ\u00e8s !')
       } else {
-        // Créer un nouveau test
+        // Cr\u00e9er un nouveau test
         const newTest: Test = {
           id: generateId(),
           titre: data.titre,
@@ -101,8 +143,8 @@ export default function TestsPage() {
           updated_at: new Date().toISOString(),
         }
         setTests([...tests, newTest])
-        showNotification('Test créé avec succès !')
-        // Scroll vers la liste après création
+        showNotification('Test cr\u00e9\u00e9 avec succ\u00e8s !')
+        // Scroll vers la liste apr\u00e8s cr\u00e9ation
         setTimeout(() => listRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
       }
       setShowForm(false)
@@ -116,7 +158,7 @@ export default function TestsPage() {
   const handleDelete = async (id: string) => {
     try {
       setTests(tests.filter((t) => t.id !== id))
-      showNotification('Test supprimé avec succès !')
+      showNotification('Test supprim\u00e9 avec succ\u00e8s !')
     } catch (error) {
       console.error('Erreur:', error)
       showNotification('Une erreur est survenue', 'error')
@@ -145,11 +187,11 @@ export default function TestsPage() {
         </div>
       )}
 
-      {/* Bouton pour ajouter un test (désactivé si aucune exigence) */}
+      {/* Bouton pour ajouter un test (d\u00e9sactiv\u00e9 si aucune exigence) */}
       <button
         onClick={() => {
           if (exigences.length === 0) {
-            showNotification('Veuillez d\'abord créer une exigence', 'error')
+            showNotification('Veuillez d\'abord cr\u00e9er une exigence', 'error')
             return
           }
           setEditingTest(null)
@@ -174,10 +216,11 @@ export default function TestsPage() {
             setShowForm(false)
             setEditingTest(null)
           }}
+          onGenerateAI={openAIGenerator}
         />
       )}
 
-      {/* Liste des tests avec référence pour le scroll */}
+      {/* Liste des tests avec r\u00e9f\u00e9rence pour le scroll */}
       <div ref={listRef}>
         <TestList
           tests={tests}
@@ -186,6 +229,18 @@ export default function TestsPage() {
           onDelete={handleDelete}
         />
       </div>
+
+      {/* Modale de g\u00e9n\u00e9ration IA */}
+      {showAIGenerator && (
+        <TestAIGeneratorModal
+          exigence={selectedExigenceForAI}
+          onClose={() => {
+            setShowAIGenerator(false)
+            setSelectedExigenceForAI(null)
+          }}
+          onGenerate={handleGenerateFromAI}
+        />
+      )}
     </div>
   )
 }
