@@ -1,33 +1,40 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import BesoinForm from '@/components/BesoinForm'
-import BesoinList from '@/components/BesoinList'
-import type { Besoin, BesoinFormData } from '@/types/besoin'
+import FeatureForm from '@/components/FeatureForm'
+import FeatureList from '@/components/FeatureList'
+import type { Feature, FeatureFormData } from '@/types/feature'
+import type { Besoin } from '@/types/besoin'
 
-export default function Home() {
+export default function FeaturesPage() {
+  const [features, setFeatures] = useState<Feature[]>([])
   const [besoins, setBesoins] = useState<Besoin[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [editingBesoin, setEditingBesoin] = useState<Besoin | null>(null)
+  const [editingFeature, setEditingFeature] = useState<Feature | null>(null)
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
-  // Charger les besoins depuis localStorage
+  // Charger les données depuis localStorage
   useEffect(() => {
     const savedBesoins = localStorage.getItem('besoins')
+    const savedFeatures = localStorage.getItem('features')
+    
     if (savedBesoins) {
       setBesoins(JSON.parse(savedBesoins))
+    }
+    if (savedFeatures) {
+      setFeatures(JSON.parse(savedFeatures))
     }
     setLoading(false)
   }, [])
 
-  // Sauvegarder dans localStorage
+  // Sauvegarder les features dans localStorage
   useEffect(() => {
     if (!loading) {
-      localStorage.setItem('besoins', JSON.stringify(besoins))
+      localStorage.setItem('features', JSON.stringify(features))
     }
-  }, [besoins, loading])
+  }, [features, loading])
 
   // Générer un ID unique
   const generateId = (): string => {
@@ -40,39 +47,45 @@ export default function Home() {
     setTimeout(() => setNotification(null), 3000)
   }
 
-  const handleSubmit = async (data: BesoinFormData) => {
+  const handleSubmit = async (data: FeatureFormData) => {
     try {
-      if (editingBesoin) {
-        setBesoins(
-          besoins.map((b) =>
-            b.id === editingBesoin.id
+      if (editingFeature) {
+        // Mettre à jour une feature existante
+        setFeatures(
+          features.map((f) =>
+            f.id === editingFeature.id
               ? {
-                  ...b,
+                  ...f,
                   titre: data.titre,
                   description: data.description,
+                  priorite: data.priorite,
                   statut: data.statut,
+                  besoinId: data.besoinId,
                   updated_at: new Date().toISOString(),
                 }
-              : b
+              : f
           )
         )
-        showNotification('Besoin modifié avec succès !')
+        showNotification('Feature modifiée avec succès !')
       } else {
-        const newBesoin: Besoin = {
+        // Créer une nouvelle feature
+        const newFeature: Feature = {
           id: generateId(),
           titre: data.titre,
           description: data.description,
+          priorite: data.priorite,
           statut: data.statut,
+          besoinId: data.besoinId,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }
-        setBesoins([...besoins, newBesoin])
-        showNotification('Besoin créé avec succès !')
+        setFeatures([...features, newFeature])
+        showNotification('Feature créée avec succès !')
         // Scroll vers la liste après création
         setTimeout(() => listRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
       }
       setShowForm(false)
-      setEditingBesoin(null)
+      setEditingFeature(null)
     } catch (error) {
       console.error('Erreur:', error)
       showNotification('Une erreur est survenue', 'error')
@@ -81,16 +94,16 @@ export default function Home() {
 
   const handleDelete = async (id: string) => {
     try {
-      setBesoins(besoins.filter((b) => b.id !== id))
-      showNotification('Besoin supprimé avec succès !')
+      setFeatures(features.filter((f) => f.id !== id))
+      showNotification('Feature supprimée avec succès !')
     } catch (error) {
       console.error('Erreur:', error)
       showNotification('Une erreur est survenue', 'error')
     }
   }
 
-  const handleEdit = (besoin: Besoin) => {
-    setEditingBesoin(besoin)
+  const handleEdit = (feature: Feature) => {
+    setEditingFeature(feature)
     setShowForm(true)
   }
 
@@ -98,7 +111,7 @@ export default function Home() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Gestion des Besoins</h1>
+      <h1 className="text-2xl font-bold mb-6">Gestion des Features</h1>
 
       {/* Notification */}
       {notification && (
@@ -111,30 +124,42 @@ export default function Home() {
         </div>
       )}
 
+      {/* Bouton pour ajouter une feature (désactivé si aucun besoin) */}
       <button
         onClick={() => {
-          setEditingBesoin(null)
+          if (besoins.length === 0) {
+            showNotification('Veuillez d\'abord créer un besoin', 'error')
+            return
+          }
+          setEditingFeature(null)
           setShowForm(!showForm)
         }}
-        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        disabled={besoins.length === 0}
+        className={`mb-4 px-4 py-2 rounded ${
+          besoins.length === 0
+            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            : 'bg-blue-500 text-white hover:bg-blue-600'
+        }`}
       >
-        {showForm ? 'Annuler' : 'Ajouter un besoin'}
+        {showForm ? 'Annuler' : 'Ajouter une Feature'}
       </button>
 
       {showForm && (
-        <BesoinForm
-          besoin={editingBesoin}
+        <FeatureForm
+          feature={editingFeature}
+          besoins={besoins}
           onSubmit={handleSubmit}
           onCancel={() => {
             setShowForm(false)
-            setEditingBesoin(null)
+            setEditingFeature(null)
           }}
         />
       )}
 
-      {/* Liste des besoins avec référence pour le scroll */}
+      {/* Liste des features avec référence pour le scroll */}
       <div ref={listRef}>
-        <BesoinList
+        <FeatureList
+          features={features}
           besoins={besoins}
           onEdit={handleEdit}
           onDelete={handleDelete}

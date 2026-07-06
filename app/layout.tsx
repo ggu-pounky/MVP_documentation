@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import Sidebar from '@/components/Sidebar'
 
 export const metadata: Metadata = {
-  title: 'Gestion des Besoins',
-  description: 'Application simple de gestion des besoins',
+  title: 'Gestion des Besoins et Features',
+  description: 'Application de gestion des besoins et features',
 }
 
 export default function RootLayout({
@@ -13,7 +14,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <div className="flex min-h-screen">
+          <Sidebar />
+          <main className="flex-1 p-6 bg-gray-50">{children}</main>
+        </div>
+      </body>
     </html>
   )
 }

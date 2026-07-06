@@ -1,0 +1,38 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+
+export default function Sidebar() {
+  const pathname = usePathname()
+
+  const isActive = (path: string) => pathname === path
+
+  return (
+    <aside className="w-64 bg-gray-800 text-white min-h-screen p-4">
+      <div className="mb-8">
+        <h1 className="text-xl font-bold">MVP Documentation</h1>
+      </div>
+      <nav className="space-y-2">
+        <Link
+          href="/"
+          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
+            isActive('/') ? 'bg-gray-700' : 'hover:bg-gray-700'
+          }`}
+        >
+          <span>📌</span>
+          <span>Besoins</span>
+        </Link>
+        <Link
+          href="/features"
+          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
+            isActive('/features') ? 'bg-gray-700' : 'hover:bg-gray-700'
+          }`}
+        >
+          <span>🚀</span>
+          <span>Features</span>
+        </Link>
+      </nav>
+    </aside>
+  )
+}
