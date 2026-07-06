@@ -50,7 +50,7 @@ export default function FeaturesPage() {
     setTimeout(() => setNotification(null), 3000)
   }
 
-  // Ouvrir la modale de génération IA pour un besoin spécifique
+  // Ouvrir la modale de génération IA pour un besoin
   const openAIGenerator = (besoin: Besoin) => {
     setSelectedBesoinForAI(besoin)
     setShowAIGenerator(true)
@@ -64,8 +64,8 @@ export default function FeaturesPage() {
       id: generateId(),
       titre: featureData.titre,
       description: featureData.description,
-      priorite: 'Moyenne', // Priorité par défaut
-      statut: 'À faire',   // Statut par défaut
+      priorite: 'Moyenne',
+      statut: 'À faire',
       besoinId: selectedBesoinForAI.id,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -75,6 +75,7 @@ export default function FeaturesPage() {
     showNotification(`${newFeatures.length} Feature(s) générée(s) avec succès !`)
     setShowAIGenerator(false)
     setSelectedBesoinForAI(null)
+    setShowForm(false) // Fermer le formulaire après génération
   }
 
   const handleSubmit = async (data: FeatureFormData) => {
@@ -141,34 +142,7 @@ export default function FeaturesPage() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Gestion des Features</h1>
-        {/* Bouton Génération IA (visible si des besoins existent) */}
-        {besoins.length > 0 && (
-          <div className="flex gap-2">
-            <select
-              onChange={(e) => {
-                const besoinId = e.target.value
-                if (besoinId) {
-                  const besoin = besoins.find((b) => b.id === besoinId)
-                  if (besoin) openAIGenerator(besoin)
-                }
-              }}
-              defaultValue=""
-              className="p-2 border rounded"
-            >
-              <option value="" disabled>
-                Génération IA pour...
-              </option>
-              {besoins.map((besoin) => (
-                <option key={besoin.id} value={besoin.id}>
-                  {besoin.titre}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-      </div>
+      <h1 className="text-2xl font-bold mb-6">Gestion des Features</h1>
 
       {/* Notification */}
       {notification && (
@@ -204,12 +178,13 @@ export default function FeaturesPage() {
       {showForm && (
         <FeatureForm
           feature={editingFeature}
-          besoins={besoins}
+          besoins={besoins.map((b) => ({ id: b.id, titre: b.titre }))}
           onSubmit={handleSubmit}
           onCancel={() => {
             setShowForm(false)
             setEditingFeature(null)
           }}
+          onGenerateAI={openAIGenerator}
         />
       )}
 

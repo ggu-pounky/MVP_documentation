@@ -3,15 +3,17 @@
 import { useState, useEffect } from 'react'
 import type { Feature, FeatureFormData } from '@/types/feature'
 import { priorites, statutsFeature } from '@/types/feature'
+import type { Besoin } from '@/types/besoin'
 
 type FeatureFormProps = {
   feature?: Feature | null
   besoins: { id: string; titre: string }[]
   onSubmit: (data: FeatureFormData) => Promise<void>
   onCancel: () => void
+  onGenerateAI?: (besoin: Besoin) => void  // Nouvelle prop pour la génération IA
 }
 
-export default function FeatureForm({ feature, besoins, onSubmit, onCancel }: FeatureFormProps) {
+export default function FeatureForm({ feature, besoins, onSubmit, onCancel, onGenerateAI }: FeatureFormProps) {
   const [titre, setTitre] = useState('')
   const [description, setDescription] = useState('')
   const [priorite, setPriorite] = useState<'Faible' | 'Moyenne' | 'Élevée' | 'Critique'>('Moyenne')
@@ -48,6 +50,9 @@ export default function FeatureForm({ feature, besoins, onSubmit, onCancel }: Fe
       besoinId,
     })
   }
+
+  // Trouver le besoin sélectionné pour la génération IA
+  const selectedBesoin = besoins.find((b) => b.id === besoinId)
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow mb-4">
@@ -133,6 +138,16 @@ export default function FeatureForm({ feature, besoins, onSubmit, onCancel }: Fe
         >
           Annuler
         </button>
+        {/* Bouton Générer par IA (visible si on crée une nouvelle feature et qu'un besoin est sélectionné) */}
+        {onGenerateAI && !feature && selectedBesoin && (
+          <button
+            type="button"
+            onClick={() => onGenerateAI(selectedBesoin)}
+            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+          >
+            Générer par IA
+          </button>
+        )}
       </div>
     </form>
   )
