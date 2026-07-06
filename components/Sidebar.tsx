@@ -20,7 +20,7 @@ export default function Sidebar() {
             isActive('/') ? 'bg-gray-700' : 'hover:bg-gray-700'
           }`}
         >
-          <span>📌</span>
+          <span>📜</span>
           <span>Besoins</span>
         </Link>
         <Link
@@ -59,8 +59,7 @@ export default function Sidebar() {
           <span>🧪</span>
           <span>Tests</span>
         </Link>
-      </nav>
-      <div className="mt-auto">
+        {/* PRD link moved up - removed mt-auto to bring it higher */}
         <Link
           href="/prd"
           className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
@@ -70,7 +69,7 @@ export default function Sidebar() {
           <span>📄</span>
           <span>PRD</span>
         </Link>
-      </div>
+      </nav>
     </aside>
   )
 }
