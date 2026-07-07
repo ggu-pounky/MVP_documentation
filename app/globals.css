@@ -2,9 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Add system font stack that properly handles accents */
+/* Add system font stack that properly handles accents and special characters */
 @layer base {
   html {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Noto Sans', 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  /* Ensure proper rendering of accented characters */
+  body {
+    font-feature-settings: "liga", "calt";
+    text-rendering: optimizeLegibility;
   }
 }

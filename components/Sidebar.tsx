@@ -213,6 +213,19 @@ export default function Sidebar() {
             <span>PRD</span>
           </span>
         </Link>
+        {/* Matrices link between PRD and Tests */}
+        <Link
+          href="/matrices"
+          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
+            isActive('/matrices') ? 'bg-gray-700' : 'hover:bg-gray-700'
+          }`}
+        >
+          <span>📊</span>
+          <span className="flex flex-col">
+            <span className="text-xs text-gray-400">documentation</span>
+            <span>Matrices</span>
+          </span>
+        </Link>
         <Link
           href="/tests"
           className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
