@@ -10,13 +10,14 @@ type CodeFunction = {
   description: string
   file: string
   line: number
+  codeSnippet?: string
 }
 
 type MatchResult = {
   type: 'intuitive' | 'possible' | 'none'
   codeFunction: CodeFunction
   matchedExigence?: Exigence
-  confidence: number // % de fiabilité (0-100)
+  confidence: number
   isValidated: boolean
 }
 
@@ -36,6 +37,7 @@ export default function CodePage() {
   const [matchResults, setMatchResults] = useState<MatchResult[]>([])
   const [manualMatches, setManualMatches] = useState<ManualMatch[]>([])
   const [analysisDone, setAnalysisDone] = useState(false)
+  const [foundFunctions, setFoundFunctions] = useState<CodeFunction[]>([])
 
   // Charger les exigences et features depuis localStorage
   useEffect(() => {
@@ -50,70 +52,221 @@ export default function CodePage() {
     }
   }, [])
 
-  // Simuler l'analyse du code GitHub
+  // Extraire le owner et repo du champ githubRepo
+  const getOwnerAndRepo = () => {
+    const parts = githubRepo.split('/')
+    if (parts.length >= 2) {
+      return { owner: parts[0], repo: parts[1] }
+    }
+    return { owner: '', repo: '' }
+  }
+
+  // Appel à l'API GitHub pour récupérer le contenu du dépôt
+  const fetchGitHubContents = async (owner: string, repo: string, path: string = '', token?: string) => {
+    const headers: Record<string, string> = {
+      'Accept': 'application/vnd.github.v3+json',
+    }
+    
+    if (token) {
+      headers['Authorization'] = `token ${token}`
+    }
+
+    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`
+    
+    try {
+      const response = await fetch(url, { headers })
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null
+        }
+        if (response.status === 403) {
+          throw new Error('Limite de requêtes API dépassée ou token invalide')
+        }
+        throw new Error(`Erreur API GitHub: ${response.status}`)
+      }
+      
+      return await response.json()
+    } catch (err) {
+      console.error('Erreur fetch:', err)
+      throw err
+    }
+  }
+
+  // Extraire les fonctions d'un fichier TypeScript/JavaScript
+  const extractFunctionsFromCode = (code: string, filePath: string): CodeFunction[] => {
+    const functions: CodeFunction[] = []
+    const lines = code.split('\n')
+    
+    // Expressions régulières pour détecter les fonctions
+    const functionRegex = /(?:function|const|class|async function|export function|export const)\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*(?:[(\[]|:)/g
+    const classRegex = /class\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/g
+    const arrowFunctionRegex = /const\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*=\s*(?:async\s+)?\(/g
+    
+    // Parcourir chaque ligne
+    lines.forEach((line, index) => {
+      const lineNum = index + 1
+      
+      // Chercher les fonctions normales
+      let match
+      while ((match = functionRegex.exec(line)) !== null) {
+        const functionName = match[1]
+        if (functionName && !['if', 'for', 'while', 'switch', 'return'].includes(functionName)) {
+          // Extraire la description des commentaires au-dessus
+          const description = extractDescriptionFromComments(lines, index)
+          
+          functions.push({
+            id: `${filePath}-${lineNum}-${functionName}`,
+            name: functionName,
+            description: description || `Fonction ${functionName} dans ${filePath}`,
+            file: filePath,
+            line: lineNum,
+            codeSnippet: line.trim(),
+          })
+        }
+      }
+      
+      // Chercher les classes
+      while ((match = classRegex.exec(line)) !== null) {
+        const className = match[1]
+        if (className) {
+          const description = extractDescriptionFromComments(lines, index)
+          
+          functions.push({
+            id: `${filePath}-${lineNum}-${className}`,
+            name: className,
+            description: description || `Classe ${className} dans ${filePath}`,
+            file: filePath,
+            line: lineNum,
+            codeSnippet: line.trim(),
+          })
+        }
+      }
+      
+      // Chercher les arrow functions
+      while ((match = arrowFunctionRegex.exec(line)) !== null) {
+        const constName = match[1]
+        if (constName) {
+          const description = extractDescriptionFromComments(lines, index)
+          
+          functions.push({
+            id: `${filePath}-${lineNum}-${constName}`,
+            name: constName,
+            description: description || `Constante ${constName} dans ${filePath}`,
+            file: filePath,
+            line: lineNum,
+            codeSnippet: line.trim(),
+          })
+        }
+      }
+    })
+    
+    return functions
+  }
+
+  // Extraire la description des commentaires au-dessus d'une ligne
+  const extractDescriptionFromComments = (lines: string[], lineIndex: number): string | null => {
+    // Remonter de 3 lignes maximum pour chercher des commentaires
+    const startLine = Math.max(0, lineIndex - 3)
+    const endLine = lineIndex
+    
+    for (let i = startLine; i < endLine; i++) {
+      const line = lines[i].trim()
+      
+      // Commentaires // ou /* */
+      if (line.startsWith('//')) {
+        return line.substring(2).trim()
+      }
+      if (line.startsWith('*') || line.startsWith('/*')) {
+        // Extraire le contenu entre /* et */
+        const commentContent = line.replace(/\/\*|\*\/|\*/g, '').trim()
+        if (commentContent) {
+          return commentContent
+        }
+      }
+      // JSDoc
+      if (line.startsWith('/**')) {
+        // Lire jusqu'à */
+        let j = i
+        let docString = ''
+        while (j < lines.length && !lines[j].includes('*/')) {
+          docString += lines[j].replace(/\/\*\*|\*\/|\*/g, '').trim() + ' '
+          j++
+        }
+        if (docString.trim()) {
+          return docString.trim()
+        }
+      }
+    }
+    
+    return null
+  }
+
+  // Analyser le code depuis GitHub
   const analyzeCode = async () => {
     if (!githubRepo) {
       setError('Veuillez entrer un nom de dépôt GitHub (ex: owner/repo)')
       return
     }
 
+    const { owner, repo } = getOwnerAndRepo()
+    if (!owner || !repo) {
+      setError('Format invalide. Utilisez: owner/repo')
+      return
+    }
+
     setIsLoading(true)
     setError(null)
     setAnalysisDone(false)
+    setFoundFunctions([])
+    setMatchResults([])
+    setManualMatches([])
 
     try {
-      // Simulation d'un appel à l'API GitHub (à remplacer par un vrai appel)
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      // Récupérer la liste des fichiers à la racine
+      const rootContents = await fetchGitHubContents(owner, repo, '', githubToken || undefined)
+      
+      if (!rootContents || !Array.isArray(rootContents)) {
+        throw new Error('Dépôt non trouvé ou inaccessible')
+      }
 
-      // Générer des fonctions de code simulées
-      const simulatedFunctions: CodeFunction[] = [
-        {
-          id: '1',
-          name: 'selectRoom',
-          description: 'Permet à l\'utilisateur de sélectionner une chambre disponible',
-          file: 'src/components/RoomSelection.tsx',
-          line: 42,
-        },
-        {
-          id: '2',
-          name: 'addToCart',
-          description: 'Ajoute une chambre au panier de réservation',
-          file: 'src/services/CartService.ts',
-          line: 15,
-        },
-        {
-          id: '3',
-          name: 'confirmBooking',
-          description: 'Confirme la réservation et envoie un email de confirmation',
-          file: 'src/services/BookingService.ts',
-          line: 28,
-        },
-        {
-          id: '4',
-          name: 'validateUserInput',
-          description: 'Valide les entrées utilisateur avant soumission',
-          file: 'src/utils/validation.ts',
-          line: 89,
-        },
-        {
-          id: '5',
-          name: 'calculatePrice',
-          description: 'Calcule le prix total en fonction des options sélectionnées',
-          file: 'src/services/PricingService.ts',
-          line: 33,
-        },
-      ]
+      // Filtrer les fichiers TypeScript/JavaScript
+      const codeFiles = rootContents.filter((item: any) => 
+        item.type === 'file' && 
+        (item.name.endsWith('.ts') || 
+         item.name.endsWith('.tsx') || 
+         item.name.endsWith('.js') || 
+         item.name.endsWith('.jsx'))
+      )
+
+      // Lire le contenu de chaque fichier
+      const allFunctions: CodeFunction[] = []
+      
+      for (const file of codeFiles) {
+        try {
+          const fileContents = await fetchGitHubContents(owner, repo, file.path, githubToken || undefined)
+          if (fileContents && typeof fileContents === 'object' && 'content' in fileContents) {
+            // Décoder le contenu base64
+            const content = Buffer.from(fileContents.content, 'base64').toString('utf-8')
+            const functions = extractFunctionsFromCode(content, file.path)
+            allFunctions.push(...functions)
+          }
+        } catch (err) {
+          console.warn(`Impossible de lire ${file.path}:`, err)
+          // Ignorer les fichiers trop gros ou inaccessibles
+        }
+      }
+
+      setFoundFunctions(allFunctions)
 
       // Classer les fonctions selon leur correspondance avec les exigences
       const newMatchResults: MatchResult[] = []
       const newManualMatches: ManualMatch[] = []
 
-      simulatedFunctions.forEach((func) => {
-        // Trouver la meilleure correspondance avec les exigences
+      allFunctions.forEach((func) => {
         const bestMatch = findBestMatch(func, exigences)
         
         if (bestMatch) {
-          // Rapprochement intuitif ou possible
           const confidence = calculateConfidence(func, bestMatch)
           const type = confidence > 80 ? 'intuitive' : 'possible'
           
@@ -125,7 +278,6 @@ export default function CodePage() {
             isValidated: false,
           })
         } else {
-          // Aucun rapprochement
           newManualMatches.push({
             codeFunction: func,
             selectedExigenceId: '',
@@ -139,7 +291,7 @@ export default function CodePage() {
       setAnalysisDone(true)
 
     } catch (err) {
-      setError('Erreur lors de l\'analyse du code. Vérifiez le nom du dépôt.')
+      setError(err instanceof Error ? err.message : 'Erreur lors de l\'analyse du code')
       console.error('Erreur:', err)
     } finally {
       setIsLoading(false)
@@ -150,7 +302,6 @@ export default function CodePage() {
   const findBestMatch = (func: CodeFunction, exigences: Exigence[]): Exigence | null => {
     if (exigences.length === 0) return null
 
-    // Comparer le nom et la description de la fonction avec les exigences
     const funcText = `${func.name} ${func.description}`.toLowerCase()
     
     let bestMatch: Exigence | null = null
@@ -159,7 +310,7 @@ export default function CodePage() {
     exigences.forEach((exigence) => {
       const exigenceText = `${exigence.titre} ${exigence.description}`.toLowerCase()
       
-      // Calculer un score de similarité simple
+      // Calculer un score de similarité
       const commonWords = funcText.split(' ').filter(word => 
         exigenceText.includes(word) && word.length > 3
       ).length
@@ -170,7 +321,6 @@ export default function CodePage() {
       }
     })
 
-    // Seuil minimum pour considérer un match
     return bestScore >= 2 ? bestMatch : null
   }
 
@@ -179,16 +329,14 @@ export default function CodePage() {
     const funcText = `${func.name} ${func.description}`.toLowerCase()
     const exigenceText = `${exigence.titre} ${exigence.description}`.toLowerCase()
     
-    // Compter les mots communs
     const funcWords = funcText.split(' ').filter(w => w.length > 3)
     const exigenceWords = exigenceText.split(' ').filter(w => w.length > 3)
     
     const commonWords = funcWords.filter(word => exigenceWords.includes(word)).length
     const totalWords = Math.max(funcWords.length, exigenceWords.length)
     
-    // Calculer un pourcentage (arrondi)
     const confidence = Math.round((commonWords / totalWords) * 100)
-    return Math.min(confidence, 100) // Max 100%
+    return Math.min(confidence, 100)
   }
 
   // Gérer la validation d'un rapprochement
@@ -222,11 +370,15 @@ export default function CodePage() {
     const validatedMatches = matchResults.filter((m) => m.isValidated)
     const validatedManualMatches = manualMatches.filter((m) => m.isValidated && m.selectedExigenceId)
 
-    // Ici, on pourrait sauvegarder dans localStorage ou envoyer à une API
-    console.log('Associations validées:', {
+    const associations = {
+      date: new Date().toISOString(),
+      repo: githubRepo,
       validatedMatches,
       validatedManualMatches,
-    })
+    }
+
+    // Sauvegarder dans localStorage
+    localStorage.setItem('codeAssociations', JSON.stringify(associations))
 
     alert(`Associations sauvegardées : ${validatedMatches.length + validatedManualMatches.length}`)
   }
@@ -285,71 +437,84 @@ export default function CodePage() {
       {/* Résultats de l'analyse */}
       {analysisDone && (
         <div className="space-y-8">
-          {/* Section 1: Rapprochement intuitif */}
-          <div className="bg-green-50 p-6 rounded-lg">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <span className="text-2xl">🟢</span>
-              Rapprochement intuitif
-            </h2>
-            <p className="text-gray-600 mb-4">
-              Les fonctions dont le nom ou la description correspondent clairement à une exigence existante.
+          {/* Info sur les fonctions trouvées */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-center">
+              <strong>{foundFunctions.length}</strong> fonctions/classes trouvées dans le code source.
+              {matchResults.length > 0 && (
+                <span> <strong>{matchResults.length}</strong> ont été associées automatiquement.</span>
+              )}
             </p>
+          </div>
 
-            {matchResults.filter((m) => m.type === 'intuitive').length > 0 ? (
+          {/* Section 1: Rapprochement intuitif */}
+          {matchResults.filter((m) => m.type === 'intuitive').length > 0 && (
+            <div className="bg-green-50 p-6 rounded-lg">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span className="text-2xl">🟢</span>
+                Rapprochement intuitif
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Les fonctions dont le nom ou la description correspondent clairement à une exigence existante.
+              </p>
+
               <div className="space-y-4">
                 {matchResults
                   .filter((m) => m.type === 'intuitive')
-                  .map((match, index) => (
-                    <div
-                      key={match.codeFunction.id}
-                      className="bg-white p-4 rounded border-l-4 border-green-500"
-                    >
-                      <div className="flex items-start gap-4">
-                        <input
-                          type="checkbox"
-                          checked={match.isValidated}
-                          onChange={() => toggleValidation(index, 'match')}
-                          className="mt-1 w-5 h-5"
-                        />
-                        <div className="flex-1">
-                          <div className="font-medium text-green-700">
-                            {match.codeFunction.name}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {match.codeFunction.file}:{match.codeFunction.line}
-                          </div>
-                          <div className="text-sm text-gray-500 mt-1">
-                            {match.codeFunction.description}
-                          </div>
-                          <div className="mt-2 p-2 bg-gray-50 rounded">
-                            <span className="text-sm font-medium">
-                              ↔️ {match.matchedExigence?.titre || 'Exigence correspondante'}
-                            </span>
-                            <div className="text-xs text-gray-500 mt-1">
-                              Confiance: {match.confidence}%
+                  .map((match, index) => {
+                    const matchIndex = matchResults.findIndex(
+                      (m) => m.codeFunction.id === match.codeFunction.id && m.type === 'intuitive'
+                    )
+                    return (
+                      <div
+                        key={match.codeFunction.id}
+                        className="bg-white p-4 rounded border-l-4 border-green-500"
+                      >
+                        <div className="flex items-start gap-4">
+                          <input
+                            type="checkbox"
+                            checked={match.isValidated}
+                            onChange={() => toggleValidation(matchIndex, 'match')}
+                            className="mt-1 w-5 h-5"
+                          />
+                          <div className="flex-1">
+                            <div className="font-medium text-green-700">
+                              {match.codeFunction.name}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {match.codeFunction.file}:{match.codeFunction.line}
+                            </div>
+                            <div className="text-sm text-gray-500 mt-1">
+                              {match.codeFunction.description}
+                            </div>
+                            <div className="mt-2 p-2 bg-gray-50 rounded">
+                              <span className="text-sm font-medium">
+                                ↔️ {match.matchedExigence?.titre || 'Exigence correspondante'}
+                              </span>
+                              <div className="text-xs text-gray-500 mt-1">
+                                Confiance: {match.confidence}%
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
               </div>
-            ) : (
-              <p className="text-gray-500">Aucun rapprochement intuitif trouvé.</p>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Section 2: Rapprochement possible */}
-          <div className="bg-yellow-50 p-6 rounded-lg">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <span className="text-2xl">🟡</span>
-              Rapprochement possible
-            </h2>
-            <p className="text-gray-600 mb-4">
-              Les fonctions qui pourraient correspondre à une exigence, mais avec moins de certitude.
-            </p>
+          {matchResults.filter((m) => m.type === 'possible').length > 0 && (
+            <div className="bg-yellow-50 p-6 rounded-lg">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span className="text-2xl">🟡</span>
+                Rapprochement possible
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Les fonctions qui pourraient correspondre à une exigence, mais avec moins de certitude.
+              </p>
 
-            {matchResults.filter((m) => m.type === 'possible').length > 0 ? (
               <div className="space-y-4">
                 {matchResults
                   .filter((m) => m.type === 'possible')
@@ -393,22 +558,21 @@ export default function CodePage() {
                     )
                   })}
               </div>
-            ) : (
-              <p className="text-gray-500">Aucun rapprochement possible trouvé.</p>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Section 3: Aucun rapprochement */}
-          <div className="bg-red-50 p-6 rounded-lg">
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <span className="text-2xl">🔴</span>
-              Aucun rapprochement trouvé
-            </h2>
-            <p className="text-gray-600 mb-4">
-              Les fonctions pour lesquelles aucun rapprochement automatique n'a été trouvé.
-            </p>
+          {manualMatches.length > 0 && (
+            <div className="bg-red-50 p-6 rounded-lg">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span className="text-2xl">🔴</span>
+                Aucun rapprochement trouvé
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Les fonctions pour lesquelles aucun rapprochement automatique n'a été trouvé.
+                Associez-les manuellement aux exigences existantes.
+              </p>
 
-            {manualMatches.length > 0 ? (
               <div className="space-y-4">
                 {manualMatches.map((manualMatch, index) => (
                   <div
@@ -432,42 +596,49 @@ export default function CodePage() {
                         <div className="text-sm text-gray-500 mt-1">
                           {manualMatch.codeFunction.description}
                         </div>
-                        <div className="mt-3">
-                          <label className="block text-sm font-medium mb-1">
-                            Associer à une exigence :
-                          </label>
-                          <select
-                            value={manualMatch.selectedExigenceId}
-                            onChange={(e) => handleExigenceSelection(index, e.target.value)}
-                            className="w-full p-2 border rounded"
-                          >
-                            <option value="">-- Sélectionnez une exigence --</option>
-                            {exigences.map((exigence) => (
-                              <option key={exigence.id} value={exigence.id}>
-                                {exigence.titre}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                        {exigences.length > 0 && (
+                          <div className="mt-3">
+                            <label className="block text-sm font-medium mb-1">
+                              Associer à une exigence :
+                            </label>
+                            <select
+                              value={manualMatch.selectedExigenceId}
+                              onChange={(e) => handleExigenceSelection(index, e.target.value)}
+                              className="w-full p-2 border rounded"
+                            >
+                              <option value="">-- Sélectionnez une exigence --</option>
+                              {exigences.map((exigence) => (
+                                <option key={exigence.id} value={exigence.id}>
+                                  {exigence.titre}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                        {exigences.length === 0 && (
+                          <div className="mt-3 text-sm text-gray-500">
+                            Aucune exigence disponible. Veuillez d'abord créer des exigences.
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
-            ) : (
-              <p className="text-gray-500">Aucune fonction sans rapprochement.</p>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Bouton de sauvegarde */}
-          <div className="flex justify-end">
-            <button
-              onClick={saveAssociations}
-              className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600"
-            >
-              Sauvegarder les associations
-            </button>
-          </div>
+          {(matchResults.length > 0 || manualMatches.length > 0) && (
+            <div className="flex justify-end">
+              <button
+                onClick={saveAssociations}
+                className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600"
+              >
+                Sauvegarder les associations
+              </button>
+            </div>
+          )}
         </div>
       )}
 
