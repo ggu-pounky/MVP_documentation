@@ -164,6 +164,43 @@ export default function Sidebar() {
           <span>📥</span>
           <span>Charger données exemple</span>
         </button>
+        
+        {/* Séparation */}
+        <hr className="border-gray-600 my-2" />
+        
+        {/* Titre module Exigence */}
+        <div className="px-4 py-2 text-sm font-medium text-gray-400">
+          module Exigence
+        </div>
+        
+        {/* Séparation */}
+        <hr className="border-gray-600 my-2" />
+        
+        {/* Titre module Code */}
+        <div className="px-4 py-2 text-sm font-medium text-gray-400">
+          module Code
+        </div>
+        
+        {/* Séparation */}
+        <hr className="border-gray-600 my-2" />
+        
+        {/* Titre module Test */}
+        <div className="px-4 py-2 text-sm font-medium text-gray-400">
+          module Test
+        </div>
+        
+        {/* Séparation */}
+        <hr className="border-gray-600 my-2" />
+        
+        {/* Titre module Maintenance */}
+        <div className="px-4 py-2 text-sm font-medium text-gray-400">
+          module Maintenance
+        </div>
+        
+        {/* Séparation */}
+        <hr className="border-gray-600 my-2" />
+        
+        {/* Ancien menu */}
         <Link
           href="/"
           className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
@@ -191,7 +228,6 @@ export default function Sidebar() {
           <span>🚀</span>
           <span>Features</span>
         </Link>
-        {/* Code link between Features and Exigences */}
         <Link
           href="/code"
           className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
@@ -210,7 +246,16 @@ export default function Sidebar() {
           <span>📋</span>
           <span>Exigences</span>
         </Link>
-        {/* PRD link between Exigences and Tests */}
+        <Link
+          href="/tests"
+          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
+            isActive('/tests') ? 'bg-gray-700' : 'hover:bg-gray-700'
+          }`}
+        >
+          <span>🧪</span>
+          <span>Tests</span>
+        </Link>
+        {/* PRD link */}
         <Link
           href="/prd"
           className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
@@ -223,7 +268,7 @@ export default function Sidebar() {
             <span>PRD</span>
           </span>
         </Link>
-        {/* Matrices link between PRD and Tests */}
+        {/* Matrices link */}
         <Link
           href="/matrices"
           className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
@@ -235,15 +280,6 @@ export default function Sidebar() {
             <span className="text-xs text-gray-400">documentation</span>
             <span>Matrices</span>
           </span>
-        </Link>
-        <Link
-          href="/tests"
-          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
-            isActive('/tests') ? 'bg-gray-700' : 'hover:bg-gray-700'
-          }`}
-        >
-          <span>🧪</span>
-          <span>Tests</span>
         </Link>
       </nav>
       {/* Notification pour le chargement des données */}
