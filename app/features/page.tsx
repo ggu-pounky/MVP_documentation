@@ -81,7 +81,7 @@ export default function FeaturesPage() {
       priorite: 'Moyenne',
       statut: 'À faire',
       besoinId: selectedBesoinForAI.id,
-      epicId: null, // Pas d'EPIC par défaut pour les features générées par IA
+      epicId: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }))
@@ -91,6 +91,31 @@ export default function FeaturesPage() {
     setShowAIGenerator(false)
     setSelectedBesoinForAI(null)
     setShowForm(false)
+  }
+
+  // Améliorer une Feature avec IA (IREB)
+  const handleImproveAI = (feature: Feature) => {
+    // Générer une description améliorée selon IREB
+    const improvedDescription = `User Story: En tant qu'utilisateur, je veux ${feature.titre.toLowerCase()}, afin de répondre à mes besoins.
+Critères d'acceptation:
+1. Le système doit permettre de gérer ${feature.titre.toLowerCase()}.
+2. Les données doivent être validées avant toute opération.
+3. Une confirmation visuelle doit être affichée après chaque action.
+4. Les erreurs doivent être gérées et affichées clairement.`
+
+    // Mettre à jour la Feature avec la nouvelle description
+    setFeatures(
+      features.map((f) =>
+        f.id === feature.id
+          ? {
+              ...f,
+              description: improvedDescription,
+              updated_at: new Date().toISOString(),
+            }
+          : f
+      )
+    )
+    showNotification('Feature améliorée avec IA (IREB) !')
   }
 
   const handleSubmit = async (data: FeatureFormData) => {
@@ -201,13 +226,13 @@ export default function FeaturesPage() {
         <FeatureForm
           feature={editingFeature}
           besoins={besoins}
-          epics={epics} // Passer les EPICS pour le sélecteur
+          epics={epics}
           onSubmit={handleSubmit}
           onCancel={() => {
             setShowForm(false)
             setEditingFeature(null)
           }}
-          onGenerateAI={openAIGenerator}
+          onImproveAI={handleImproveAI}
         />
       )}
 

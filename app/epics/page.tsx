@@ -85,6 +85,31 @@ export default function EpicsPage() {
     setShowForm(false)
   }
 
+  // Améliorer une EPIC avec IA (IREB)
+  const handleImproveAI = (epic: Epic) => {
+    // Générer une description améliorée selon IREB
+    const improvedDescription = `User Story: En tant qu'utilisateur, je veux ${epic.titre.toLowerCase()}, afin de répondre à mes besoins.
+Critères d'acceptation:
+1. Le système doit permettre de gérer ${epic.titre.toLowerCase()}.
+2. Les données doivent être validées avant toute opération.
+3. Une confirmation visuelle doit être affichée après chaque action.
+4. Les erreurs doivent être gérées et affichées clairement.`
+
+    // Mettre à jour l'EPIC avec la nouvelle description
+    setEpics(
+      epics.map((e) =>
+        e.id === epic.id
+          ? {
+              ...e,
+              description: improvedDescription,
+              updated_at: new Date().toISOString(),
+            }
+          : e
+      )
+    )
+    showNotification('EPIC améliorée avec IA (IREB) !')
+  }
+
   const handleSubmit = async (data: EpicFormData) => {
     try {
       if (editingEpic) {
@@ -189,7 +214,7 @@ export default function EpicsPage() {
             setShowForm(false)
             setEditingEpic(null)
           }}
-          onGenerateAI={openAIGenerator}
+          onImproveAI={handleImproveAI}
         />
       )}
 

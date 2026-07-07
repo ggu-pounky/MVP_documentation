@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react'
 import BesoinForm from '@/components/BesoinForm'
 import BesoinList from '@/components/BesoinList'
-import BesoinAIGeneratorModal from '@/components/BesoinAIGeneratorModal'
 import type { Besoin, BesoinFormData } from '@/types/besoin'
 
 export default function Home() {
@@ -12,7 +11,6 @@ export default function Home() {
   const [showForm, setShowForm] = useState(false)
   const [editingBesoin, setEditingBesoin] = useState<Besoin | null>(null)
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-  const [showAIGenerator, setShowAIGenerator] = useState(false)
   const listRef = useRef<HTMLDivElement>(null)
 
   // Charger les besoins depuis localStorage
@@ -48,28 +46,6 @@ export default function Home() {
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
     setNotification({ message, type })
     setTimeout(() => setNotification(null), 3000)
-  }
-
-  // Ouvrir la modale de génération IA
-  const openAIGenerator = () => {
-    setShowAIGenerator(true)
-  }
-
-  // Générer des besoins à partir des suggestions IA
-  const handleGenerateFromAI = (generatedBesoins: { titre: string; description: string }[]) => {
-    const newBesoins: Besoin[] = generatedBesoins.map((besoinData) => ({
-      id: generateId(),
-      titre: besoinData.titre,
-      description: besoinData.description,
-      statut: 'À faire',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }))
-
-    setBesoins([...besoins, ...newBesoins])
-    showNotification(`${newBesoins.length} besoin(s) généré(s) avec succès !`)
-    setShowAIGenerator(false)
-    setShowForm(false)
   }
 
   const handleSubmit = async (data: BesoinFormData) => {
@@ -143,23 +119,15 @@ export default function Home() {
         </div>
       )}
 
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={() => {
-            setEditingBesoin(null)
-            setShowForm(!showForm)
-          }}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          {showForm ? 'Annuler' : 'Ajouter un besoin'}
-        </button>
-        <button
-          onClick={openAIGenerator}
-          className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
-        >
-          Générer avec IA
-        </button>
-      </div>
+      <button
+        onClick={() => {
+          setEditingBesoin(null)
+          setShowForm(!showForm)
+        }}
+        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+      >
+        {showForm ? 'Annuler' : 'Ajouter un besoin'}
+      </button>
 
       {showForm && (
         <BesoinForm
@@ -180,14 +148,6 @@ export default function Home() {
           onDelete={handleDelete}
         />
       </div>
-
-      {/* Modale de génération IA */}
-      {showAIGenerator && (
-        <BesoinAIGeneratorModal
-          onClose={() => setShowAIGenerator(false)}
-          onGenerate={handleGenerateFromAI}
-        />
-      )}
     </div>
   )
 }

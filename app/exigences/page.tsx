@@ -104,6 +104,77 @@ export default function ExigencesPage() {
     setShowForm(false)
   }
 
+  // Améliorer une Exigence avec IA (IREB)
+  const handleImproveAI = (exigence: Exigence) => {
+    // Trouver la feature associée pour plus de contexte
+    const feature = features.find((f) => f.id === exigence.featureId)
+    const featureTitre = feature ? feature.titre : 'cette fonctionnalité'
+    
+    // Générer une description améliorée selon IREB
+    const improvedDescription = `User Story: En tant qu'utilisateur, je veux ${exigence.titre.toLowerCase()} pour ${featureTitre}, afin de ${getBenefitFromTitre(exigence.titre)}.
+Critères d'acceptation:
+1. Le système doit permettre de ${getActionFromTitre(exigence.titre)}.
+2. Les données doivent être validées avant toute opération.
+3. Une confirmation visuelle doit être affichée après chaque action.
+4. Les erreurs doivent être gérées et affichées clairement.
+5. La fonctionnalité doit être accessible depuis l'interface principale.`
+
+    // Mettre à jour l'Exigence avec la nouvelle description
+    setExigences(
+      exigences.map((e) =>
+        e.id === exigence.id
+          ? {
+              ...e,
+              description: improvedDescription,
+              updated_at: new Date().toISOString(),
+            }
+          : e
+      )
+    )
+    showNotification('Exigence améliorée avec IA (IREB) !')
+  }
+
+  // Fonctions utilitaires pour générer des phrases IREB
+  const getBenefitFromTitre = (titre: string): string => {
+    const benefits: Record<string, string> = {
+      'Sélectionner': 'choisir une option',
+      'Ajouter': 'ajouter un élément',
+      'Confirmer': 'valider une action',
+      'Valider': 'confirmer une information',
+      'Afficher': 'visualiser les données',
+      'Gérer': 'gérer les informations',
+      'Créer': 'créer un nouvel élément',
+      'Modifier': 'modifier une information',
+    }
+    
+    for (const [key, value] of Object.entries(benefits)) {
+      if (titre.toLowerCase().includes(key.toLowerCase())) {
+        return value
+      }
+    }
+    return 'répondre à mes besoins'
+  }
+
+  const getActionFromTitre = (titre: string): string => {
+    const actions: Record<string, string> = {
+      'Sélectionner': 'sélectionner une option',
+      'Ajouter': 'ajouter un élément',
+      'Confirmer': 'confirmer l\'action',
+      'Valider': 'valider les informations',
+      'Afficher': 'afficher les données',
+      'Gérer': 'gérer les informations',
+      'Créer': 'créer un nouvel élément',
+      'Modifier': 'modifier les informations',
+    }
+    
+    for (const [key, value] of Object.entries(actions)) {
+      if (titre.toLowerCase().includes(key.toLowerCase())) {
+        return value
+      }
+    }
+    return titre.toLowerCase()
+  }
+
   // Préparer la liste des features avec leurs informations complètes
   const featuresWithInfo = features.map((feature) => {
     const besoin = besoins.find((b) => b.id === feature.besoinId)
@@ -219,7 +290,7 @@ export default function ExigencesPage() {
             setShowForm(false)
             setEditingExigence(null)
           }}
-          onGenerateAI={openAIGenerator}
+          onImproveAI={handleImproveAI}
         />
       )}
 
