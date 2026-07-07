@@ -191,6 +191,16 @@ export default function Sidebar() {
           <span>🚀</span>
           <span>Features</span>
         </Link>
+        {/* Code link between Features and Exigences */}
+        <Link
+          href="/code"
+          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
+            isActive('/code') ? 'bg-gray-700' : 'hover:bg-gray-700'
+          }`}
+        >
+          <span>💻</span>
+          <span>Code</span>
+        </Link>
         <Link
           href="/exigences"
           className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
