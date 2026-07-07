@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { ReactNode } from 'react'
 
 type MatrixType = 'exigence-code' | 'code-tests' | 'exigence-tests' | 'complete'
 
@@ -11,8 +12,8 @@ const matrixOptions: { value: MatrixType; label: string }[] = [
   { value: 'complete', label: 'Matrice complète' },
 ]
 
-// Contenu des matrices (à remplacer par des données réelles plus tard)
-const matrixContent: Record<MatrixType, string> = {
+// Contenu des matrices (ReactNode pour supporter JSX)
+const matrixContent: Record<MatrixType, ReactNode> = {
   'exigence-code': (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Matrice Exigence - Code</h3>
