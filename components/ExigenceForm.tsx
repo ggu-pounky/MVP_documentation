@@ -17,67 +17,22 @@ type ExigenceFormProps = {
   features: FeatureInfo[]
   onSubmit: (data: ExigenceFormData) => Promise<void>
   onCancel: () => void
-  onImproveAI?: (exigence: Exigence) => void  // Nouvelle prop pour l'amélioration IA
+  onGenerateAI?: (feature: FeatureInfo) => void  // Pour la génération IA (création)
+  onImproveAI?: (exigence: Exigence) => void  // Pour l'amélioration IA (modification)
 }
 
-// Fonction pour améliorer une description selon les règles IREB
-const improveWithIREB = (currentDescription: string, titre: string): string => {
-  // Si la description est déjà au format IREB, on la conserve
-  if (currentDescription.includes('User Story:') || currentDescription.includes('Critères d\'acceptation:')) {
-    return currentDescription
-  }
-
-  // Sinon, on génère une description au format IREB
-  return `User Story: En tant qu'utilisateur, je veux ${titre.toLowerCase()}, afin de ${getBenefitFromTitre(titre)}.
+// Fonction pour générer une description IREB
+const generateIREBDescription = (titre: string, featureTitre?: string): string => {
+  const context = featureTitre ? `pour ${featureTitre.toLowerCase()}` : ''
+  return `User Story: En tant qu'utilisateur, je veux ${titre.toLowerCase()} ${context}, afin de répondre à mes besoins.
 Critères d'acceptation:
-1. Le système doit permettre de ${getActionFromTitre(titre)}.
-2. Les données doivent être validées avant ${getActionFromTitre(titre).split(' ')[0]}.
-3. Une confirmation visuelle doit être affichée après ${getActionFromTitre(titre).split(' ')[0]}.
+1. Le système doit permettre de ${titre.toLowerCase()}.
+2. Les données doivent être validées avant toute opération.
+3. Une confirmation visuelle doit être affichée après chaque action.
 4. Les erreurs doivent être gérées et affichées clairement.`
 }
 
-// Fonctions utilitaires pour générer des phrases IREB
-const getBenefitFromTitre = (titre: string): string => {
-  const benefits: Record<string, string> = {
-    'Sélectionner': 'choisir une option',
-    'Ajouter': 'ajouter un élément',
-    'Confirmer': 'valider une action',
-    'Valider': 'confirmer une information',
-    'Afficher': 'visualiser les données',
-    'Gérer': 'gérer les informations',
-    'Créer': 'créer un nouvel élément',
-    'Modifier': 'modifier une information',
-  }
-  
-  for (const [key, value] of Object.entries(benefits)) {
-    if (titre.toLowerCase().includes(key.toLowerCase())) {
-      return value
-    }
-  }
-  return 'répondre à mes besoins'
-}
-
-const getActionFromTitre = (titre: string): string => {
-  const actions: Record<string, string> = {
-    'Sélectionner': 'sélectionner',
-    'Ajouter': 'ajouter',
-    'Confirmer': 'confirmer',
-    'Valider': 'valider',
-    'Afficher': 'afficher',
-    'Gérer': 'gérer',
-    'Créer': 'créer',
-    'Modifier': 'modifier',
-  }
-  
-  for (const [key, value] of Object.entries(actions)) {
-    if (titre.toLowerCase().includes(key.toLowerCase())) {
-      return value + ' ' + titre.toLowerCase()
-    }
-  }
-  return titre.toLowerCase()
-}
-
-export default function ExigenceForm({ exigence, features, onSubmit, onCancel, onImproveAI }: ExigenceFormProps) {
+export default function ExigenceForm({ exigence, features, onSubmit, onCancel, onGenerateAI, onImproveAI }: ExigenceFormProps) {
   const [titre, setTitre] = useState('')
   const [description, setDescription] = useState('')
   const [statut, setStatut] = useState<'À faire' | 'En cours' | 'Terminé' | 'Annulé' | 'Validé'>('À faire')
@@ -114,7 +69,7 @@ export default function ExigenceForm({ exigence, features, onSubmit, onCancel, o
   // Trouver la feature sélectionnée
   const selectedFeature = features.find((f) => f.id === featureId)
 
-  // Fonction pour améliorer la description avec IREB
+  // Gérer le clic sur "Amélioration IA"
   const handleImproveAI = () => {
     if (exigence && onImproveAI) {
       onImproveAI(exigence)
@@ -130,7 +85,7 @@ export default function ExigenceForm({ exigence, features, onSubmit, onCancel, o
           onChange={(e) => setFeatureId(e.target.value)}
           required
           className="w-full p-2 border rounded"
-          disabled={!!exigence} // Désactiver si on modifie une exigence existante
+          disabled={!!exigence}
         >
           <option value="">-- Sélectionnez une Feature --</option>
           {features.map((feature) => (
@@ -191,6 +146,16 @@ export default function ExigenceForm({ exigence, features, onSubmit, onCancel, o
         >
           Annuler
         </button>
+        {/* Bouton Générer par IA (visible uniquement en mode création) */}
+        {onGenerateAI && !exigence && selectedFeature && (
+          <button
+            type="button"
+            onClick={() => onGenerateAI(selectedFeature)}
+            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+          >
+            Générer par IA
+          </button>
+        )}
         {/* Bouton Amélioration IA (visible uniquement en mode modification) */}
         {onImproveAI && exigence && (
           <button

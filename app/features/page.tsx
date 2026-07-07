@@ -4,9 +4,17 @@ import { useState, useEffect, useRef } from 'react'
 import FeatureForm from '@/components/FeatureForm'
 import FeatureList from '@/components/FeatureList'
 import FeatureAIGeneratorModal from '@/components/FeatureAIGeneratorModal'
+import AIImprovementModal from '@/components/AIImprovementModal'
 import type { Feature, FeatureFormData } from '@/types/feature'
 import type { Besoin } from '@/types/besoin'
 import type { Epic } from '@/types/epic'
+
+type Suggestion = {
+  field: 'titre' | 'description'
+  oldValue: string
+  newValue: string
+  checked: boolean
+}
 
 export default function FeaturesPage() {
   const [features, setFeatures] = useState<Feature[]>([])
@@ -18,6 +26,9 @@ export default function FeaturesPage() {
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [showAIGenerator, setShowAIGenerator] = useState(false)
   const [selectedBesoinForAI, setSelectedBesoinForAI] = useState<Besoin | null>(null)
+  const [showImprovementModal, setShowImprovementModal] = useState(false)
+  const [improvementSuggestions, setImprovementSuggestions] = useState<Suggestion[]>([])
+  const [improvingFeature, setImprovingFeature] = useState<Feature | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
   // Charger les données depuis localStorage
@@ -93,29 +104,69 @@ export default function FeaturesPage() {
     setShowForm(false)
   }
 
-  // Améliorer une Feature avec IA (IREB)
-  const handleImproveAI = (feature: Feature) => {
-    // Générer une description améliorée selon IREB
-    const improvedDescription = `User Story: En tant qu'utilisateur, je veux ${feature.titre.toLowerCase()}, afin de répondre à mes besoins.
+  // Ouvrir la modale d'amélioration IA
+  const openImprovementModal = (feature: Feature) => {
+    setImprovingFeature(feature)
+    
+    // Générer des suggestions d'amélioration
+    const suggestions: Suggestion[] = []
+    
+    // Suggestion pour le titre (si vide ou trop court)
+    if (!feature.titre || feature.titre.length < 10) {
+      suggestions.push({
+        field: 'titre',
+        oldValue: feature.titre || '(vide)',
+        newValue: `Gestion de ${feature.titre || 'cette fonctionnalité'}`,
+        checked: true,
+      })
+    }
+    
+    // Suggestion pour la description (format IREB)
+    if (!feature.description || !feature.description.includes('User Story:')) {
+      const newDescription = `User Story: En tant qu'utilisateur, je veux ${feature.titre.toLowerCase()}, afin de répondre à mes besoins.
 Critères d'acceptation:
 1. Le système doit permettre de gérer ${feature.titre.toLowerCase()}.
 2. Les données doivent être validées avant toute opération.
 3. Une confirmation visuelle doit être affichée après chaque action.
 4. Les erreurs doivent être gérées et affichées clairement.`
+      
+      suggestions.push({
+        field: 'description',
+        oldValue: feature.description || '(vide)',
+        newValue: newDescription,
+        checked: true,
+      })
+    }
+    
+    setImprovementSuggestions(suggestions)
+    setShowImprovementModal(true)
+  }
 
-    // Mettre à jour la Feature avec la nouvelle description
+  // Appliquer les suggestions d'amélioration sélectionnées
+  const handleApplyImprovements = (selectedSuggestions: Suggestion[]) => {
+    if (!improvingFeature) return
+    
+    // Appliquer les modifications à la Feature
     setFeatures(
-      features.map((f) =>
-        f.id === feature.id
-          ? {
-              ...f,
-              description: improvedDescription,
-              updated_at: new Date().toISOString(),
-            }
-          : f
-      )
+      features.map((f) => {
+        if (f.id !== improvingFeature.id) return f
+        
+        const updatedFeature = { ...f }
+        selectedSuggestions.forEach((suggestion) => {
+          if (suggestion.field === 'titre') {
+            updatedFeature.titre = suggestion.newValue
+          } else if (suggestion.field === 'description') {
+            updatedFeature.description = suggestion.newValue
+          }
+        })
+        updatedFeature.updated_at = new Date().toISOString()
+        return updatedFeature
+      })
     )
-    showNotification('Feature améliorée avec IA (IREB) !')
+    
+    showNotification('Améliorations IA appliquées avec succès !')
+    setShowImprovementModal(false)
+    setImprovingFeature(null)
   }
 
   const handleSubmit = async (data: FeatureFormData) => {
@@ -232,7 +283,8 @@ Critères d'acceptation:
             setShowForm(false)
             setEditingFeature(null)
           }}
-          onImproveAI={handleImproveAI}
+          onGenerateAI={openAIGenerator}
+          onImproveAI={openImprovementModal}
         />
       )}
 
@@ -256,6 +308,19 @@ Critères d'acceptation:
             setSelectedBesoinForAI(null)
           }}
           onGenerate={handleGenerateFromAI}
+        />
+      )}
+
+      {/* Modale d'amélioration IA */}
+      {showImprovementModal && improvingFeature && (
+        <AIImprovementModal
+          title={improvingFeature.titre}
+          suggestions={improvementSuggestions}
+          onClose={() => {
+            setShowImprovementModal(false)
+            setImprovingFeature(null)
+          }}
+          onApply={handleApplyImprovements}
         />
       )}
     </div>

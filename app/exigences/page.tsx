@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import ExigenceForm from '@/components/ExigenceForm'
 import ExigenceList from '@/components/ExigenceList'
 import ExigenceAIGeneratorModal from '@/components/ExigenceAIGeneratorModal'
+import AIImprovementModal from '@/components/AIImprovementModal'
 import type { Exigence, ExigenceFormData } from '@/types/exigence'
 import type { Besoin } from '@/types/besoin'
 import type { Feature } from '@/types/feature'
@@ -14,6 +15,13 @@ type FeatureInfo = {
   besoinTitre: string
   titre: string
   description?: string
+}
+
+type Suggestion = {
+  field: 'titre' | 'description'
+  oldValue: string
+  newValue: string
+  checked: boolean
 }
 
 export default function ExigencesPage() {
@@ -27,6 +35,9 @@ export default function ExigencesPage() {
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const [showAIGenerator, setShowAIGenerator] = useState(false)
   const [selectedFeatureForAI, setSelectedFeatureForAI] = useState<FeatureInfo | null>(null)
+  const [showImprovementModal, setShowImprovementModal] = useState(false)
+  const [improvementSuggestions, setImprovementSuggestions] = useState<Suggestion[]>([])
+  const [improvingExigence, setImprovingExigence] = useState<Exigence | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
   // Charger les données depuis localStorage
@@ -104,75 +115,74 @@ export default function ExigencesPage() {
     setShowForm(false)
   }
 
-  // Améliorer une Exigence avec IA (IREB)
-  const handleImproveAI = (exigence: Exigence) => {
+  // Ouvrir la modale d'amélioration IA
+  const openImprovementModal = (exigence: Exigence) => {
+    setImprovingExigence(exigence)
+    
     // Trouver la feature associée pour plus de contexte
     const feature = features.find((f) => f.id === exigence.featureId)
     const featureTitre = feature ? feature.titre : 'cette fonctionnalité'
     
-    // Générer une description améliorée selon IREB
-    const improvedDescription = `User Story: En tant qu'utilisateur, je veux ${exigence.titre.toLowerCase()} pour ${featureTitre}, afin de ${getBenefitFromTitre(exigence.titre)}.
+    // Générer des suggestions d'amélioration
+    const suggestions: Suggestion[] = []
+    
+    // Suggestion pour le titre (si vide ou trop court)
+    if (!exigence.titre || exigence.titre.length < 10) {
+      suggestions.push({
+        field: 'titre',
+        oldValue: exigence.titre || '(vide)',
+        newValue: `Gestion de ${exigence.titre || 'cette exigence'}`,
+        checked: true,
+      })
+    }
+    
+    // Suggestion pour la description (format IREB)
+    if (!exigence.description || !exigence.description.includes('User Story:')) {
+      const newDescription = `User Story: En tant qu'utilisateur, je veux ${exigence.titre.toLowerCase()} pour ${featureTitre.toLowerCase()}, afin de répondre à mes besoins.
 Critères d'acceptation:
-1. Le système doit permettre de ${getActionFromTitre(exigence.titre)}.
+1. Le système doit permettre de ${exigence.titre.toLowerCase()}.
 2. Les données doivent être validées avant toute opération.
 3. Une confirmation visuelle doit être affichée après chaque action.
 4. Les erreurs doivent être gérées et affichées clairement.
 5. La fonctionnalité doit être accessible depuis l'interface principale.`
+      
+      suggestions.push({
+        field: 'description',
+        oldValue: exigence.description || '(vide)',
+        newValue: newDescription,
+        checked: true,
+      })
+    }
+    
+    setImprovementSuggestions(suggestions)
+    setShowImprovementModal(true)
+  }
 
-    // Mettre à jour l'Exigence avec la nouvelle description
+  // Appliquer les suggestions d'amélioration sélectionnées
+  const handleApplyImprovements = (selectedSuggestions: Suggestion[]) => {
+    if (!improvingExigence) return
+    
+    // Appliquer les modifications à l'Exigence
     setExigences(
-      exigences.map((e) =>
-        e.id === exigence.id
-          ? {
-              ...e,
-              description: improvedDescription,
-              updated_at: new Date().toISOString(),
-            }
-          : e
-      )
+      exigences.map((e) => {
+        if (e.id !== improvingExigence.id) return e
+        
+        const updatedExigence = { ...e }
+        selectedSuggestions.forEach((suggestion) => {
+          if (suggestion.field === 'titre') {
+            updatedExigence.titre = suggestion.newValue
+          } else if (suggestion.field === 'description') {
+            updatedExigence.description = suggestion.newValue
+          }
+        })
+        updatedExigence.updated_at = new Date().toISOString()
+        return updatedExigence
+      })
     )
-    showNotification('Exigence améliorée avec IA (IREB) !')
-  }
-
-  // Fonctions utilitaires pour générer des phrases IREB
-  const getBenefitFromTitre = (titre: string): string => {
-    const benefits: Record<string, string> = {
-      'Sélectionner': 'choisir une option',
-      'Ajouter': 'ajouter un élément',
-      'Confirmer': 'valider une action',
-      'Valider': 'confirmer une information',
-      'Afficher': 'visualiser les données',
-      'Gérer': 'gérer les informations',
-      'Créer': 'créer un nouvel élément',
-      'Modifier': 'modifier une information',
-    }
     
-    for (const [key, value] of Object.entries(benefits)) {
-      if (titre.toLowerCase().includes(key.toLowerCase())) {
-        return value
-      }
-    }
-    return 'répondre à mes besoins'
-  }
-
-  const getActionFromTitre = (titre: string): string => {
-    const actions: Record<string, string> = {
-      'Sélectionner': 'sélectionner une option',
-      'Ajouter': 'ajouter un élément',
-      'Confirmer': 'confirmer l\'action',
-      'Valider': 'valider les informations',
-      'Afficher': 'afficher les données',
-      'Gérer': 'gérer les informations',
-      'Créer': 'créer un nouvel élément',
-      'Modifier': 'modifier les informations',
-    }
-    
-    for (const [key, value] of Object.entries(actions)) {
-      if (titre.toLowerCase().includes(key.toLowerCase())) {
-        return value
-      }
-    }
-    return titre.toLowerCase()
+    showNotification('Améliorations IA appliquées avec succès !')
+    setShowImprovementModal(false)
+    setImprovingExigence(null)
   }
 
   // Préparer la liste des features avec leurs informations complètes
@@ -290,7 +300,8 @@ Critères d'acceptation:
             setShowForm(false)
             setEditingExigence(null)
           }}
-          onImproveAI={handleImproveAI}
+          onGenerateAI={openAIGenerator}
+          onImproveAI={openImprovementModal}
         />
       )}
 
@@ -313,6 +324,19 @@ Critères d'acceptation:
             setSelectedFeatureForAI(null)
           }}
           onGenerate={handleGenerateFromAI}
+        />
+      )}
+
+      {/* Modale d'amélioration IA */}
+      {showImprovementModal && improvingExigence && (
+        <AIImprovementModal
+          title={improvingExigence.titre}
+          suggestions={improvementSuggestions}
+          onClose={() => {
+            setShowImprovementModal(false)
+            setImprovingExigence(null)
+          }}
+          onApply={handleApplyImprovements}
         />
       )}
     </div>

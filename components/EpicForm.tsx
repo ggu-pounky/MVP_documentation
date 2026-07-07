@@ -10,66 +10,21 @@ type EpicFormProps = {
   besoins: Besoin[]
   onSubmit: (data: EpicFormData) => Promise<void>
   onCancel: () => void
-  onImproveAI?: (epic: Epic) => void  // Nouvelle prop pour l'amélioration IA
+  onGenerateAI?: (besoin: Besoin) => void  // Pour la génération IA (création)
+  onImproveAI?: (epic: Epic) => void  // Pour l'amélioration IA (modification)
 }
 
-// Fonction pour améliorer une description selon les règles IREB
-const improveWithIREB = (currentDescription: string, titre: string): string => {
-  // Si la description est déjà au format IREB, on la conserve
-  if (currentDescription.includes('User Story:') || currentDescription.includes('Critères d\'acceptation:')) {
-    return currentDescription
-  }
-
-  // Sinon, on génère une description au format IREB
-  return `User Story: En tant qu'utilisateur, je veux ${titre.toLowerCase()}, afin de ${getBenefitFromTitre(titre)}.
+// Fonction pour générer une description IREB
+const generateIREBDescription = (titre: string): string => {
+  return `User Story: En tant qu'utilisateur, je veux ${titre.toLowerCase()}, afin de répondre à mes besoins.
 Critères d'acceptation:
-1. Le système doit permettre de ${getActionFromTitre(titre)}.
-2. Les données doivent être validées avant ${getActionFromTitre(titre).split(' ')[0]}.
-3. Une confirmation visuelle doit être affichée après ${getActionFromTitre(titre).split(' ')[0]}.
+1. Le système doit permettre de gérer ${titre.toLowerCase()}.
+2. Les données doivent être validées avant toute opération.
+3. Une confirmation visuelle doit être affichée après chaque action.
 4. Les erreurs doivent être gérées et affichées clairement.`
 }
 
-// Fonctions utilitaires pour générer des phrases IREB
-const getBenefitFromTitre = (titre: string): string => {
-  const benefits: Record<string, string> = {
-    'Gestion des réservations': 'simplifier la gestion des réservations',
-    'Gestion des disponibilités': 'optimiser l\'utilisation des ressources',
-    'Paiement et facturation': 'faciliter les transactions financières',
-    'Authentification': 'sécuriser l\'accès à l\'application',
-    'Catalogue': 'visualiser les produits disponibles',
-    'Panier': 'finaliser mes achats',
-    'Commande': 'suivre mes achats',
-  }
-  
-  for (const [key, value] of Object.entries(benefits)) {
-    if (titre.toLowerCase().includes(key.toLowerCase())) {
-      return value
-    }
-  }
-  return 'répondre à mes besoins'
-}
-
-const getActionFromTitre = (titre: string): string => {
-  const actions: Record<string, string> = {
-    'Gestion': 'gérer',
-    'Création': 'créer',
-    'Modification': 'modifier',
-    'Suppression': 'supprimer',
-    'Affichage': 'afficher',
-    'Validation': 'valider',
-    'Paiement': 'effectuer le paiement',
-    'Réservation': 'réserver',
-  }
-  
-  for (const [key, value] of Object.entries(actions)) {
-    if (titre.toLowerCase().includes(key.toLowerCase())) {
-      return value + ' ' + titre.toLowerCase()
-    }
-  }
-  return titre.toLowerCase()
-}
-
-export default function EpicForm({ epic, besoins, onSubmit, onCancel, onImproveAI }: EpicFormProps) {
+export default function EpicForm({ epic, besoins, onSubmit, onCancel, onGenerateAI, onImproveAI }: EpicFormProps) {
   const [titre, setTitre] = useState('')
   const [description, setDescription] = useState('')
   const [statut, setStatut] = useState<'À faire' | 'En cours' | 'Terminé' | 'Annulé'>('À faire')
@@ -103,7 +58,10 @@ export default function EpicForm({ epic, besoins, onSubmit, onCancel, onImproveA
     })
   }
 
-  // Fonction pour améliorer la description avec IREB
+  // Trouver le besoin sélectionné pour la génération IA
+  const selectedBesoin = besoins.find((b) => b.id === besoinId)
+
+  // Gérer le clic sur "Amélioration IA"
   const handleImproveAI = () => {
     if (epic && onImproveAI) {
       onImproveAI(epic)
@@ -180,6 +138,16 @@ export default function EpicForm({ epic, besoins, onSubmit, onCancel, onImproveA
         >
           Annuler
         </button>
+        {/* Bouton Générer par IA (visible uniquement en mode création) */}
+        {onGenerateAI && !epic && selectedBesoin && (
+          <button
+            type="button"
+            onClick={() => onGenerateAI(selectedBesoin)}
+            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+          >
+            Générer par IA
+          </button>
+        )}
         {/* Bouton Amélioration IA (visible uniquement en mode modification) */}
         {onImproveAI && epic && (
           <button

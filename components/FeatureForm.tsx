@@ -9,70 +9,24 @@ import type { Epic } from '@/types/epic'
 type FeatureFormProps = {
   feature?: Feature | null
   besoins: Besoin[]
-  epics?: Epic[]  // Ajout des EPICS pour le sélecteur
+  epics?: Epic[]
   onSubmit: (data: FeatureFormData) => Promise<void>
   onCancel: () => void
-  onImproveAI?: (feature: Feature) => void  // Nouvelle prop pour l'amélioration IA
+  onGenerateAI?: (besoin: Besoin) => void  // Pour la génération IA (création)
+  onImproveAI?: (feature: Feature) => void  // Pour l'amélioration IA (modification)
 }
 
-// Fonction pour améliorer une description selon les règles IREB
-const improveWithIREB = (currentDescription: string, titre: string): string => {
-  // Si la description est déjà au format IREB, on la conserve
-  if (currentDescription.includes('User Story:') || currentDescription.includes('Critères d\'acceptation:')) {
-    return currentDescription
-  }
-
-  // Sinon, on génère une description au format IREB
-  return `User Story: En tant qu'utilisateur, je veux ${titre.toLowerCase()}, afin de ${getBenefitFromTitre(titre)}.
+// Fonction pour générer une description IREB
+const generateIREBDescription = (titre: string): string => {
+  return `User Story: En tant qu'utilisateur, je veux ${titre.toLowerCase()}, afin de répondre à mes besoins.
 Critères d'acceptation:
-1. Le système doit permettre de ${getActionFromTitre(titre)}.
-2. Les données doivent être validées avant ${getActionFromTitre(titre).split(' ')[0]}.
-3. Une confirmation visuelle doit être affichée après ${getActionFromTitre(titre).split(' ')[0]}.
+1. Le système doit permettre de gérer ${titre.toLowerCase()}.
+2. Les données doivent être validées avant toute opération.
+3. Une confirmation visuelle doit être affichée après chaque action.
 4. Les erreurs doivent être gérées et affichées clairement.`
 }
 
-// Fonctions utilitaires pour générer des phrases IREB
-const getBenefitFromTitre = (titre: string): string => {
-  const benefits: Record<string, string> = {
-    'Réservation': 'réserver une chambre ou un service',
-    'Modification': 'modifier mes informations',
-    'Annulation': 'annuler une action',
-    'Paiement': 'effectuer un paiement sécurisé',
-    'Gestion': 'gérer mes données',
-    'Affichage': 'visualiser les informations',
-    'Création': 'créer un nouvel élément',
-    'Validation': 'valider une action',
-  }
-  
-  for (const [key, value] of Object.entries(benefits)) {
-    if (titre.toLowerCase().includes(key.toLowerCase())) {
-      return value
-    }
-  }
-  return 'répondre à mes besoins'
-}
-
-const getActionFromTitre = (titre: string): string => {
-  const actions: Record<string, string> = {
-    'Réservation': 'réserver',
-    'Modification': 'modifier',
-    'Annulation': 'annuler',
-    'Paiement': 'effectuer le paiement',
-    'Gestion': 'gérer',
-    'Affichage': 'afficher',
-    'Création': 'créer',
-    'Validation': 'valider',
-  }
-  
-  for (const [key, value] of Object.entries(actions)) {
-    if (titre.toLowerCase().includes(key.toLowerCase())) {
-      return value + ' ' + titre.toLowerCase()
-    }
-  }
-  return titre.toLowerCase()
-}
-
-export default function FeatureForm({ feature, besoins, epics = [], onSubmit, onCancel, onImproveAI }: FeatureFormProps) {
+export default function FeatureForm({ feature, besoins, epics = [], onSubmit, onCancel, onGenerateAI, onImproveAI }: FeatureFormProps) {
   const [titre, setTitre] = useState('')
   const [description, setDescription] = useState('')
   const [priorite, setPriorite] = useState<'Faible' | 'Moyenne' | 'Élevée' | 'Critique'>('Moyenne')
@@ -117,7 +71,10 @@ export default function FeatureForm({ feature, besoins, epics = [], onSubmit, on
   // Filtrer les EPICS par besoin sélectionné
   const epicsForSelectedBesoin = besoinId ? epics.filter((e) => e.besoinId === besoinId) : []
 
-  // Fonction pour améliorer la description avec IREB
+  // Trouver le besoin sélectionné pour la génération IA
+  const selectedBesoin = besoins.find((b) => b.id === besoinId)
+
+  // Gérer le clic sur "Amélioration IA"
   const handleImproveAI = () => {
     if (feature && onImproveAI) {
       onImproveAI(feature)
@@ -132,11 +89,11 @@ export default function FeatureForm({ feature, besoins, epics = [], onSubmit, on
           value={besoinId}
           onChange={(e) => {
             setBesoinId(e.target.value)
-            setEpicId(null) // Réinitialiser l'EPIC si le besoin change
+            setEpicId(null)
           }}
           required
           className="w-full p-2 border rounded"
-          disabled={!!feature} // Désactiver si on modifie une feature existante
+          disabled={!!feature}
         >
           <option value="">-- Sélectionnez un besoin --</option>
           {besoins.map((besoin) => (
@@ -153,7 +110,7 @@ export default function FeatureForm({ feature, besoins, epics = [], onSubmit, on
           value={epicId || ''}
           onChange={(e) => setEpicId(e.target.value || null)}
           className="w-full p-2 border rounded"
-          disabled={!besoinId || !!feature} // Désactiver si on modifie une feature existante
+          disabled={!besoinId || !!feature}
         >
           <option value="">-- Aucune EPIC --</option>
           {epicsForSelectedBesoin.map((epic) => (
@@ -229,6 +186,16 @@ export default function FeatureForm({ feature, besoins, epics = [], onSubmit, on
         >
           Annuler
         </button>
+        {/* Bouton Générer par IA (visible uniquement en mode création) */}
+        {onGenerateAI && !feature && selectedBesoin && (
+          <button
+            type="button"
+            onClick={() => onGenerateAI(selectedBesoin)}
+            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+          >
+            Générer par IA
+          </button>
+        )}
         {/* Bouton Amélioration IA (visible uniquement en mode modification) */}
         {onImproveAI && feature && (
           <button
