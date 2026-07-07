@@ -31,7 +31,7 @@ export default function TestsPage() {
   const listRef = useRef<HTMLDivElement>(null)
 
   // Charger les données depuis localStorage
-  useEffect(() => {
+  const loadData = () => {
     const savedBesoins = localStorage.getItem('besoins')
     const savedFeatures = localStorage.getItem('features')
     const savedExigences = localStorage.getItem('exigences')
@@ -43,6 +43,14 @@ export default function TestsPage() {
     if (savedTests) setTests(JSON.parse(savedTests))
 
     setLoading(false)
+  }
+
+  useEffect(() => {
+    loadData()
+    // Écouter les changements de localStorage
+    const handleStorageChange = () => loadData()
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
 
   // Sauvegarder les tests dans localStorage
@@ -81,13 +89,13 @@ export default function TestsPage() {
       isTNR: false,
       isAutomatisable: false,
       priorite: 'Moyenne',
-      statut: '\u00c0 faire',
+      statut: 'À faire',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }))
 
     setTests([...tests, ...newTests])
-    showNotification(`${newTests.length} test(s) g\u00e9n\u00e9r\u00e9(s) avec succ\u00e8s !`)
+    showNotification(`${newTests.length} test(s) généré(s) avec succès !`)
     setShowAIGenerator(false)
     setSelectedExigenceForAI(null)
     setShowForm(false)
@@ -109,7 +117,7 @@ export default function TestsPage() {
   const handleSubmit = async (data: TestFormData) => {
     try {
       if (editingTest) {
-        // Mettre \u00e0 jour un test existant
+        // Mettre à jour un test existant
         setTests(
           tests.map((t) =>
             t.id === editingTest.id
@@ -127,9 +135,9 @@ export default function TestsPage() {
               : t
           )
         )
-        showNotification('Test modifi\u00e9 avec succ\u00e8s !')
+        showNotification('Test modifié avec succès !')
       } else {
-        // Cr\u00e9er un nouveau test
+        // Créer un nouveau test
         const newTest: Test = {
           id: generateId(),
           titre: data.titre,
@@ -143,8 +151,8 @@ export default function TestsPage() {
           updated_at: new Date().toISOString(),
         }
         setTests([...tests, newTest])
-        showNotification('Test cr\u00e9\u00e9 avec succ\u00e8s !')
-        // Scroll vers la liste apr\u00e8s cr\u00e9ation
+        showNotification('Test créé avec succès !')
+        // Scroll vers la liste après création
         setTimeout(() => listRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
       }
       setShowForm(false)
@@ -158,7 +166,7 @@ export default function TestsPage() {
   const handleDelete = async (id: string) => {
     try {
       setTests(tests.filter((t) => t.id !== id))
-      showNotification('Test supprim\u00e9 avec succ\u00e8s !')
+      showNotification('Test supprimé avec succès !')
     } catch (error) {
       console.error('Erreur:', error)
       showNotification('Une erreur est survenue', 'error')
@@ -187,11 +195,11 @@ export default function TestsPage() {
         </div>
       )}
 
-      {/* Bouton pour ajouter un test (d\u00e9sactiv\u00e9 si aucune exigence) */}
+      {/* Bouton pour ajouter un test (désactivé si aucune exigence) */}
       <button
         onClick={() => {
           if (exigences.length === 0) {
-            showNotification('Veuillez d\'abord cr\u00e9er une exigence', 'error')
+            showNotification('Veuillez d\'abord créer une exigence', 'error')
             return
           }
           setEditingTest(null)
@@ -220,7 +228,7 @@ export default function TestsPage() {
         />
       )}
 
-      {/* Liste des tests avec r\u00e9f\u00e9rence pour le scroll */}
+      {/* Liste des tests avec référence pour le scroll */}
       <div ref={listRef}>
         <TestList
           tests={tests}
@@ -230,7 +238,7 @@ export default function TestsPage() {
         />
       </div>
 
-      {/* Modale de g\u00e9n\u00e9ration IA */}
+      {/* Modale de génération IA */}
       {showAIGenerator && (
         <TestAIGeneratorModal
           exigence={selectedExigenceForAI}

@@ -19,7 +19,7 @@ export default function EpicsPage() {
   const listRef = useRef<HTMLDivElement>(null)
 
   // Charger les données depuis localStorage
-  useEffect(() => {
+  const loadData = () => {
     const savedBesoins = localStorage.getItem('besoins')
     const savedEpics = localStorage.getItem('epics')
     
@@ -30,6 +30,14 @@ export default function EpicsPage() {
       setEpics(JSON.parse(savedEpics))
     }
     setLoading(false)
+  }
+
+  useEffect(() => {
+    loadData()
+    // Écouter les changements de localStorage
+    const handleStorageChange = () => loadData()
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
 
   // Sauvegarder les epics dans localStorage

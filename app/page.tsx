@@ -14,12 +14,20 @@ export default function Home() {
   const listRef = useRef<HTMLDivElement>(null)
 
   // Charger les besoins depuis localStorage
-  useEffect(() => {
+  const loadBesoins = () => {
     const savedBesoins = localStorage.getItem('besoins')
     if (savedBesoins) {
       setBesoins(JSON.parse(savedBesoins))
     }
     setLoading(false)
+  }
+
+  useEffect(() => {
+    loadBesoins()
+    // Écouter les changements de localStorage (y compris les événements personnalisés)
+    const handleStorageChange = () => loadBesoins()
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
 
   // Sauvegarder dans localStorage

@@ -21,7 +21,7 @@ export default function FeaturesPage() {
   const listRef = useRef<HTMLDivElement>(null)
 
   // Charger les données depuis localStorage
-  useEffect(() => {
+  const loadData = () => {
     const savedBesoins = localStorage.getItem('besoins')
     const savedFeatures = localStorage.getItem('features')
     const savedEpics = localStorage.getItem('epics')
@@ -36,6 +36,14 @@ export default function FeaturesPage() {
       setEpics(JSON.parse(savedEpics))
     }
     setLoading(false)
+  }
+
+  useEffect(() => {
+    loadData()
+    // Écouter les changements de localStorage
+    const handleStorageChange = () => loadData()
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
 
   // Sauvegarder les features dans localStorage

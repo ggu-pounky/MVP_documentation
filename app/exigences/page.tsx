@@ -30,7 +30,7 @@ export default function ExigencesPage() {
   const listRef = useRef<HTMLDivElement>(null)
 
   // Charger les données depuis localStorage
-  useEffect(() => {
+  const loadData = () => {
     const savedBesoins = localStorage.getItem('besoins')
     const savedFeatures = localStorage.getItem('features')
     const savedEpics = localStorage.getItem('epics')
@@ -49,6 +49,14 @@ export default function ExigencesPage() {
       setExigences(JSON.parse(savedExigences))
     }
     setLoading(false)
+  }
+
+  useEffect(() => {
+    loadData()
+    // Écouter les changements de localStorage
+    const handleStorageChange = () => loadData()
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
 
   // Sauvegarder les exigences dans localStorage

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -140,6 +140,9 @@ export default function Sidebar() {
       localStorage.setItem('exigences', JSON.stringify(exigences))
       localStorage.setItem('tests', JSON.stringify([]))
 
+      // Déclencher un événement personnalisé pour notifier les pages
+      window.dispatchEvent(new Event('storage'))
+
       showNotification('Données d\'exemple chargées avec succès !', 'success')
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error)
@@ -167,7 +170,7 @@ export default function Sidebar() {
             isActive('/') ? 'bg-gray-700' : 'hover:bg-gray-700'
           }`}
         >
-          <span>📜</span>
+          <span>📝</span>
           <span>Besoins</span>
         </Link>
         <Link
@@ -176,7 +179,7 @@ export default function Sidebar() {
             isActive('/epics') ? 'bg-gray-700' : 'hover:bg-gray-700'
           }`}
         >
-          <span>📜</span>
+          <span>📝</span>
           <span>EPICS</span>
         </Link>
         <Link
