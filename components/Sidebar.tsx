@@ -150,6 +150,9 @@ export default function Sidebar() {
     }
   }
 
+  // Récupérer le numéro de version (hash du commit)
+  const version = process.env.NEXT_PUBLIC_VERSION || 'dev'
+
   return (
     <aside className="w-64 bg-gray-800 text-white min-h-screen p-4 flex flex-col">
       <div className="mb-8">
@@ -282,6 +285,14 @@ export default function Sidebar() {
           </span>
         </Link>
       </nav>
+      
+      {/* Numéro de version en bas du menu */}
+      <div className="mt-auto pt-4 border-t border-gray-600">
+        <div className="px-4 py-2 text-xs text-gray-400 text-center">
+          Version: {version || '74cf10c'}
+        </div>
+      </div>
+      
       {/* Notification pour le chargement des données */}
       {notification && (
         <div
