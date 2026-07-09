@@ -17,11 +17,11 @@ const matrixContent: Record<MatrixType, ReactNode> = {
   'exigence-code': (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Matrice Exigence - Code</h3>
-      <p className="text-gray-600">
+      <p className="text-neumorphic-muted">
         Cette matrice montre la couverture des exigences par le code source.
       </p>
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border">
+        <table className="min-w-full neumorphic-card border">
           <thead>
             <tr>
               <th className="py-2 px-4 border">Exigence</th>
@@ -53,11 +53,11 @@ const matrixContent: Record<MatrixType, ReactNode> = {
   'code-tests': (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Matrice Code - Tests</h3>
-      <p className="text-gray-600">
+      <p className="text-neumorphic-muted">
         Cette matrice montre la couverture du code par les tests.
       </p>
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border">
+        <table className="min-w-full neumorphic-card border">
           <thead>
             <tr>
               <th className="py-2 px-4 border">Code</th>
@@ -84,11 +84,11 @@ const matrixContent: Record<MatrixType, ReactNode> = {
   'exigence-tests': (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Matrice Exigence - Tests</h3>
-      <p className="text-gray-600">
+      <p className="text-neumorphic-muted">
         Cette matrice montre la couverture des exigences par les tests.
       </p>
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border">
+        <table className="min-w-full neumorphic-card border">
           <thead>
             <tr>
               <th className="py-2 px-4 border">Exigence</th>
@@ -115,11 +115,11 @@ const matrixContent: Record<MatrixType, ReactNode> = {
   'complete': (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">Matrice Complète</h3>
-      <p className="text-gray-600">
+      <p className="text-neumorphic-muted">
         Cette matrice combine toutes les relations entre exigences, code et tests.
       </p>
       <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border">
+        <table className="min-w-full neumorphic-card border">
           <thead>
             <tr>
               <th className="py-2 px-4 border">Exigence</th>
@@ -163,7 +163,7 @@ export default function MatricesPage() {
         <select
           value={selectedMatrix}
           onChange={(e) => setSelectedMatrix(e.target.value as MatrixType)}
-          className="w-full max-w-md p-3 border rounded-lg bg-white"
+          className="w-full max-w-md p-3 border rounded-lg neumorphic-card"
         >
           <option value="">-- Sélectionnez une matrice --</option>
           {matrixOptions.map((option) => (
@@ -176,14 +176,14 @@ export default function MatricesPage() {
 
       {/* Affichage de la matrice sélectionnée */}
       {selectedMatrix && (
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="neumorphic-card p-6 rounded-lg ">
           {matrixContent[selectedMatrix]}
         </div>
       )}
 
       {/* Message si aucune matrice sélectionnée */}
       {!selectedMatrix && (
-        <div className="bg-gray-100 p-6 rounded-lg text-center text-gray-500">
+        <div className="neumorphic-card p-6 rounded-lg text-center text-neumorphic-muted">
           Sélectionnez une matrice dans la liste déroulante pour l'afficher.
         </div>
       )}

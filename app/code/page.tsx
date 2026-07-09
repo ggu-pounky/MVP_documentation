@@ -388,7 +388,7 @@ export default function CodePage() {
       <h1 className="text-2xl font-bold mb-6">Analyse du Code Source</h1>
 
       {/* Formulaire de connexion GitHub */}
-      <div className="bg-white p-6 rounded-lg shadow mb-8">
+      <div className="neumorphic-card p-6 rounded-lg  mb-8">
         <h2 className="text-xl font-semibold mb-4">Connexion à GitHub</h2>
         
         <div className="space-y-4">
@@ -428,7 +428,7 @@ export default function CodePage() {
         </div>
 
         {error && (
-          <div className="mt-4 p-4 bg-red-100 text-red-800 rounded-lg">
+          <div className="mt-4 p-4 bg-red-900/20 text-red-400 rounded-lg">
             {error}
           </div>
         )}
@@ -438,7 +438,7 @@ export default function CodePage() {
       {analysisDone && (
         <div className="space-y-8">
           {/* Info sur les fonctions trouvées */}
-          <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="neumorphic-card p-4 rounded-lg">
             <p className="text-center">
               <strong>{foundFunctions.length}</strong> fonctions/classes trouvées dans le code source.
               {matchResults.length > 0 && (
@@ -449,12 +449,12 @@ export default function CodePage() {
 
           {/* Section 1: Rapprochement intuitif */}
           {matchResults.filter((m) => m.type === 'intuitive').length > 0 && (
-            <div className="bg-green-50 p-6 rounded-lg">
+            <div className="bg-green-900/10 p-6 rounded-lg">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <span className="text-2xl">🟢</span>
                 Rapprochement intuitif
               </h2>
-              <p className="text-gray-600 mb-4">
+              <p className="text-neumorphic-muted mb-4">
                 Les fonctions dont le nom ou la description correspondent clairement à une exigence existante.
               </p>
 
@@ -468,7 +468,7 @@ export default function CodePage() {
                     return (
                       <div
                         key={match.codeFunction.id}
-                        className="bg-white p-4 rounded border-l-4 border-green-500"
+                        className="neumorphic-card p-4 rounded border-l-4 border-green-500"
                       >
                         <div className="flex items-start gap-4">
                           <input
@@ -478,20 +478,20 @@ export default function CodePage() {
                             className="mt-1 w-5 h-5"
                           />
                           <div className="flex-1">
-                            <div className="font-medium text-green-700">
+                            <div className="font-medium text-green-400">
                               {match.codeFunction.name}
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-neumorphic-muted">
                               {match.codeFunction.file}:{match.codeFunction.line}
                             </div>
-                            <div className="text-sm text-gray-500 mt-1">
+                            <div className="text-sm text-neumorphic-muted mt-1">
                               {match.codeFunction.description}
                             </div>
-                            <div className="mt-2 p-2 bg-gray-50 rounded">
+                            <div className="mt-2 p-2 neumorphic-card rounded">
                               <span className="text-sm font-medium">
                                 ↔️ {match.matchedExigence?.titre || 'Exigence correspondante'}
                               </span>
-                              <div className="text-xs text-gray-500 mt-1">
+                              <div className="text-xs text-neumorphic-muted mt-1">
                                 Confiance: {match.confidence}%
                               </div>
                             </div>
@@ -506,12 +506,12 @@ export default function CodePage() {
 
           {/* Section 2: Rapprochement possible */}
           {matchResults.filter((m) => m.type === 'possible').length > 0 && (
-            <div className="bg-yellow-50 p-6 rounded-lg">
+            <div className="bg-yellow-900/10 p-6 rounded-lg">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <span className="text-2xl">🟡</span>
                 Rapprochement possible
               </h2>
-              <p className="text-gray-600 mb-4">
+              <p className="text-neumorphic-muted mb-4">
                 Les fonctions qui pourraient correspondre à une exigence, mais avec moins de certitude.
               </p>
 
@@ -525,7 +525,7 @@ export default function CodePage() {
                     return (
                       <div
                         key={match.codeFunction.id}
-                        className="bg-white p-4 rounded border-l-4 border-yellow-500"
+                        className="neumorphic-card p-4 rounded border-l-4 border-yellow-500"
                       >
                         <div className="flex items-start gap-4">
                           <input
@@ -535,20 +535,20 @@ export default function CodePage() {
                             className="mt-1 w-5 h-5"
                           />
                           <div className="flex-1">
-                            <div className="font-medium text-yellow-700">
+                            <div className="font-medium text-yellow-400">
                               {match.codeFunction.name}
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-neumorphic-muted">
                               {match.codeFunction.file}:{match.codeFunction.line}
                             </div>
-                            <div className="text-sm text-gray-500 mt-1">
+                            <div className="text-sm text-neumorphic-muted mt-1">
                               {match.codeFunction.description}
                             </div>
-                            <div className="mt-2 p-2 bg-gray-50 rounded">
+                            <div className="mt-2 p-2 neumorphic-card rounded">
                               <span className="text-sm font-medium">
                                 ↔️ {match.matchedExigence?.titre || 'Exigence correspondante'}
                               </span>
-                              <div className="text-xs text-gray-500 mt-1">
+                              <div className="text-xs text-neumorphic-muted mt-1">
                                 Confiance: {match.confidence}%
                               </div>
                             </div>
@@ -563,12 +563,12 @@ export default function CodePage() {
 
           {/* Section 3: Aucun rapprochement */}
           {manualMatches.length > 0 && (
-            <div className="bg-red-50 p-6 rounded-lg">
+            <div className="bg-red-900/10 p-6 rounded-lg">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <span className="text-2xl">🔴</span>
                 Aucun rapprochement trouvé
               </h2>
-              <p className="text-gray-600 mb-4">
+              <p className="text-neumorphic-muted mb-4">
                 Les fonctions pour lesquelles aucun rapprochement automatique n'a été trouvé.
                 Associez-les manuellement aux exigences existantes.
               </p>
@@ -577,7 +577,7 @@ export default function CodePage() {
                 {manualMatches.map((manualMatch, index) => (
                   <div
                     key={manualMatch.codeFunction.id}
-                    className="bg-white p-4 rounded border-l-4 border-red-500"
+                    className="neumorphic-card p-4 rounded border-l-4 border-red-500"
                   >
                     <div className="flex items-start gap-4">
                       <input
@@ -587,13 +587,13 @@ export default function CodePage() {
                         className="mt-1 w-5 h-5"
                       />
                       <div className="flex-1">
-                        <div className="font-medium text-red-700">
+                        <div className="font-medium text-red-400">
                           {manualMatch.codeFunction.name}
                         </div>
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-neumorphic-muted">
                           {manualMatch.codeFunction.file}:{manualMatch.codeFunction.line}
                         </div>
-                        <div className="text-sm text-gray-500 mt-1">
+                        <div className="text-sm text-neumorphic-muted mt-1">
                           {manualMatch.codeFunction.description}
                         </div>
                         {exigences.length > 0 && (
@@ -616,7 +616,7 @@ export default function CodePage() {
                           </div>
                         )}
                         {exigences.length === 0 && (
-                          <div className="mt-3 text-sm text-gray-500">
+                          <div className="mt-3 text-sm text-neumorphic-muted">
                             Aucune exigence disponible. Veuillez d'abord créer des exigences.
                           </div>
                         )}
@@ -633,7 +633,7 @@ export default function CodePage() {
             <div className="flex justify-end">
               <button
                 onClick={saveAssociations}
-                className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                className="px-6 py-3 bg-green-900/100 text-white rounded-lg hover:bg-green-600"
               >
                 Sauvegarder les associations
               </button>
@@ -644,7 +644,7 @@ export default function CodePage() {
 
       {/* Message si aucune analyse effectuée */}
       {!analysisDone && !isLoading && (
-        <div className="bg-gray-100 p-6 rounded-lg text-center text-gray-500">
+        <div className="neumorphic-card p-6 rounded-lg text-center text-neumorphic-muted">
           Entrez un nom de dépôt GitHub et cliquez sur "Analyser le code" pour commencer.
         </div>
       )}

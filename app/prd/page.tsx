@@ -198,14 +198,14 @@ export default function PRDPage() {
       {notification && (
         <div
           className={`mb-4 p-4 rounded ${
-            notification.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            notification.type === 'success' ? 'bg-green-900/20 text-green-400' : 'bg-red-900/20 text-red-400'
           }`}
         >
           {notification.message}
         </div>
       )}
 
-      <div ref={prdRef} className="bg-white p-6 rounded shadow">
+      <div ref={prdRef} className="neumorphic-card p-6 rounded ">
         {/* Section Titre */}
         <div className="mb-6">
           <label className="block text-sm font-medium mb-1">Titre du PRD</label>
@@ -338,12 +338,12 @@ export default function PRDPage() {
         {/* Section Besoins, Features et Exigences (non modifiable) */}
         <div className="mt-8">
           <h2 className="text-xl font-bold mb-4">Besoins, Features et Exigences</h2>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-neumorphic-muted mb-4">
             Ces données sont générées automatiquement à partir des Besoins, Features et Exigences existants.
           </p>
 
           {besoinsWithFeatures.length === 0 ? (
-            <div className="bg-gray-50 p-4 rounded text-center text-gray-500">
+            <div className="neumorphic-card p-4 rounded text-center text-neumorphic-muted">
               <p>Aucun besoin, feature ou exigence enregistré.</p>
               <p className="mt-2 text-sm">
                 Créez des besoins, features et exigences pour générer le contenu du PRD.
@@ -354,38 +354,38 @@ export default function PRDPage() {
               {besoinsWithFeatures.map(({ besoin, features: featuresWithExigences }) => (
                 <div key={besoin.id} className="border rounded-lg p-4">
                   <h3 className="text-lg font-semibold mb-2">{besoin.titre}</h3>
-                  <p className="text-sm text-gray-600 mb-2">
+                  <p className="text-sm text-neumorphic-muted mb-2">
                     <strong>Statut:</strong> {besoin.statut}
                   </p>
                   {besoin.description && (
-                    <p className="text-sm text-gray-600 mb-4"><strong>Description:</strong> {besoin.description}</p>
+                    <p className="text-sm text-neumorphic-muted mb-4"><strong>Description:</strong> {besoin.description}</p>
                   )}
 
                   <h4 className="font-medium mt-4 mb-2">Features:</h4>
                   {featuresWithExigences.length === 0 ? (
-                    <p className="text-sm text-gray-500 italic">Aucune feature pour ce besoin.</p>
+                    <p className="text-sm text-neumorphic-muted italic">Aucune feature pour ce besoin.</p>
                   ) : (
                     <div className="space-y-4 pl-4">
                       {featuresWithExigences.map(({ feature, exigences: featureExigences }) => (
                         <div key={feature.id} className="border-l-2 border-gray-200 pl-4">
                           <h5 className="font-medium">{feature.titre}</h5>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-neumorphic-muted">
                             <strong>Priorité:</strong> {feature.priorite} | <strong>Statut:</strong> {feature.statut}
                           </p>
                           {feature.description && (
-                            <p className="text-sm text-gray-600 mt-1">{feature.description}</p>
+                            <p className="text-sm text-neumorphic-muted mt-1">{feature.description}</p>
                           )}
 
                           <h6 className="font-medium mt-2 mb-1">Exigences:</h6>
                           {featureExigences.length === 0 ? (
-                            <p className="text-sm text-gray-500 italic">Aucune exigence pour cette feature.</p>
+                            <p className="text-sm text-neumorphic-muted italic">Aucune exigence pour cette feature.</p>
                           ) : (
                             <ul className="list-disc list-inside space-y-1 text-sm">
                               {featureExigences.map((exigence) => (
                                 <li key={exigence.id}>
-                                  {exigence.titre} (<span className="text-gray-500">{exigence.statut}</span>)
+                                  {exigence.titre} (<span className="text-neumorphic-muted">{exigence.statut}</span>)
                                   {exigence.description && (
-                                    <p className="text-xs text-gray-500 mt-1 pl-4">{exigence.description}</p>
+                                    <p className="text-xs text-neumorphic-muted mt-1 pl-4">{exigence.description}</p>
                                   )}
                                 </li>
                               ))}
