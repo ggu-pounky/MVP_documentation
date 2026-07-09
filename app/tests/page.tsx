@@ -5,10 +5,22 @@ import TestForm from '@/components/TestForm'
 import TestList from '@/components/TestList'
 import type { Test, TestFormData } from '@/types/test'
 import type { Exigence } from '@/types/exigence'
+import type { Feature } from '@/types/feature'
+import type { Besoin } from '@/types/besoin'
+
+type ExigenceInfo = {
+  id: string
+  titre: string
+  featureTitre: string
+  besoinTitre: string
+  description?: string
+}
 
 export default function TestsPage() {
   const [tests, setTests] = useState<Test[]>([])
   const [exigences, setExigences] = useState<Exigence[]>([])
+  const [features, setFeatures] = useState<Feature[]>([])
+  const [besoins, setBesoins] = useState<Besoin[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingTest, setEditingTest] = useState<Test | null>(null)
@@ -19,12 +31,20 @@ export default function TestsPage() {
   const loadData = () => {
     const savedTests = localStorage.getItem('tests')
     const savedExigences = localStorage.getItem('exigences')
+    const savedFeatures = localStorage.getItem('features')
+    const savedBesoins = localStorage.getItem('besoins')
     
     if (savedTests) {
       setTests(JSON.parse(savedTests))
     }
     if (savedExigences) {
       setExigences(JSON.parse(savedExigences))
+    }
+    if (savedFeatures) {
+      setFeatures(JSON.parse(savedFeatures))
+    }
+    if (savedBesoins) {
+      setBesoins(JSON.parse(savedBesoins))
     }
     setLoading(false)
   }
@@ -55,6 +75,21 @@ export default function TestsPage() {
     setTimeout(() => setNotification(null), 3000)
   }
 
+  // Convertir les exigences en ExigenceInfo avec les titres des features et besoins
+  const getExigencesWithInfo = (): ExigenceInfo[] => {
+    return exigences.map((exigence) => {
+      const feature = features.find((f) => f.id === exigence.featureId)
+      const besoin = besoins.find((b) => b.id === feature?.besoinId)
+      return {
+        id: exigence.id,
+        titre: exigence.titre,
+        featureTitre: feature?.titre || 'Inconnu',
+        besoinTitre: besoin?.titre || 'Inconnu',
+        description: exigence.description || undefined,
+      }
+    })
+  }
+
   const handleSubmit = async (data: TestFormData) => {
     try {
       if (editingTest) {
@@ -67,7 +102,9 @@ export default function TestsPage() {
                   titre: data.titre,
                   description: data.description,
                   statut: data.statut,
-                  type: data.type,
+                  isTNR: data.isTNR,
+                  isAutomatisable: data.isAutomatisable,
+                  priorite: data.priorite,
                   exigenceId: data.exigenceId,
                   updated_at: new Date().toISOString(),
                 }
@@ -82,7 +119,9 @@ export default function TestsPage() {
           titre: data.titre,
           description: data.description,
           statut: data.statut,
-          type: data.type,
+          isTNR: data.isTNR,
+          isAutomatisable: data.isAutomatisable,
+          priorite: data.priorite,
           exigenceId: data.exigenceId,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -120,13 +159,15 @@ export default function TestsPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="neumorphic-card px-6 py-4">
           <div className="flex items-center gap-2 text-neumorphic">
-            <span className="animate-spin">⏳</span>
+            <span className="animate-spin">\u23f3</span>
             <span>Chargement...</span>
           </div>
         </div>
       </div>
     )
   }
+
+  const exigencesWithInfo = getExigencesWithInfo()
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -160,7 +201,7 @@ export default function TestsPage() {
         disabled={exigences.length === 0}
         className={`neumorphic-button px-6 py-3 flex items-center gap-2 ${exigences.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
-        <span>{showForm ? '❌' : '➕'}</span>
+        <span>{showForm ? '\u274c' : '\u2795'}</span>
         <span>{showForm ? 'Annuler' : 'Ajouter un Test'}</span>
       </button>
 
@@ -168,7 +209,7 @@ export default function TestsPage() {
         <div className="neumorphic-card p-6">
           <TestForm
             test={editingTest}
-            exigences={exigences}
+            exigences={exigencesWithInfo}
             onSubmit={handleSubmit}
             onCancel={() => {
               setShowForm(false)
@@ -183,7 +224,7 @@ export default function TestsPage() {
         <h2 className="text-lg font-semibold text-neumorphic mb-4">Liste des Tests</h2>
         <TestList
           tests={tests}
-          exigences={exigences}
+          exigences={exigencesWithInfo}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />

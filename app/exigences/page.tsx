@@ -5,10 +5,19 @@ import ExigenceForm from '@/components/ExigenceForm'
 import ExigenceList from '@/components/ExigenceList'
 import type { Exigence, ExigenceFormData } from '@/types/exigence'
 import type { Feature } from '@/types/feature'
+import type { Besoin } from '@/types/besoin'
+
+type FeatureInfo = {
+  id: string
+  besoinTitre: string
+  titre: string
+  description?: string
+}
 
 export default function ExigencesPage() {
   const [exigences, setExigences] = useState<Exigence[]>([])
   const [features, setFeatures] = useState<Feature[]>([])
+  const [besoins, setBesoins] = useState<Besoin[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingExigence, setEditingExigence] = useState<Exigence | null>(null)
@@ -19,12 +28,16 @@ export default function ExigencesPage() {
   const loadData = () => {
     const savedExigences = localStorage.getItem('exigences')
     const savedFeatures = localStorage.getItem('features')
+    const savedBesoins = localStorage.getItem('besoins')
     
     if (savedExigences) {
       setExigences(JSON.parse(savedExigences))
     }
     if (savedFeatures) {
       setFeatures(JSON.parse(savedFeatures))
+    }
+    if (savedBesoins) {
+      setBesoins(JSON.parse(savedBesoins))
     }
     setLoading(false)
   }
@@ -53,6 +66,19 @@ export default function ExigencesPage() {
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
     setNotification({ message, type })
     setTimeout(() => setNotification(null), 3000)
+  }
+
+  // Convertir les features en FeatureInfo avec le titre du besoin
+  const getFeaturesWithBesoinInfo = (): FeatureInfo[] => {
+    return features.map((feature) => {
+      const besoin = besoins.find((b) => b.id === feature.besoinId)
+      return {
+        id: feature.id,
+        besoinTitre: besoin?.titre || 'Inconnu',
+        titre: feature.titre,
+        description: feature.description || undefined,
+      }
+    })
   }
 
   const handleSubmit = async (data: ExigenceFormData) => {
@@ -118,13 +144,15 @@ export default function ExigencesPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="neumorphic-card px-6 py-4">
           <div className="flex items-center gap-2 text-neumorphic">
-            <span className="animate-spin">⏳</span>
+            <span className="animate-spin">\u23f3</span>
             <span>Chargement...</span>
           </div>
         </div>
       </div>
     )
   }
+
+  const featuresWithInfo = getFeaturesWithBesoinInfo()
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -158,7 +186,7 @@ export default function ExigencesPage() {
         disabled={features.length === 0}
         className={`neumorphic-button px-6 py-3 flex items-center gap-2 ${features.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
-        <span>{showForm ? '❌' : '➕'}</span>
+        <span>{showForm ? '\u274c' : '\u2795'}</span>
         <span>{showForm ? 'Annuler' : 'Ajouter une Exigence'}</span>
       </button>
 
@@ -166,7 +194,7 @@ export default function ExigencesPage() {
         <div className="neumorphic-card p-6">
           <ExigenceForm
             exigence={editingExigence}
-            features={features}
+            features={featuresWithInfo}
             onSubmit={handleSubmit}
             onCancel={() => {
               setShowForm(false)
@@ -181,7 +209,7 @@ export default function ExigencesPage() {
         <h2 className="text-lg font-semibold text-neumorphic mb-4">Liste des Exigences</h2>
         <ExigenceList
           exigences={exigences}
-          features={features}
+          features={featuresWithInfo}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
