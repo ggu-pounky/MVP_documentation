@@ -231,7 +231,18 @@ Critères d'acceptation:
     setShowForm(true)
   }
 
-  if (loading) return <div className="p-4">Chargement...</div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="neumorphic-card px-6 py-4">
+          <div className="flex items-center gap-2 text-neumorphic">
+            <span className="animate-spin">⏳</span>
+            <span>Chargement...</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // Filtrer les EPICS par besoin pour le sélecteur
   const epicsByBesoin = (besoinId: string) => {
@@ -239,21 +250,25 @@ Critères d'acceptation:
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Gestion des Features</h1>
+    <div className="max-w-6xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="neumorphic-card p-6">
+        <h1 className="text-2xl font-bold text-neumorphic mb-2">Gestion des Features</h1>
+        <p className="text-neumorphic-muted">Créez, modifiez et gérez vos features projet</p>
+      </div>
 
       {/* Notification */}
       {notification && (
         <div
-          className={`mb-4 p-4 rounded ${
-            notification.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          className={`neumorphic-card p-4 notification-slide-in ${
+            notification.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
           }`}
         >
           {notification.message}
         </div>
       )}
 
-      {/* Bouton pour ajouter une feature (désactivé si aucun besoin) */}
+      {/* Bouton pour ajouter une feature */}
       <button
         onClick={() => {
           if (besoins.length === 0) {
@@ -264,32 +279,32 @@ Critères d'acceptation:
           setShowForm(!showForm)
         }}
         disabled={besoins.length === 0}
-        className={`mb-4 px-4 py-2 rounded ${
-          besoins.length === 0
-            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            : 'bg-blue-500 text-white hover:bg-blue-600'
-        }`}
+        className={`neumorphic-button px-6 py-3 flex items-center gap-2 ${besoins.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
-        {showForm ? 'Annuler' : 'Ajouter une Feature'}
+        <span>{showForm ? '❌' : '➕'}</span>
+        <span>{showForm ? 'Annuler' : 'Ajouter une Feature'}</span>
       </button>
 
       {showForm && (
-        <FeatureForm
-          feature={editingFeature}
-          besoins={besoins}
-          epics={epics}
-          onSubmit={handleSubmit}
-          onCancel={() => {
-            setShowForm(false)
-            setEditingFeature(null)
-          }}
-          onGenerateAI={openAIGenerator}
-          onImproveAI={openImprovementModal}
-        />
+        <div className="neumorphic-card p-6">
+          <FeatureForm
+            feature={editingFeature}
+            besoins={besoins}
+            epics={epics}
+            onSubmit={handleSubmit}
+            onCancel={() => {
+              setShowForm(false)
+              setEditingFeature(null)
+            }}
+            onGenerateAI={openAIGenerator}
+            onImproveAI={openImprovementModal}
+          />
+        </div>
       )}
 
-      {/* Liste des features avec référence pour le scroll */}
-      <div ref={listRef}>
+      {/* Liste des features */}
+      <div ref={listRef} className="neumorphic-card p-6">
+        <h2 className="text-lg font-semibold text-neumorphic mb-4">Liste des Features</h2>
         <FeatureList
           features={features}
           besoins={besoins}
@@ -301,27 +316,35 @@ Critères d'acceptation:
 
       {/* Modale de génération IA */}
       {showAIGenerator && (
-        <FeatureAIGeneratorModal
-          besoin={selectedBesoinForAI}
-          onClose={() => {
-            setShowAIGenerator(false)
-            setSelectedBesoinForAI(null)
-          }}
-          onGenerate={handleGenerateFromAI}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="neumorphic-card max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <FeatureAIGeneratorModal
+              besoin={selectedBesoinForAI}
+              onClose={() => {
+                setShowAIGenerator(false)
+                setSelectedBesoinForAI(null)
+              }}
+              onGenerate={handleGenerateFromAI}
+            />
+          </div>
+        </div>
       )}
 
       {/* Modale d'amélioration IA */}
       {showImprovementModal && improvingFeature && (
-        <AIImprovementModal
-          title={improvingFeature.titre}
-          suggestions={improvementSuggestions}
-          onClose={() => {
-            setShowImprovementModal(false)
-            setImprovingFeature(null)
-          }}
-          onApply={handleApplyImprovements}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="neumorphic-card max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <AIImprovementModal
+              title={improvingFeature.titre}
+              suggestions={improvementSuggestions}
+              onClose={() => {
+                setShowImprovementModal(false)
+                setImprovingFeature(null)
+              }}
+              onApply={handleApplyImprovements}
+            />
+          </div>
+        </div>
       )}
     </div>
   )

@@ -3,61 +3,28 @@
 import { useState, useEffect, useRef } from 'react'
 import ExigenceForm from '@/components/ExigenceForm'
 import ExigenceList from '@/components/ExigenceList'
-import ExigenceAIGeneratorModal from '@/components/ExigenceAIGeneratorModal'
-import AIImprovementModal from '@/components/AIImprovementModal'
 import type { Exigence, ExigenceFormData } from '@/types/exigence'
-import type { Besoin } from '@/types/besoin'
 import type { Feature } from '@/types/feature'
-import type { Epic } from '@/types/epic'
-
-type FeatureInfo = {
-  id: string
-  besoinTitre: string
-  titre: string
-  description?: string
-}
-
-type Suggestion = {
-  field: 'titre' | 'description'
-  oldValue: string
-  newValue: string
-  checked: boolean
-}
 
 export default function ExigencesPage() {
   const [exigences, setExigences] = useState<Exigence[]>([])
-  const [besoins, setBesoins] = useState<Besoin[]>([])
   const [features, setFeatures] = useState<Feature[]>([])
-  const [epics, setEpics] = useState<Epic[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingExigence, setEditingExigence] = useState<Exigence | null>(null)
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-  const [showAIGenerator, setShowAIGenerator] = useState(false)
-  const [selectedFeatureForAI, setSelectedFeatureForAI] = useState<FeatureInfo | null>(null)
-  const [showImprovementModal, setShowImprovementModal] = useState(false)
-  const [improvementSuggestions, setImprovementSuggestions] = useState<Suggestion[]>([])
-  const [improvingExigence, setImprovingExigence] = useState<Exigence | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
   // Charger les données depuis localStorage
   const loadData = () => {
-    const savedBesoins = localStorage.getItem('besoins')
-    const savedFeatures = localStorage.getItem('features')
-    const savedEpics = localStorage.getItem('epics')
     const savedExigences = localStorage.getItem('exigences')
+    const savedFeatures = localStorage.getItem('features')
     
-    if (savedBesoins) {
-      setBesoins(JSON.parse(savedBesoins))
+    if (savedExigences) {
+      setExigences(JSON.parse(savedExigences))
     }
     if (savedFeatures) {
       setFeatures(JSON.parse(savedFeatures))
-    }
-    if (savedEpics) {
-      setEpics(JSON.parse(savedEpics))
-    }
-    if (savedExigences) {
-      setExigences(JSON.parse(savedExigences))
     }
     setLoading(false)
   }
@@ -87,114 +54,6 @@ export default function ExigencesPage() {
     setNotification({ message, type })
     setTimeout(() => setNotification(null), 3000)
   }
-
-  // Ouvrir la modale de génération IA pour une feature
-  const openAIGenerator = (feature: FeatureInfo) => {
-    setSelectedFeatureForAI(feature)
-    setShowAIGenerator(true)
-  }
-
-  // Générer des exigences à partir des suggestions IA
-  const handleGenerateFromAI = (generatedExigences: { titre: string; description: string }[]) => {
-    if (!selectedFeatureForAI) return
-
-    const newExigences: Exigence[] = generatedExigences.map((exigenceData) => ({
-      id: generateId(),
-      titre: exigenceData.titre,
-      description: exigenceData.description,
-      statut: 'À faire',
-      featureId: selectedFeatureForAI.id,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }))
-
-    setExigences([...exigences, ...newExigences])
-    showNotification(`${newExigences.length} exigence(s) générée(s) avec succès !`)
-    setShowAIGenerator(false)
-    setSelectedFeatureForAI(null)
-    setShowForm(false)
-  }
-
-  // Ouvrir la modale d'amélioration IA
-  const openImprovementModal = (exigence: Exigence) => {
-    setImprovingExigence(exigence)
-    
-    // Trouver la feature associée pour plus de contexte
-    const feature = features.find((f) => f.id === exigence.featureId)
-    const featureTitre = feature ? feature.titre : 'cette fonctionnalité'
-    
-    // Générer des suggestions d'amélioration
-    const suggestions: Suggestion[] = []
-    
-    // Suggestion pour le titre (si vide ou trop court)
-    if (!exigence.titre || exigence.titre.length < 10) {
-      suggestions.push({
-        field: 'titre',
-        oldValue: exigence.titre || '(vide)',
-        newValue: `Gestion de ${exigence.titre || 'cette exigence'}`,
-        checked: true,
-      })
-    }
-    
-    // Suggestion pour la description (format IREB)
-    if (!exigence.description || !exigence.description.includes('User Story:')) {
-      const newDescription = `User Story: En tant qu'utilisateur, je veux ${exigence.titre.toLowerCase()} pour ${featureTitre.toLowerCase()}, afin de répondre à mes besoins.
-Critères d'acceptation:
-1. Le système doit permettre de ${exigence.titre.toLowerCase()}.
-2. Les données doivent être validées avant toute opération.
-3. Une confirmation visuelle doit être affichée après chaque action.
-4. Les erreurs doivent être gérées et affichées clairement.
-5. La fonctionnalité doit être accessible depuis l'interface principale.`
-      
-      suggestions.push({
-        field: 'description',
-        oldValue: exigence.description || '(vide)',
-        newValue: newDescription,
-        checked: true,
-      })
-    }
-    
-    setImprovementSuggestions(suggestions)
-    setShowImprovementModal(true)
-  }
-
-  // Appliquer les suggestions d'amélioration sélectionnées
-  const handleApplyImprovements = (selectedSuggestions: Suggestion[]) => {
-    if (!improvingExigence) return
-    
-    // Appliquer les modifications à l'Exigence
-    setExigences(
-      exigences.map((e) => {
-        if (e.id !== improvingExigence.id) return e
-        
-        const updatedExigence = { ...e }
-        selectedSuggestions.forEach((suggestion) => {
-          if (suggestion.field === 'titre') {
-            updatedExigence.titre = suggestion.newValue
-          } else if (suggestion.field === 'description') {
-            updatedExigence.description = suggestion.newValue
-          }
-        })
-        updatedExigence.updated_at = new Date().toISOString()
-        return updatedExigence
-      })
-    )
-    
-    showNotification('Améliorations IA appliquées avec succès !')
-    setShowImprovementModal(false)
-    setImprovingExigence(null)
-  }
-
-  // Préparer la liste des features avec leurs informations complètes
-  const featuresWithInfo = features.map((feature) => {
-    const besoin = besoins.find((b) => b.id === feature.besoinId)
-    return {
-      id: feature.id,
-      titre: feature.titre,
-      besoinTitre: besoin ? besoin.titre : 'Inconnu',
-      description: feature.description || undefined,
-    }
-  })
 
   const handleSubmit = async (data: ExigenceFormData) => {
     try {
@@ -254,91 +113,79 @@ Critères d'acceptation:
     setShowForm(true)
   }
 
-  if (loading) return <div className="p-4">Chargement...</div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="neumorphic-card px-6 py-4">
+          <div className="flex items-center gap-2 text-neumorphic">
+            <span className="animate-spin">⏳</span>
+            <span>Chargement...</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Gestion des Exigences</h1>
+    <div className="max-w-6xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="neumorphic-card p-6">
+        <h1 className="text-2xl font-bold text-neumorphic mb-2">Gestion des Exigences</h1>
+        <p className="text-neumorphic-muted">Créez, modifiez et gérez vos exigences projet</p>
+      </div>
 
       {/* Notification */}
       {notification && (
         <div
-          className={`mb-4 p-4 rounded ${
-            notification.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          className={`neumorphic-card p-4 notification-slide-in ${
+            notification.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
           }`}
         >
           {notification.message}
         </div>
       )}
 
-      {/* Bouton pour ajouter une exigence (désactivé si aucune feature) */}
+      {/* Bouton pour ajouter une exigence */}
       <button
         onClick={() => {
           if (features.length === 0) {
-            showNotification('Veuillez d\'abord créer une Feature', 'error')
+            showNotification('Veuillez d\'abord créer une feature', 'error')
             return
           }
           setEditingExigence(null)
           setShowForm(!showForm)
         }}
         disabled={features.length === 0}
-        className={`mb-4 px-4 py-2 rounded ${
-          features.length === 0
-            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            : 'bg-blue-500 text-white hover:bg-blue-600'
-        }`}
+        className={`neumorphic-button px-6 py-3 flex items-center gap-2 ${features.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
-        {showForm ? 'Annuler' : 'Ajouter une Exigence'}
+        <span>{showForm ? '❌' : '➕'}</span>
+        <span>{showForm ? 'Annuler' : 'Ajouter une Exigence'}</span>
       </button>
 
       {showForm && (
-        <ExigenceForm
-          exigence={editingExigence}
-          features={featuresWithInfo}
-          onSubmit={handleSubmit}
-          onCancel={() => {
-            setShowForm(false)
-            setEditingExigence(null)
-          }}
-          onGenerateAI={openAIGenerator}
-          onImproveAI={openImprovementModal}
-        />
+        <div className="neumorphic-card p-6">
+          <ExigenceForm
+            exigence={editingExigence}
+            features={features}
+            onSubmit={handleSubmit}
+            onCancel={() => {
+              setShowForm(false)
+              setEditingExigence(null)
+            }}
+          />
+        </div>
       )}
 
-      {/* Liste des exigences avec référence pour le scroll */}
-      <div ref={listRef}>
+      {/* Liste des exigences */}
+      <div ref={listRef} className="neumorphic-card p-6">
+        <h2 className="text-lg font-semibold text-neumorphic mb-4">Liste des Exigences</h2>
         <ExigenceList
           exigences={exigences}
-          features={featuresWithInfo}
+          features={features}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
       </div>
-
-      {/* Modale de génération IA */}
-      {showAIGenerator && (
-        <ExigenceAIGeneratorModal
-          feature={selectedFeatureForAI}
-          onClose={() => {
-            setShowAIGenerator(false)
-            setSelectedFeatureForAI(null)
-          }}
-          onGenerate={handleGenerateFromAI}
-        />
-      )}
-
-      {/* Modale d'amélioration IA */}
-      {showImprovementModal && improvingExigence && (
-        <AIImprovementModal
-          title={improvingExigence.titre}
-          suggestions={improvementSuggestions}
-          onClose={() => {
-            setShowImprovementModal(false)
-            setImprovingExigence(null)
-          }}
-          onApply={handleApplyImprovements}
-        />
-      )}
     </div>
   )
 }

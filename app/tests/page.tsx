@@ -3,45 +3,29 @@
 import { useState, useEffect, useRef } from 'react'
 import TestForm from '@/components/TestForm'
 import TestList from '@/components/TestList'
-import TestAIGeneratorModal from '@/components/TestAIGeneratorModal'
 import type { Test, TestFormData } from '@/types/test'
-import type { Besoin } from '@/types/besoin'
-import type { Feature } from '@/types/feature'
 import type { Exigence } from '@/types/exigence'
-
-type ExigenceInfo = {
-  id: string
-  titre: string
-  featureTitre: string
-  besoinTitre: string
-  description?: string
-}
 
 export default function TestsPage() {
   const [tests, setTests] = useState<Test[]>([])
-  const [besoins, setBesoins] = useState<Besoin[]>([])
-  const [features, setFeatures] = useState<Feature[]>([])
   const [exigences, setExigences] = useState<Exigence[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingTest, setEditingTest] = useState<Test | null>(null)
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-  const [showAIGenerator, setShowAIGenerator] = useState(false)
-  const [selectedExigenceForAI, setSelectedExigenceForAI] = useState<ExigenceInfo | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
   // Charger les données depuis localStorage
   const loadData = () => {
-    const savedBesoins = localStorage.getItem('besoins')
-    const savedFeatures = localStorage.getItem('features')
-    const savedExigences = localStorage.getItem('exigences')
     const savedTests = localStorage.getItem('tests')
-
-    if (savedBesoins) setBesoins(JSON.parse(savedBesoins))
-    if (savedFeatures) setFeatures(JSON.parse(savedFeatures))
-    if (savedExigences) setExigences(JSON.parse(savedExigences))
-    if (savedTests) setTests(JSON.parse(savedTests))
-
+    const savedExigences = localStorage.getItem('exigences')
+    
+    if (savedTests) {
+      setTests(JSON.parse(savedTests))
+    }
+    if (savedExigences) {
+      setExigences(JSON.parse(savedExigences))
+    }
     setLoading(false)
   }
 
@@ -71,49 +55,6 @@ export default function TestsPage() {
     setTimeout(() => setNotification(null), 3000)
   }
 
-  // Ouvrir la modale de génération IA pour une exigence
-  const openAIGenerator = (exigence: ExigenceInfo) => {
-    setSelectedExigenceForAI(exigence)
-    setShowAIGenerator(true)
-  }
-
-  // Générer des tests à partir des suggestions IA
-  const handleGenerateFromAI = (generatedTests: { titre: string; description: string }[]) => {
-    if (!selectedExigenceForAI) return
-
-    const newTests: Test[] = generatedTests.map((testData) => ({
-      id: generateId(),
-      titre: testData.titre,
-      description: testData.description,
-      exigenceId: selectedExigenceForAI.id,
-      isTNR: false,
-      isAutomatisable: false,
-      priorite: 'Moyenne',
-      statut: 'À faire',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }))
-
-    setTests([...tests, ...newTests])
-    showNotification(`${newTests.length} test(s) généré(s) avec succès !`)
-    setShowAIGenerator(false)
-    setSelectedExigenceForAI(null)
-    setShowForm(false)
-  }
-
-  // Préparer la liste des exigences avec leurs informations complètes
-  const exigencesWithInfo = exigences.map((exigence) => {
-    const feature = features.find((f) => f.id === exigence.featureId)
-    const besoin = besoins.find((b) => b.id === feature?.besoinId)
-    return {
-      id: exigence.id,
-      titre: exigence.titre,
-      featureTitre: feature ? feature.titre : 'Inconnu',
-      besoinTitre: besoin ? besoin.titre : 'Inconnu',
-      description: exigence.description || undefined,
-    }
-  })
-
   const handleSubmit = async (data: TestFormData) => {
     try {
       if (editingTest) {
@@ -125,11 +66,9 @@ export default function TestsPage() {
                   ...t,
                   titre: data.titre,
                   description: data.description,
-                  exigenceId: data.exigenceId,
-                  isTNR: data.isTNR,
-                  isAutomatisable: data.isAutomatisable,
-                  priorite: data.priorite,
                   statut: data.statut,
+                  type: data.type,
+                  exigenceId: data.exigenceId,
                   updated_at: new Date().toISOString(),
                 }
               : t
@@ -142,11 +81,9 @@ export default function TestsPage() {
           id: generateId(),
           titre: data.titre,
           description: data.description,
-          exigenceId: data.exigenceId,
-          isTNR: data.isTNR,
-          isAutomatisable: data.isAutomatisable,
-          priorite: data.priorite,
           statut: data.statut,
+          type: data.type,
+          exigenceId: data.exigenceId,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         }
@@ -178,24 +115,39 @@ export default function TestsPage() {
     setShowForm(true)
   }
 
-  if (loading) return <div className="p-4">Chargement...</div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="neumorphic-card px-6 py-4">
+          <div className="flex items-center gap-2 text-neumorphic">
+            <span className="animate-spin">⏳</span>
+            <span>Chargement...</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Gestion des Tests</h1>
+    <div className="max-w-6xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="neumorphic-card p-6">
+        <h1 className="text-2xl font-bold text-neumorphic mb-2">Gestion des Tests</h1>
+        <p className="text-neumorphic-muted">Créez, modifiez et gérez vos tests projet</p>
+      </div>
 
       {/* Notification */}
       {notification && (
         <div
-          className={`mb-4 p-4 rounded ${
-            notification.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          className={`neumorphic-card p-4 notification-slide-in ${
+            notification.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
           }`}
         >
           {notification.message}
         </div>
       )}
 
-      {/* Bouton pour ajouter un test (désactivé si aucune exigence) */}
+      {/* Bouton pour ajouter un test */}
       <button
         onClick={() => {
           if (exigences.length === 0) {
@@ -206,49 +158,36 @@ export default function TestsPage() {
           setShowForm(!showForm)
         }}
         disabled={exigences.length === 0}
-        className={`mb-4 px-4 py-2 rounded ${
-          exigences.length === 0
-            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            : 'bg-blue-500 text-white hover:bg-blue-600'
-        }`}
+        className={`neumorphic-button px-6 py-3 flex items-center gap-2 ${exigences.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
-        {showForm ? 'Annuler' : 'Ajouter un Test'}
+        <span>{showForm ? '❌' : '➕'}</span>
+        <span>{showForm ? 'Annuler' : 'Ajouter un Test'}</span>
       </button>
 
       {showForm && (
-        <TestForm
-          test={editingTest}
-          exigences={exigencesWithInfo}
-          onSubmit={handleSubmit}
-          onCancel={() => {
-            setShowForm(false)
-            setEditingTest(null)
-          }}
-          onGenerateAI={openAIGenerator}
-        />
+        <div className="neumorphic-card p-6">
+          <TestForm
+            test={editingTest}
+            exigences={exigences}
+            onSubmit={handleSubmit}
+            onCancel={() => {
+              setShowForm(false)
+              setEditingTest(null)
+            }}
+          />
+        </div>
       )}
 
-      {/* Liste des tests avec référence pour le scroll */}
-      <div ref={listRef}>
+      {/* Liste des tests */}
+      <div ref={listRef} className="neumorphic-card p-6">
+        <h2 className="text-lg font-semibold text-neumorphic mb-4">Liste des Tests</h2>
         <TestList
           tests={tests}
-          exigences={exigencesWithInfo}
+          exigences={exigences}
           onEdit={handleEdit}
           onDelete={handleDelete}
         />
       </div>
-
-      {/* Modale de génération IA */}
-      {showAIGenerator && (
-        <TestAIGeneratorModal
-          exigence={selectedExigenceForAI}
-          onClose={() => {
-            setShowAIGenerator(false)
-            setSelectedExigenceForAI(null)
-          }}
-          onGenerate={handleGenerateFromAI}
-        />
-      )}
     </div>
   )
 }
