@@ -3,8 +3,8 @@ import './globals.css'
 import Sidebar from '@/components/Sidebar'
 
 export const metadata: Metadata = {
-  title: 'Gestion des Besoins et Features',
-  description: 'Application de gestion des besoins et features',
+  title: 'MVP Documentation - Neumorphic Design',
+  description: 'Application de gestion des besoins et features avec design neomorphique professionnel',
 }
 
 export default function RootLayout({
@@ -14,10 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
-      <body className="antialiased">
+      <body className="antialiased bg-neumorphic min-h-screen">
         <div className="flex min-h-screen">
           <Sidebar />
-          <main className="flex-1 p-6 bg-gray-50">{children}</main>
+          <main className="flex-1 p-6 bg-neumorphic-light">{children}</main>
         </div>
       </body>
     </html>

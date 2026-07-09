@@ -102,46 +102,66 @@ export default function Home() {
     setShowForm(true)
   }
 
-  if (loading) return <div className="p-4">Chargement...</div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="neumorphic-card px-6 py-4">
+          <div className="flex items-center gap-2 text-neumorphic">
+            <span className="animate-spin">⏳</span>
+            <span>Chargement...</span>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Gestion des Besoins</h1>
+    <div className="max-w-6xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="neumorphic-card p-6">
+        <h1 className="text-2xl font-bold text-neumorphic mb-2">Gestion des Besoins</h1>
+        <p className="text-neumorphic-muted">Créez, modifiez et gérez vos besoins projet</p>
+      </div>
 
       {/* Notification */}
       {notification && (
         <div
-          className={`mb-4 p-4 rounded ${
-            notification.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          className={`neumorphic-card p-4 notification-slide-in ${
+            notification.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
           }`}
         >
           {notification.message}
         </div>
       )}
 
+      {/* Bouton Ajouter */}
       <button
         onClick={() => {
           setEditingBesoin(null)
           setShowForm(!showForm)
         }}
-        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        className="neumorphic-button px-6 py-3 flex items-center gap-2"
       >
-        {showForm ? 'Annuler' : 'Ajouter un besoin'}
+        <span>{showForm ? '❌' : '➕'}</span>
+        <span>{showForm ? 'Annuler' : 'Ajouter un besoin'}</span>
       </button>
 
       {showForm && (
-        <BesoinForm
-          besoin={editingBesoin}
-          onSubmit={handleSubmit}
-          onCancel={() => {
-            setShowForm(false)
-            setEditingBesoin(null)
-          }}
-        />
+        <div className="neumorphic-card p-6">
+          <BesoinForm
+            besoin={editingBesoin}
+            onSubmit={handleSubmit}
+            onCancel={() => {
+              setShowForm(false)
+              setEditingBesoin(null)
+            }}
+          />
+        </div>
       )}
 
-      {/* Liste des besoins avec référence pour le scroll */}
-      <div ref={listRef}>
+      {/* Liste des besoins */}
+      <div ref={listRef} className="neumorphic-card p-6">
+        <h2 className="text-lg font-semibold text-neumorphic mb-4">Liste des besoins</h2>
         <BesoinList
           besoins={besoins}
           onEdit={handleEdit}

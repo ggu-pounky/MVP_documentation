@@ -2,15 +2,202 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Add system font stack that properly handles accents and special characters */
+/* Neumorphic Dark Theme */
 @layer base {
   html {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Noto Sans', 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Noto Sans', 'Helvetica Neue', Arial, sans-serif;
   }
   
-  /* Ensure proper rendering of accented characters */
   body {
     font-feature-settings: "liga", "calt";
     text-rendering: optimizeLegibility;
+    background-color: #0a0a0a;
+    color: #e0e0e0;
   }
+}
+
+/* Neumorphic Dark Theme Variables */
+:root {
+  --neumorphic-bg: #0a0a0a;
+  --neumorphic-bg-light: #121212;
+  --neumorphic-bg-dark: #050505;
+  --neumorphic-text: #e0e0e0;
+  --neumorphic-text-muted: #8a8a8a;
+  --neumorphic-border: #2a2a2a;
+  --neumorphic-highlight: #3a3a3a;
+  --neumorphic-shadow-color: rgba(0, 0, 0, 0.5);
+  --neumorphic-glow: rgba(255, 255, 255, 0.05);
+}
+
+/* Neumorphic Base Styles */
+@layer components {
+  /* Neumorphic Card Effect */
+  .neumorphic-card {
+    background: var(--neumorphic-bg-light);
+    border-radius: 12px;
+    box-shadow: 
+      5px 5px 15px var(--neumorphic-shadow-color),
+      -5px -5px 15px var(--neumorphic-glow);
+    border: 1px solid var(--neumorphic-border);
+    transition: all 0.3s ease;
+  }
+  
+  .neumorphic-card:hover {
+    box-shadow: 
+      8px 8px 20px var(--neumorphic-shadow-color),
+      -8px -8px 20px var(--neumorphic-glow);
+    transform: translateY(-2px);
+  }
+  
+  /* Neumorphic Button Effect */
+  .neumorphic-button {
+    background: var(--neumorphic-bg-light);
+    border-radius: 8px;
+    box-shadow: 
+      3px 3px 8px var(--neumorphic-shadow-color),
+      -3px -3px 8px var(--neumorphic-glow);
+    border: 1px solid var(--neumorphic-border);
+    transition: all 0.2s ease;
+    color: var(--neumorphic-text);
+  }
+  
+  .neumorphic-button:active {
+    box-shadow: 
+      1px 1px 3px var(--neumorphic-shadow-color),
+      -1px -1px 3px var(--neumorphic-glow);
+    transform: translateY(1px);
+  }
+  
+  .neumorphic-button:hover {
+    box-shadow: 
+      5px 5px 12px var(--neumorphic-shadow-color),
+      -5px -5px 12px var(--neumorphic-glow);
+    background: var(--neumorphic-bg);
+  }
+  
+  /* Neumorphic Input Effect */
+  .neumorphic-input {
+    background: var(--neumorphic-bg-light);
+    border-radius: 8px;
+    box-shadow: 
+      inset 3px 3px 8px var(--neumorphic-shadow-color),
+      inset -3px -3px 8px var(--neumorphic-glow);
+    border: 1px solid var(--neumorphic-border);
+    color: var(--neumorphic-text);
+    transition: all 0.2s ease;
+  }
+  
+  .neumorphic-input:focus {
+    outline: none;
+    box-shadow: 
+      inset 1px 1px 3px var(--neumorphic-shadow-color),
+      inset -1px -1px 3px var(--neumorphic-glow),
+      0 0 0 2px rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Neumorphic Sidebar Effect */
+  .neumorphic-sidebar {
+    background: var(--neumorphic-bg-dark);
+    border-right: 1px solid var(--neumorphic-border);
+    box-shadow: 
+      5px 0 15px var(--neumorphic-shadow-color);
+  }
+  
+  /* Neumorphic Link Effect */
+  .neumorphic-link {
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    color: var(--neumorphic-text-muted);
+  }
+  
+  .neumorphic-link:hover {
+    background: var(--neumorphic-bg-light);
+    color: var(--neumorphic-text);
+    box-shadow: 
+      2px 2px 5px var(--neumorphic-shadow-color),
+      -2px -2px 5px var(--neumorphic-glow);
+  }
+  
+  .neumorphic-link.active {
+    background: var(--neumorphic-highlight);
+    color: var(--neumorphic-text);
+    box-shadow: 
+      inset 2px 2px 5px var(--neumorphic-shadow-color),
+      inset -2px -2px 5px var(--neumorphic-glow);
+  }
+  
+  /* Scrollbar Styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: var(--neumorphic-bg-dark);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: var(--neumorphic-border);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--neumorphic-highlight);
+  }
+}
+
+/* Utility Classes */
+@layer utilities {
+  .text-neumorphic {
+    color: var(--neumorphic-text);
+  }
+  
+  .text-neumorphic-muted {
+    color: var(--neumorphic-text-muted);
+  }
+  
+  .bg-neumorphic {
+    background: var(--neumorphic-bg);
+  }
+  
+  .bg-neumorphic-light {
+    background: var(--neumorphic-bg-light);
+  }
+  
+  .bg-neumorphic-dark {
+    background: var(--neumorphic-bg-dark);
+  }
+  
+  .border-neumorphic {
+    border-color: var(--neumorphic-border);
+  }
+}
+
+/* Animation for notifications */
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.notification-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.notification-fade-out {
+  animation: fadeOut 0.3s ease-out;
 }

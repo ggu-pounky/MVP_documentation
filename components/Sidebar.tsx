@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 export default function Sidebar() {
   const pathname = usePathname()
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [isExpanded, setIsExpanded] = useState(true)
 
   const isActive = (path: string) => pathname === path
 
@@ -151,153 +152,167 @@ export default function Sidebar() {
   }
 
   // Récupérer le numéro de version (hash du commit)
-  const version = process.env.NEXT_PUBLIC_VERSION || 'dev'
+  const version = process.env.NEXT_PUBLIC_VERSION || 'preview'
 
   return (
-    <aside className="w-64 bg-gray-800 text-white min-h-screen p-4 flex flex-col">
+    <aside className={`neumorphic-sidebar w-64 text-white min-h-screen p-4 flex flex-col transition-all duration-300 ${isExpanded ? 'w-64' : 'w-20'}`}>
       <div className="mb-8">
-        <h1 className="text-xl font-bold">MVP Documentation</h1>
+        <div className="flex items-center justify-between">
+          <h1 className={`text-xl font-bold text-neumorphic ${!isExpanded && 'hidden'}`}>
+            MVP Documentation
+          </h1>
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="neumorphic-button p-2 rounded-full hover:bg-neumorphic-highlight"
+          >
+            <span>{isExpanded ? '❌' : '☰'}</span>
+          </button>
+        </div>
       </div>
+      
       <nav className="space-y-2 flex-1">
-        {/* Bouton de chargement des données - premier dans le menu */}
+        {/* Bouton de chargement des données */}
         <button
           onClick={loadSampleData}
-          className="w-full flex items-center gap-2 px-4 py-2 rounded transition-colors hover:bg-gray-700 text-left"
+          className="neumorphic-button w-full flex items-center justify-center gap-2 px-4 py-3 text-left"
         >
-          <span>📥</span>
-          <span>Charger données exemple</span>
+          <span>📦</span>
+          {isExpanded && <span>Charger données exemple</span>}
         </button>
         
         {/* Séparation */}
-        <hr className="border-gray-600 my-2" />
+        <hr className="border-neumorphic my-3" />
         
-        {/* Titre module Exigence */}
-        <div className="px-4 py-2 text-sm font-medium text-gray-400">
-          module Exigence
-        </div>
-        
-        {/* Séparation */}
-        <hr className="border-gray-600 my-2" />
-        
-        {/* Titre module Code */}
-        <div className="px-4 py-2 text-sm font-medium text-gray-400">
-          module Code
-        </div>
+        {/* Module Exigence */}
+        {isExpanded && (
+          <div className="px-4 py-2 text-xs font-medium text-neumorphic-muted uppercase tracking-wider">
+            Module Exigence
+          </div>
+        )}
         
         {/* Séparation */}
-        <hr className="border-gray-600 my-2" />
+        <hr className="border-neumorphic my-2" />
         
-        {/* Titre module Test */}
-        <div className="px-4 py-2 text-sm font-medium text-gray-400">
-          module Test
-        </div>
-        
-        {/* Séparation */}
-        <hr className="border-gray-600 my-2" />
-        
-        {/* Titre module Maintenance */}
-        <div className="px-4 py-2 text-sm font-medium text-gray-400">
-          module Maintenance
-        </div>
+        {/* Module Code */}
+        {isExpanded && (
+          <div className="px-4 py-2 text-xs font-medium text-neumorphic-muted uppercase tracking-wider">
+            Module Code
+          </div>
+        )}
         
         {/* Séparation */}
-        <hr className="border-gray-600 my-2" />
+        <hr className="border-neumorphic my-2" />
         
-        {/* Ancien menu */}
+        {/* Module Test */}
+        {isExpanded && (
+          <div className="px-4 py-2 text-xs font-medium text-neumorphic-muted uppercase tracking-wider">
+            Module Test
+          </div>
+        )}
+        
+        {/* Séparation */}
+        <hr className="border-neumorphic my-2" />
+        
+        {/* Module Maintenance */}
+        {isExpanded && (
+          <div className="px-4 py-2 text-xs font-medium text-neumorphic-muted uppercase tracking-wider">
+            Module Maintenance
+          </div>
+        )}
+        
+        {/* Séparation */}
+        <hr className="border-neumorphic my-2" />
+        
+        {/* Liens du menu */}
         <Link
           href="/"
-          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
-            isActive('/') ? 'bg-gray-700' : 'hover:bg-gray-700'
-          }`}
-        >
-          <span>📝</span>
-          <span>Besoins</span>
-        </Link>
-        <Link
-          href="/epics"
-          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
-            isActive('/epics') ? 'bg-gray-700' : 'hover:bg-gray-700'
-          }`}
-        >
-          <span>📝</span>
-          <span>EPICS</span>
-        </Link>
-        <Link
-          href="/features"
-          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
-            isActive('/features') ? 'bg-gray-700' : 'hover:bg-gray-700'
-          }`}
-        >
-          <span>🚀</span>
-          <span>Features</span>
-        </Link>
-        <Link
-          href="/code"
-          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
-            isActive('/code') ? 'bg-gray-700' : 'hover:bg-gray-700'
-          }`}
-        >
-          <span>💻</span>
-          <span>Code</span>
-        </Link>
-        <Link
-          href="/exigences"
-          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
-            isActive('/exigences') ? 'bg-gray-700' : 'hover:bg-gray-700'
-          }`}
+          className={`neumorphic-link flex items-center gap-3 px-4 py-3 rounded-lg ${isActive('/') ? 'active' : ''}`}
         >
           <span>📋</span>
-          <span>Exigences</span>
+          {isExpanded && <span>Besoins</span>}
         </Link>
+        
+        <Link
+          href="/epics"
+          className={`neumorphic-link flex items-center gap-3 px-4 py-3 rounded-lg ${isActive('/epics') ? 'active' : ''}`}
+        >
+          <span>🗺️</span>
+          {isExpanded && <span>EPICS</span>}
+        </Link>
+        
+        <Link
+          href="/features"
+          className={`neumorphic-link flex items-center gap-3 px-4 py-3 rounded-lg ${isActive('/features') ? 'active' : ''}`}
+        >
+          <span>🚀</span>
+          {isExpanded && <span>Features</span>}
+        </Link>
+        
+        <Link
+          href="/code"
+          className={`neumorphic-link flex items-center gap-3 px-4 py-3 rounded-lg ${isActive('/code') ? 'active' : ''}`}
+        >
+          <span>💻</span>
+          {isExpanded && <span>Code</span>}
+        </Link>
+        
+        <Link
+          href="/exigences"
+          className={`neumorphic-link flex items-center gap-3 px-4 py-3 rounded-lg ${isActive('/exigences') ? 'active' : ''}`}
+        >
+          <span>📝</span>
+          {isExpanded && <span>Exigences</span>}
+        </Link>
+        
         <Link
           href="/tests"
-          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
-            isActive('/tests') ? 'bg-gray-700' : 'hover:bg-gray-700'
-          }`}
+          className={`neumorphic-link flex items-center gap-3 px-4 py-3 rounded-lg ${isActive('/tests') ? 'active' : ''}`}
         >
           <span>🧪</span>
-          <span>Tests</span>
+          {isExpanded && <span>Tests</span>}
         </Link>
+        
         {/* PRD link */}
         <Link
           href="/prd"
-          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
-            isActive('/prd') ? 'bg-gray-700' : 'hover:bg-gray-700'
-          }`}
+          className={`neumorphic-link flex items-center gap-3 px-4 py-3 rounded-lg ${isActive('/prd') ? 'active' : ''}`}
         >
           <span>📄</span>
-          <span className="flex flex-col">
-            <span className="text-xs text-gray-400">documentation</span>
-            <span>PRD</span>
-          </span>
+          {isExpanded && (
+            <span className="flex flex-col">
+              <span className="text-xs text-neumorphic-muted">Documentation</span>
+              <span>PRD</span>
+            </span>
+          )}
         </Link>
+        
         {/* Matrices link */}
         <Link
           href="/matrices"
-          className={`flex items-center gap-2 px-4 py-2 rounded transition-colors ${
-            isActive('/matrices') ? 'bg-gray-700' : 'hover:bg-gray-700'
-          }`}
+          className={`neumorphic-link flex items-center gap-3 px-4 py-3 rounded-lg ${isActive('/matrices') ? 'active' : ''}`}
         >
           <span>📊</span>
-          <span className="flex flex-col">
-            <span className="text-xs text-gray-400">documentation</span>
-            <span>Matrices</span>
-          </span>
+          {isExpanded && (
+            <span className="flex flex-col">
+              <span className="text-xs text-neumorphic-muted">Documentation</span>
+              <span>Matrices</span>
+            </span>
+          )}
         </Link>
       </nav>
       
       {/* Numéro de version en bas du menu */}
-      <div className="mt-auto pt-4 border-t border-gray-600">
-        <div className="px-4 py-2 text-xs text-gray-400 text-center">
-          Version: {version || '74cf10c'}
+      <div className="mt-auto pt-4 border-t border-neumorphic">
+        <div className="px-4 py-2 text-xs text-neumorphic-muted text-center">
+          {isExpanded ? `Version: ${version}` : version.slice(0, 7)}
         </div>
       </div>
       
       {/* Notification pour le chargement des données */}
       {notification && (
         <div
-          className={`fixed bottom-4 left-4 p-4 rounded z-50 ${
-            notification.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+          className={`fixed bottom-4 left-4 p-4 rounded-lg z-50 notification-slide-in ${
+            notification.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
           }`}
         >
           {notification.message}
