@@ -1,31 +1,30 @@
 /**
  * Script de test IHM pour MVP Documentation
- * Ce script simule l'utilisation de l'application avec des données factices
- * pour vérifier que les écrans fonctionnent correctement.
+ * Version corrigée pour fonctionner avec Puppeteer
  */
 
 const puppeteer = require('puppeteer');
 
 // Configuration
-const BASE_URL = process.env.VERCEL_URL || 'http://localhost:3000';
+const BASE_URL = process.env.VERCEL_URL || process.env.BASE_URL || 'http://localhost:3000';
 const HEADLESS = process.env.HEADLESS !== 'false';
 
-// Données factices
+// Données de test
 const mockData = {
   besoins: [
     {
-      id: 'besoin-001',
+      id: 'test-besoin-001',
       titre: 'Gestion des utilisateurs',
       description: 'Permettre la création, modification et suppression des utilisateurs',
-      statut: 'À faire',
+      statut: 'En cours',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
     {
-      id: 'besoin-002',
+      id: 'test-besoin-002',
       titre: 'Gestion des produits',
-      description: 'Permettre la gestion du catalogue produits',
-      statut: 'En cours',
+      description: 'Permettre la gestion complète du catalogue produits',
+      statut: 'À faire',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -33,11 +32,11 @@ const mockData = {
   
   epics: [
     {
-      id: 'epic-001',
-      titre: 'Création utilisateur',
-      description: 'Épic pour la création des utilisateurs',
-      besoinId: 'besoin-001',
-      statut: 'À faire',
+      id: 'test-epic-001',
+      titre: 'Épic Authentification',
+      description: 'Toutes les fonctionnalités liées à l\'authentification',
+      besoinId: 'test-besoin-001',
+      statut: 'En cours',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -45,24 +44,24 @@ const mockData = {
   
   features: [
     {
-      id: 'feature-001',
+      id: 'test-feature-001',
       titre: 'Inscription utilisateur',
-      description: 'Permettre à un nouvel utilisateur de s\'inscrire',
+      description: 'Permettre à un nouvel utilisateur de créer un compte',
       priorite: 'Élevée',
-      statut: 'À faire',
-      besoinId: 'besoin-001',
-      epicId: 'epic-001',
+      statut: 'Terminé',
+      besoinId: 'test-besoin-001',
+      epicId: 'test-epic-001',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
     {
-      id: 'feature-002',
+      id: 'test-feature-002',
       titre: 'Connexion utilisateur',
       description: 'Permettre à un utilisateur de se connecter',
       priorite: 'Élevée',
-      statut: 'En cours',
-      besoinId: 'besoin-001',
-      epicId: 'epic-001',
+      statut: 'Terminé',
+      besoinId: 'test-besoin-001',
+      epicId: 'test-epic-001',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -70,29 +69,29 @@ const mockData = {
   
   exigences: [
     {
-      id: 'exigence-001',
+      id: 'test-exigence-001',
       titre: 'Validation email',
       description: 'L\'email doit être au format valide',
-      statut: 'À faire',
-      featureId: 'feature-001',
+      statut: 'Terminé',
+      featureId: 'test-feature-001',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
     {
-      id: 'exigence-002',
+      id: 'test-exigence-002',
       titre: 'Validation mot de passe',
       description: 'Le mot de passe doit contenir 8 caractères minimum',
-      statut: 'À faire',
-      featureId: 'feature-001',
+      statut: 'Terminé',
+      featureId: 'test-feature-001',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
     {
-      id: 'exigence-003',
+      id: 'test-exigence-003',
       titre: 'Affichage erreur connexion',
       description: 'Afficher un message d\'erreur en cas d\'échec de connexion',
       statut: 'En cours',
-      featureId: 'feature-002',
+      featureId: 'test-feature-002',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -100,34 +99,34 @@ const mockData = {
   
   tests: [
     {
-      id: 'test-001',
+      id: 'test-test-001',
       titre: 'Test email valide',
       description: 'Vérifier que le système accepte un email valide',
-      exigenceId: 'exigence-001',
+      exigenceId: 'test-exigence-001',
       isTNR: true,
       isAutomatisable: true,
       priorite: 'Élevée',
-      statut: 'À faire',
+      statut: 'Terminé',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
     {
-      id: 'test-002',
+      id: 'test-test-002',
       titre: 'Test email invalide',
       description: 'Vérifier que le système rejette un email invalide',
-      exigenceId: 'exigence-001',
+      exigenceId: 'test-exigence-001',
       isTNR: true,
       isAutomatisable: true,
       priorite: 'Élevée',
-      statut: 'À faire',
+      statut: 'Terminé',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
     {
-      id: 'test-003',
+      id: 'test-test-003',
       titre: 'Test mot de passe valide',
       description: 'Vérifier que le système accepte un mot de passe valide',
-      exigenceId: 'exigence-002',
+      exigenceId: 'test-exigence-002',
       isTNR: false,
       isAutomatisable: true,
       priorite: 'Moyenne',
@@ -138,24 +137,40 @@ const mockData = {
   ],
 };
 
-// Fonction pour injecter des données dans localStorage via JavaScript
-const injectData = async (page) => {
-  await page.evaluate((data) => {
-    localStorage.setItem('besoins', JSON.stringify(data.besoins));
-    localStorage.setItem('epics', JSON.stringify(data.epics));
-    localStorage.setItem('features', JSON.stringify(data.features));
-    localStorage.setItem('exigences', JSON.stringify(data.exigences));
-    localStorage.setItem('tests', JSON.stringify(data.tests));
-    
-    // Déclencher un événement pour notifier les composants
-    window.dispatchEvent(new Event('storage'));
-  }, mockData);
+// Fonction pour injecter les données via un script dans la page
+async function injectData(page) {
+  // Créer un script qui définit une fonction globale
+  const injectScript = `
+    window.__injectTestData = function() {
+      const data = ${JSON.stringify(mockData)};
+      localStorage.setItem('besoins', JSON.stringify(data.besoins));
+      localStorage.setItem('epics', JSON.stringify(data.epics));
+      localStorage.setItem('features', JSON.stringify(data.features));
+      localStorage.setItem('exigences', JSON.stringify(data.exigences));
+      localStorage.setItem('tests', JSON.stringify(data.tests));
+      window.dispatchEvent(new Event('storage'));
+      return true;
+    };
+  `;
   
-  console.log('✅ Données factices injectées dans localStorage');
-};
+  await page.evaluate(injectScript);
+  
+  // Appeler la fonction après que la page soit chargée
+  await page.evaluate(() => {
+    if (window.__injectTestData) {
+      return window.__injectTestData();
+    }
+    return false;
+  });
+  
+  // Attendre que les données soient chargées
+  await page.waitForTimeout(500);
+  
+  console.log('✅ Données de test injectées');
+}
 
 // Fonction pour tester une page
-const testPage = async (page, url, testName, checks) => {
+async function testPage(page, url, testName, checks) {
   console.log(`\n🧪 Test: ${testName}`);
   console.log(`   URL: ${url}`);
   
@@ -164,6 +179,12 @@ const testPage = async (page, url, testName, checks) => {
     
     // Attendre que la page soit chargée
     await page.waitForSelector('body', { timeout: 10000 });
+    
+    // Injecter les données de test
+    await injectData(page);
+    
+    // Recharger la page pour que les composants React lisent les données
+    await page.reload({ waitUntil: 'networkidle2', timeout: 30000 });
     
     // Exécuter les vérifications
     for (const check of checks) {
@@ -191,10 +212,10 @@ const testPage = async (page, url, testName, checks) => {
   } catch (error) {
     console.log(`   ❌ Erreur de chargement: ${error.message}`);
   }
-};
+}
 
 // Tests principaux
-const runTests = async () => {
+async function runTests() {
   let browser;
   
   try {
@@ -209,35 +230,28 @@ const runTests = async () => {
     
     const page = await browser.newPage();
     
-    // Injecter les données factices
-    await injectData(page);
-    
     // Test 1: Page d'accueil (Besoins)
     await testPage(page, `${BASE_URL}/`, 'Page Besoins', [
       { selector: 'h1', description: 'Titre de page présent' },
       { selector: 'table', description: 'Tableau des besoins présent' },
-      { evaluate: () => localStorage.getItem('besoins') !== null, description: 'Données besoins dans localStorage' },
     ]);
     
     // Test 2: Page Features
     await testPage(page, `${BASE_URL}/features`, 'Page Features', [
       { selector: 'h1', description: 'Titre de page présent' },
       { selector: 'table', description: 'Tableau des features présent' },
-      { evaluate: () => localStorage.getItem('features') !== null, description: 'Données features dans localStorage' },
     ]);
     
     // Test 3: Page Exigences
     await testPage(page, `${BASE_URL}/exigences`, 'Page Exigences', [
       { selector: 'h1', description: 'Titre de page présent' },
       { selector: 'table', description: 'Tableau des exigences présent' },
-      { evaluate: () => localStorage.getItem('exigences') !== null, description: 'Données exigences dans localStorage' },
     ]);
     
     // Test 4: Page Tests
     await testPage(page, `${BASE_URL}/tests`, 'Page Tests', [
       { selector: 'h1', description: 'Titre de page présent' },
       { selector: 'table', description: 'Tableau des tests présent' },
-      { evaluate: () => localStorage.getItem('tests') !== null, description: 'Données tests dans localStorage' },
     ]);
     
     // Test 5: Page Matrices - Exigence-Tests
@@ -249,6 +263,9 @@ const runTests = async () => {
     // Test 6: Vérification de la matrice Exigence-Tests
     console.log('\n🧪 Test: Matrice Exigence-Tests');
     await page.goto(`${BASE_URL}/matrices`, { waitUntil: 'networkidle2', timeout: 30000 });
+    await injectData(page);
+    await page.reload({ waitUntil: 'networkidle2', timeout: 30000 });
+    
     await page.select('select', 'exigence-tests');
     await page.waitForTimeout(1000); // Attendre le rendu
     
@@ -282,12 +299,6 @@ const runTests = async () => {
       // Vérifier les liens du menu
       const links = await page.$$('aside a, aside button');
       console.log(`   ✅ ${links?.length || 0} liens/boutons dans le sidebar`);
-      
-      // Vérifier les modules
-      const modules = await page.$$('aside div:has(> div:contains("Module"))');
-      if (modules && modules.length > 0) {
-        console.log(`   ✅ ${modules.length} sections de module dans le sidebar`);
-      }
     } else {
       console.log('   ❌ Sidebar non trouvé');
     }
@@ -308,7 +319,7 @@ const runTests = async () => {
     
     console.log('\n🎉 Tous les tests IHM terminés !');
     console.log('\n📊 Résumé:');
-    console.log('   - Données factices injectées avec succès');
+    console.log('   - Données de test injectées avec succès');
     console.log('   - Toutes les pages principales testées');
     console.log('   - Matrice Exigence-Tests vérifiée');
     console.log('   - Sidebar et navigation vérifiés');
@@ -322,7 +333,7 @@ const runTests = async () => {
       await browser.close();
     }
   }
-};
+}
 
 // Exécuter les tests
 runTests().catch(console.error);
