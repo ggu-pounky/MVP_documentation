@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 type ExigenceInfo = {
   id: string
@@ -175,6 +175,7 @@ export default function TestAIGeneratorModal({ exigence, onClose, onGenerate }: 
   const [selectedTests, setSelectedTests] = useState<number[]>([])
   const [suggestions, setSuggestions] = useState<{ titre: string; description: string }[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
+  const modalRef = useRef<HTMLDivElement>(null)
 
   // Générer les suggestions au chargement de la modale
   useEffect(() => {
@@ -190,11 +191,11 @@ export default function TestAIGeneratorModal({ exigence, onClose, onGenerate }: 
   }, [exigence])
 
   // Gérer la sélection/désélection d'une suggestion
-  const toggleTestSelection = (index: number) => {
+  const toggleTestSelection = useCallback((index: number) => {
     setSelectedTests((prev) =>
       prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
     )
-  }
+  }, [])
 
   // Valider et générer les tests sélectionnés
   const handleGenerate = () => {
@@ -203,27 +204,60 @@ export default function TestAIGeneratorModal({ exigence, onClose, onGenerate }: 
     onClose()
   }
 
-  // Gérer le clic sur la ligne (pour éviter la propagation)
-  const handleRowClick = (index: number, e: React.MouseEvent) => {
-    // Ne pas déclencher si le clic vient du checkbox
-    if ((e.target as HTMLElement).tagName !== 'INPUT') {
-      toggleTestSelection(index)
+  // Empêcher la propagation des clics vers le fond
+  const handleModalClick = (e: React.MouseEvent) => {
+    if (e.target === modalRef.current) {
+      onClose()
     }
   }
+
+  // Gérer le clic sur le checkbox uniquement
+  const handleCheckboxChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation()
+    toggleTestSelection(index)
+  }
+
+  // Gérer le clic sur la ligne (sélection par clic sur la ligne)
+  const handleRowClick = (index: number, e: React.MouseEvent) => {
+    // Ne pas déclencher si le clic vient du checkbox ou de ses enfants
+    if ((e.target as HTMLElement).closest('input[type="checkbox"]')) {
+      return
+    }
+    toggleTestSelection(index)
+  }
+
+  // Fermer avec la touche Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
 
   if (!exigence) {
     return null
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-      <div className="neumorphic-card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4"
+      onClick={handleModalClick}
+    >
+      <div
+        ref={modalRef}
+        className="neumorphic-card max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-neumorphic">Génération IA de Tests</h2>
             <button
               onClick={onClose}
               className="text-neumorphic-muted hover:text-neumorphic text-2xl"
+              type="button"
             >
               ×
             </button>
@@ -261,8 +295,8 @@ export default function TestAIGeneratorModal({ exigence, onClose, onGenerate }: 
                     key={index}
                     onClick={(e) => handleRowClick(index, e)}
                     className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                      selectedTests.includes(index) 
-                        ? 'border-blue-500 bg-blue-900/20' 
+                      selectedTests.includes(index)
+                        ? 'border-blue-500 bg-blue-900/20'
                         : 'border-neumorphic-border hover:border-neumorphic-highlight'
                     }`}
                   >
@@ -270,9 +304,9 @@ export default function TestAIGeneratorModal({ exigence, onClose, onGenerate }: 
                       <input
                         type="checkbox"
                         checked={selectedTests.includes(index)}
-                        onChange={() => toggleTestSelection(index)}
+                        onChange={(e) => handleCheckboxChange(index, e)}
                         onClick={(e) => e.stopPropagation()}
-                        className="mt-1 w-4 h-4 accent-blue-500"
+                        className="mt-1 w-4 h-4 accent-blue-500 cursor-pointer"
                       />
                       <div className="flex-1">
                         <h3 className="font-medium text-neumorphic">{suggestion.titre}</h3>
@@ -286,18 +320,20 @@ export default function TestAIGeneratorModal({ exigence, onClose, onGenerate }: 
               <div className="flex justify-end gap-2 mt-6">
                 <button
                   onClick={onClose}
-                  className="px-4 py-2 bg-neumorphic-bg-light text-neumorphic-muted rounded hover:bg-neumorphic-border"
+                  type="button"
+                  className="px-4 py-2 bg-neumorphic-bg-light text-neumorphic-muted rounded hover:bg-neumorphic-border transition-colors"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={handleGenerate}
                   disabled={selectedTests.length === 0}
-                  className={`px-4 py-2 rounded ${
+                  className={`px-4 py-2 rounded transition-colors ${
                     selectedTests.length === 0
                       ? 'bg-blue-900/30 text-blue-400 cursor-not-allowed'
                       : 'bg-blue-500 text-white hover:bg-blue-600'
                   }`}
+                  type="button"
                 >
                   Valider ({selectedTests.length} sélectionné(s))
                 </button>

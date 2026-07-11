@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 type Suggestion = {
   field: 'titre' | 'description'
@@ -18,9 +18,10 @@ type AIImprovementModalProps = {
 
 export default function AIImprovementModal({ title, suggestions, onClose, onApply }: AIImprovementModalProps) {
   const [checkedSuggestions, setCheckedSuggestions] = useState<Suggestion[]>(suggestions)
+  const modalRef = useRef<HTMLDivElement>(null)
 
   // Gérer la sélection/désélection d'une suggestion
-  const toggleSuggestion = (index: number) => {
+  const toggleSuggestion = useCallback((index: number) => {
     setCheckedSuggestions((prev) => {
       const newSuggestions = [...prev]
       newSuggestions[index] = {
@@ -29,7 +30,7 @@ export default function AIImprovementModal({ title, suggestions, onClose, onAppl
       }
       return newSuggestions
     })
-  }
+  }, [])
 
   // Appliquer les suggestions sélectionnées
   const handleApply = () => {
@@ -49,9 +50,49 @@ export default function AIImprovementModal({ title, suggestions, onClose, onAppl
     )
   }
 
+  // Empêcher la propagation des clics vers le fond
+  const handleModalClick = (e: React.MouseEvent) => {
+    if (e.target === modalRef.current) {
+      onClose()
+    }
+  }
+
+  // Gérer le clic sur le checkbox uniquement
+  const handleCheckboxChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation()
+    toggleSuggestion(index)
+  }
+
+  // Gérer le clic sur la ligne (sélection par clic sur la ligne)
+  const handleRowClick = (index: number, e: React.MouseEvent) => {
+    // Ne pas déclencher si le clic vient du checkbox ou de ses enfants
+    if ((e.target as HTMLElement).closest('input[type="checkbox"]')) {
+      return
+    }
+    toggleSuggestion(index)
+  }
+
+  // Fermer avec la touche Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-      <div className="neumorphic-card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4"
+      onClick={handleModalClick}
+    >
+      <div
+        ref={modalRef}
+        className="neumorphic-card max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="p-6">
           {/* En-tête */}
           <div className="flex justify-between items-center mb-4">
@@ -59,6 +100,7 @@ export default function AIImprovementModal({ title, suggestions, onClose, onAppl
             <button
               onClick={onClose}
               className="text-neumorphic-muted hover:text-neumorphic text-2xl"
+              type="button"
             >
               ×
             </button>
@@ -75,18 +117,20 @@ export default function AIImprovementModal({ title, suggestions, onClose, onAppl
             {checkedSuggestions.map((suggestion, index) => (
               <div
                 key={index}
-                className={`p-4 border rounded-lg ${
+                onClick={(e) => handleRowClick(index, e)}
+                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
                   suggestion.checked 
                     ? 'border-blue-500 bg-blue-900/20' 
-                    : 'border-neumorphic-border bg-neumorphic-bg-light'
+                    : 'border-neumorphic-border hover:border-neumorphic-highlight'
                 }`}
               >
                 <div className="flex items-start gap-3">
                   <input
                     type="checkbox"
                     checked={suggestion.checked}
-                    onChange={() => toggleSuggestion(index)}
-                    className="mt-1 w-4 h-4 accent-blue-500"
+                    onChange={(e) => handleCheckboxChange(index, e)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="mt-1 w-4 h-4 accent-blue-500 cursor-pointer"
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -111,25 +155,27 @@ export default function AIImprovementModal({ title, suggestions, onClose, onAppl
             <button
               type="button"
               onClick={toggleAll}
-              className="text-sm text-blue-400 hover:underline"
+              className="text-sm text-blue-400 hover:underline transition-colors"
             >
               {checkedSuggestions.every((s) => s.checked) ? 'Tout désélectionner' : 'Tout sélectionner'}
             </button>
             <div className="flex gap-2">
               <button
                 onClick={onClose}
-                className="px-4 py-2 bg-neumorphic-bg-light text-neumorphic-muted rounded hover:bg-neumorphic-border"
+                type="button"
+                className="px-4 py-2 bg-neumorphic-bg-light text-neumorphic-muted rounded hover:bg-neumorphic-border transition-colors"
               >
                 Annuler
               </button>
               <button
                 onClick={handleApply}
                 disabled={checkedSuggestions.filter((s) => s.checked).length === 0}
-                className={`px-4 py-2 rounded ${
+                className={`px-4 py-2 rounded transition-colors ${
                   checkedSuggestions.filter((s) => s.checked).length === 0
-                    ? 'bg-green-900/30 text-green-500 cursor-not-allowed'
+                    ? 'bg-green-900/30 text-green-400 cursor-not-allowed'
                     : 'bg-green-500 text-white hover:bg-green-600'
                 }`}
+                type="button"
               >
                 Valider ({checkedSuggestions.filter((s) => s.checked).length} sélectionnée(s))
               </button>
