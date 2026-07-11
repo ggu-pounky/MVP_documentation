@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import TestForm from '@/components/TestForm'
 import TestList from '@/components/TestList'
+import TestAIGeneratorModal from '@/components/TestAIGeneratorModal'
+import AIImprovementModal from '@/components/AIImprovementModal'
 import type { Test, TestFormData } from '@/types/test'
 import type { Exigence } from '@/types/exigence'
 import type { Feature } from '@/types/feature'
@@ -16,6 +18,13 @@ type ExigenceInfo = {
   description?: string
 }
 
+type Suggestion = {
+  field: 'titre' | 'description'
+  oldValue: string
+  newValue: string
+  checked: boolean
+}
+
 export default function TestsPage() {
   const [tests, setTests] = useState<Test[]>([])
   const [exigences, setExigences] = useState<Exigence[]>([])
@@ -25,6 +34,11 @@ export default function TestsPage() {
   const [showForm, setShowForm] = useState(false)
   const [editingTest, setEditingTest] = useState<Test | null>(null)
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [showAIGenerator, setShowAIGenerator] = useState(false)
+  const [selectedExigenceForAI, setSelectedExigenceForAI] = useState<ExigenceInfo | null>(null)
+  const [showImprovementModal, setShowImprovementModal] = useState(false)
+  const [improvementSuggestions, setImprovementSuggestions] = useState<Suggestion[]>([])
+  const [improvingTest, setImprovingTest] = useState<Test | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
   // Charger les données depuis localStorage
@@ -88,6 +102,100 @@ export default function TestsPage() {
         description: exigence.description || undefined,
       }
     })
+  }
+
+  // Ouvrir la modale de génération IA pour une exigence
+  const openAIGenerator = (exigence: ExigenceInfo) => {
+    setSelectedExigenceForAI(exigence)
+    setShowAIGenerator(true)
+  }
+
+  // Générer des tests à partir des suggestions IA
+  const handleGenerateFromAI = (generatedTests: { titre: string; description: string }[]) => {
+    if (!selectedExigenceForAI) return
+
+    // Trouver l'exigence correspondante
+    const exigence = exigences.find((e) => e.id === selectedExigenceForAI.id)
+    if (!exigence) return
+
+    const newTests: Test[] = generatedTests.map((testData) => ({
+      id: generateId(),
+      titre: testData.titre,
+      description: testData.description,
+      exigenceId: exigence.id,
+      isTNR: false,
+      isAutomatisable: true,
+      priorite: 'Moyenne',
+      statut: 'À faire',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }))
+
+    setTests([...tests, ...newTests])
+    showNotification(`${newTests.length} Test(s) généré(s) avec succès !`)
+    setShowAIGenerator(false)
+    setSelectedExigenceForAI(null)
+    setShowForm(false)
+  }
+
+  // Ouvrir la modale d'amélioration IA
+  const openImprovementModal = (test: Test) => {
+    setImprovingTest(test)
+    
+    // Générer des suggestions d'amélioration
+    const suggestions: Suggestion[] = []
+    
+    // Suggestion pour le titre (si vide ou trop court)
+    if (!test.titre || test.titre.length < 10) {
+      suggestions.push({
+        field: 'titre',
+        oldValue: test.titre || '(vide)',
+        newValue: `Test de ${test.titre || 'cette fonctionnalité'}`,
+        checked: true,
+      })
+    }
+    
+    // Suggestion pour la description (format standard)
+    if (!test.description || !test.description.includes('Vérifier que')) {
+      const newDescription = `Vérifier que le système ${test.titre.toLowerCase()} correctement.
+Critères de succès:
+1. Le système doit permettre de ${test.titre.toLowerCase()}.
+2. Les données doivent être validées avant toute opération.
+3. Une confirmation visuelle doit être affichée après chaque action.
+4. Les erreurs doivent être gérées et affichées clairement.`
+      
+      suggestions.push({
+        field: 'description',
+        oldValue: test.description || '(vide)',
+        newValue: newDescription,
+        checked: true,
+      })
+    }
+    
+    setImprovementSuggestions(suggestions)
+    setShowImprovementModal(true)
+  }
+
+  // Appliquer les suggestions d'amélioration sélectionnées
+  const handleApplyImprovements = (selectedSuggestions: Suggestion[]) => {
+    if (!improvingTest) return
+    
+    // Appliquer les modifications au Test
+    setTests(
+      tests.map((t) =>
+        t.id === improvingTest.id
+          ? {
+              ...t,
+              titre: selectedSuggestions.find((s) => s.field === 'titre' && s.checked)?.newValue || t.titre,
+              description: selectedSuggestions.find((s) => s.field === 'description' && s.checked)?.newValue || t.description,
+              updated_at: new Date().toISOString(),
+            }
+          : t
+      )
+    )
+    showNotification('Test amélioré avec succès !')
+    setShowImprovementModal(false)
+    setImprovingTest(null)
   }
 
   const handleSubmit = async (data: TestFormData) => {
@@ -215,6 +323,8 @@ export default function TestsPage() {
               setShowForm(false)
               setEditingTest(null)
             }}
+            onGenerateAI={openAIGenerator}
+            onImproveAI={openImprovementModal}
           />
         </div>
       )}
@@ -229,6 +339,39 @@ export default function TestsPage() {
           onDelete={handleDelete}
         />
       </div>
+
+      {/* Modale de génération IA */}
+      {showAIGenerator && selectedExigenceForAI && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="neumorphic-card max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <TestAIGeneratorModal
+              exigence={selectedExigenceForAI}
+              onClose={() => {
+                setShowAIGenerator(false)
+                setSelectedExigenceForAI(null)
+              }}
+              onGenerate={handleGenerateFromAI}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Modale d'amélioration IA */}
+      {showImprovementModal && improvingTest && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="neumorphic-card max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <AIImprovementModal
+              title={improvingTest.titre}
+              suggestions={improvementSuggestions}
+              onClose={() => {
+                setShowImprovementModal(false)
+                setImprovingTest(null)
+              }}
+              onApply={handleApplyImprovements}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

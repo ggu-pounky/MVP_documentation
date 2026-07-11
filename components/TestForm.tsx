@@ -18,9 +18,10 @@ type TestFormProps = {
   onSubmit: (data: TestFormData) => Promise<void>
   onCancel: () => void
   onGenerateAI?: (exigence: ExigenceInfo) => void
+  onImproveAI?: (test: Test) => void
 }
 
-export default function TestForm({ test, exigences, onSubmit, onCancel, onGenerateAI }: TestFormProps) {
+export default function TestForm({ test, exigences, onSubmit, onCancel, onGenerateAI, onImproveAI }: TestFormProps) {
   const [titre, setTitre] = useState('')
   const [description, setDescription] = useState('')
   const [exigenceId, setExigenceId] = useState('')
@@ -69,6 +70,13 @@ export default function TestForm({ test, exigences, onSubmit, onCancel, onGenera
   // Trouver l'exigence s\u00e9lectionn\u00e9e pour la g\u00e9n\u00e9ration IA
   const selectedExigence = exigences.find((e) => e.id === exigenceId)
 
+  // G\u00e9rer le clic sur "Am\u00e9lioration IA"
+  const handleImproveAI = () => {
+    if (test && onImproveAI) {
+      onImproveAI(test)
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow mb-4">
       <div className="mb-4">
@@ -78,6 +86,7 @@ export default function TestForm({ test, exigences, onSubmit, onCancel, onGenera
           onChange={(e) => setExigenceId(e.target.value)}
           required
           className="w-full p-2 border rounded"
+          disabled={!!test}
         >
           <option value="">-- S\u00e9lectionnez une exigence --</option>
           {exigences.map((exigence) => (
@@ -182,6 +191,16 @@ export default function TestForm({ test, exigences, onSubmit, onCancel, onGenera
             className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
           >
             G\u00e9n\u00e9rer par IA
+          </button>
+        )}
+        {/* Bouton Am\u00e9lioration IA (visible si on modifie un test) */}
+        {onImproveAI && test && (
+          <button
+            type="button"
+            onClick={handleImproveAI}
+            className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
+          >
+            Am\u00e9lioration IA
           </button>
         )}
       </div>
