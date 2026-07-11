@@ -203,32 +203,40 @@ export default function TestAIGeneratorModal({ exigence, onClose, onGenerate }: 
     onClose()
   }
 
+  // Gérer le clic sur la ligne (pour éviter la propagation)
+  const handleRowClick = (index: number, e: React.MouseEvent) => {
+    // Ne pas déclencher si le clic vient du checkbox
+    if ((e.target as HTMLElement).tagName !== 'INPUT') {
+      toggleTestSelection(index)
+    }
+  }
+
   if (!exigence) {
     return null
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+      <div className="neumorphic-card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">Génération IA de Tests</h2>
+            <h2 className="text-xl font-bold text-neumorphic">Génération IA de Tests</h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-2xl"
+              className="text-neumorphic-muted hover:text-neumorphic text-2xl"
             >
               ×
             </button>
           </div>
 
           <div className="mb-4">
-            <p className="text-sm text-gray-600">
-              Exigence sélectionnée : <strong>{exigence.titre}</strong>
+            <p className="text-sm text-neumorphic-muted">
+              Exigence sélectionnée : <strong className="text-neumorphic">{exigence.titre}</strong>
             </p>
             {exigence.description && (
-              <p className="text-sm text-gray-500 mt-1">{exigence.description}</p>
+              <p className="text-sm text-neumorphic-muted mt-1">{exigence.description}</p>
             )}
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-neumorphic-muted mt-1">
               Feature : {exigence.featureTitre} | Besoin : {exigence.besoinTitre}
             </p>
           </div>
@@ -236,24 +244,26 @@ export default function TestAIGeneratorModal({ exigence, onClose, onGenerate }: 
           {isGenerating ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-              <span className="ml-3">Génération en cours...</span>
+              <span className="ml-3 text-neumorphic">Génération en cours...</span>
             </div>
           ) : suggestions.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-neumorphic-muted">
               <p>Aucune suggestion générée.</p>
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-neumorphic-muted">
                 Sélectionnez les tests que vous souhaitez générer :
               </p>
               <div className="space-y-3">
                 {suggestions.map((suggestion, index) => (
                   <div
                     key={index}
-                    onClick={() => toggleTestSelection(index)}
+                    onClick={(e) => handleRowClick(index, e)}
                     className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                      selectedTests.includes(index) ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-300'
+                      selectedTests.includes(index) 
+                        ? 'border-blue-500 bg-blue-900/20' 
+                        : 'border-neumorphic-border hover:border-neumorphic-highlight'
                     }`}
                   >
                     <div className="flex items-start gap-3">
@@ -262,11 +272,11 @@ export default function TestAIGeneratorModal({ exigence, onClose, onGenerate }: 
                         checked={selectedTests.includes(index)}
                         onChange={() => toggleTestSelection(index)}
                         onClick={(e) => e.stopPropagation()}
-                        className="mt-1 w-4 h-4"
+                        className="mt-1 w-4 h-4 accent-blue-500"
                       />
                       <div className="flex-1">
-                        <h3 className="font-medium">{suggestion.titre}</h3>
-                        <p className="text-sm text-gray-600 mt-1">{suggestion.description}</p>
+                        <h3 className="font-medium text-neumorphic">{suggestion.titre}</h3>
+                        <p className="text-sm text-neumorphic-muted mt-1">{suggestion.description}</p>
                       </div>
                     </div>
                   </div>
@@ -276,7 +286,7 @@ export default function TestAIGeneratorModal({ exigence, onClose, onGenerate }: 
               <div className="flex justify-end gap-2 mt-6">
                 <button
                   onClick={onClose}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                  className="px-4 py-2 bg-neumorphic-bg-light text-neumorphic-muted rounded hover:bg-neumorphic-border"
                 >
                   Annuler
                 </button>
@@ -285,7 +295,7 @@ export default function TestAIGeneratorModal({ exigence, onClose, onGenerate }: 
                   disabled={selectedTests.length === 0}
                   className={`px-4 py-2 rounded ${
                     selectedTests.length === 0
-                      ? 'bg-blue-200 text-blue-400 cursor-not-allowed'
+                      ? 'bg-blue-900/30 text-blue-400 cursor-not-allowed'
                       : 'bg-blue-500 text-white hover:bg-blue-600'
                   }`}
                 >

@@ -50,23 +50,23 @@ export default function AIImprovementModal({ title, suggestions, onClose, onAppl
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+      <div className="neumorphic-card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           {/* En-tête */}
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">Suggestions d'amélioration IA</h2>
+            <h2 className="text-xl font-bold text-neumorphic">Suggestions d'amélioration IA</h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-2xl"
+              className="text-neumorphic-muted hover:text-neumorphic text-2xl"
             >
               ×
             </button>
           </div>
 
           {/* Description */}
-          <p className="text-sm text-gray-600 mb-6">
-            L'IA a analysé {title} et propose les améliorations suivantes. 
+          <p className="text-sm text-neumorphic-muted mb-6">
+            L'IA a analysé <span className="font-medium text-neumorphic">{title}</span> et propose les améliorations suivantes. 
             Cochez celles que vous souhaitez appliquer.
           </p>
 
@@ -75,25 +75,29 @@ export default function AIImprovementModal({ title, suggestions, onClose, onAppl
             {checkedSuggestions.map((suggestion, index) => (
               <div
                 key={index}
-                className={`p-4 border rounded-lg ${suggestion.checked ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}
+                className={`p-4 border rounded-lg ${
+                  suggestion.checked 
+                    ? 'border-blue-500 bg-blue-900/20' 
+                    : 'border-neumorphic-border bg-neumorphic-bg-light'
+                }`}
               >
                 <div className="flex items-start gap-3">
                   <input
                     type="checkbox"
                     checked={suggestion.checked}
                     onChange={() => toggleSuggestion(index)}
-                    className="mt-1 w-4 h-4"
+                    className="mt-1 w-4 h-4 accent-blue-500"
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium text-gray-500">
+                      <span className="text-sm font-medium text-neumorphic-muted">
                         {suggestion.field === 'titre' ? '📝 Titre' : '📄 Description'}
                       </span>
                     </div>
-                    <div className="text-sm text-gray-600 line-through mb-1">
+                    <div className="text-sm text-neumorphic-muted line-through mb-1">
                       Ancienne valeur : {suggestion.oldValue || '(vide)'}
                     </div>
-                    <div className="font-medium">
+                    <div className="font-medium text-neumorphic">
                       Nouvelle valeur : {suggestion.newValue}
                     </div>
                   </div>
@@ -107,14 +111,14 @@ export default function AIImprovementModal({ title, suggestions, onClose, onAppl
             <button
               type="button"
               onClick={toggleAll}
-              className="text-sm text-blue-500 hover:underline"
+              className="text-sm text-blue-400 hover:underline"
             >
               {checkedSuggestions.every((s) => s.checked) ? 'Tout désélectionner' : 'Tout sélectionner'}
             </button>
             <div className="flex gap-2">
               <button
                 onClick={onClose}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                className="px-4 py-2 bg-neumorphic-bg-light text-neumorphic-muted rounded hover:bg-neumorphic-border"
               >
                 Annuler
               </button>
@@ -123,7 +127,7 @@ export default function AIImprovementModal({ title, suggestions, onClose, onAppl
                 disabled={checkedSuggestions.filter((s) => s.checked).length === 0}
                 className={`px-4 py-2 rounded ${
                   checkedSuggestions.filter((s) => s.checked).length === 0
-                    ? 'bg-green-200 text-green-400 cursor-not-allowed'
+                    ? 'bg-green-900/30 text-green-500 cursor-not-allowed'
                     : 'bg-green-500 text-white hover:bg-green-600'
                 }`}
               >
