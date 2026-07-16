@@ -4,6 +4,32 @@ module.exports = {
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  safelist: [
+    // Neumorphic custom classes from globals.css
+    'neumorphic-sidebar',
+    'neumorphic-card',
+    'neumorphic-button',
+    'neumorphic-input',
+    'neumorphic-link',
+    'neumorphic-select',
+    'neumorphic-textarea',
+    'active',
+    'notification-slide-in',
+    // Background classes
+    'bg-neumorphic',
+    'bg-neumorphic-light',
+    'bg-neumorphic-dark',
+    // Text classes
+    'text-neumorphic',
+    'text-neumorphic-muted',
+    // Border classes
+    'border-neumorphic',
+    'border-neumorphic-highlight',
+    // Hover states
+    'hover:bg-neumorphic-highlight',
+    'hover:bg-neumorphic',
+    'hover:bg-neumorphic-light',
+  ],
   theme: {
     extend: {
       colors: {
