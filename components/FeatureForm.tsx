@@ -12,25 +12,15 @@ type FeatureFormProps = {
   epics?: Epic[]
   onSubmit: (data: FeatureFormData) => Promise<void>
   onCancel: () => void
-  onGenerateAI?: (besoin: Besoin) => void  // Pour la génération IA (création)
-  onImproveAI?: (feature: Feature) => void  // Pour l'amélioration IA (modification)
-}
-
-// Fonction pour générer une description IREB
-const generateIREBDescription = (titre: string): string => {
-  return `User Story: En tant qu'utilisateur, je veux ${titre.toLowerCase()}, afin de répondre à mes besoins.
-Critères d'acceptation:
-1. Le système doit permettre de gérer ${titre.toLowerCase()}.
-2. Les données doivent être validées avant toute opération.
-3. Une confirmation visuelle doit être affichée après chaque action.
-4. Les erreurs doivent être gérées et affichées clairement.`
+  onGenerateAI?: (besoin: Besoin) => void
+  onImproveAI?: (feature: Feature) => void
 }
 
 export default function FeatureForm({ feature, besoins, epics = [], onSubmit, onCancel, onGenerateAI, onImproveAI }: FeatureFormProps) {
   const [titre, setTitre] = useState('')
   const [description, setDescription] = useState('')
-  const [priorite, setPriorite] = useState<'Faible' | 'Moyenne' | 'Élevée' | 'Critique'>('Moyenne')
-  const [statut, setStatut] = useState<'À faire' | 'En cours' | 'Terminé' | 'Annulé'>('À faire')
+  const [priorite, setPriorite] = useState<'Faible' | 'Moyenne' | 'Elevee' | 'Critique'>('Moyenne')
+  const [statut, setStatut] = useState<'A faire' | 'En cours' | 'Termine' | 'Annule'>('A faire')
   const [besoinId, setBesoinId] = useState('')
   const [epicId, setEpicId] = useState<string | null>(null)
 
@@ -46,7 +36,7 @@ export default function FeatureForm({ feature, besoins, epics = [], onSubmit, on
       setTitre('')
       setDescription('')
       setPriorite('Moyenne')
-      setStatut('À faire')
+      setStatut('A faire')
       setBesoinId('')
       setEpicId(null)
     }
@@ -68,31 +58,48 @@ export default function FeatureForm({ feature, besoins, epics = [], onSubmit, on
     })
   }
 
-  // Filtrer les EPICS par besoin sélectionné
   const epicsForSelectedBesoin = besoinId ? epics.filter((e) => e.besoinId === besoinId) : []
-
-  // Trouver le besoin sélectionné pour la génération IA
   const selectedBesoin = besoins.find((b) => b.id === besoinId)
 
-  // Gérer le clic sur "Amélioration IA"
   const handleImproveAI = () => {
     if (feature && onImproveAI) {
       onImproveAI(feature)
     }
   }
 
+  const getPrioriteDisplay = (priorite: string): string => {
+    switch (priorite) {
+      case 'Elevee':
+        return 'Élevée'
+      default:
+        return priorite
+    }
+  }
+
+  const getStatutDisplay = (statut: string): string => {
+    switch (statut) {
+      case 'A faire':
+        return 'À faire'
+      case 'En cours':
+        return 'En cours'
+      case 'Termine':
+        return 'Terminé'
+      case 'Annule':
+        return 'Annulé'
+      default:
+        return statut
+    }
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow mb-4">
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Besoin *</label>
+    <form onSubmit={handleSubmit} className="w-full space-y-4">
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-neumorphic-muted">Besoin *</label>
         <select
           value={besoinId}
-          onChange={(e) => {
-            setBesoinId(e.target.value)
-            setEpicId(null)
-          }}
+          onChange={(e) => setBesoinId(e.target.value)}
           required
-          className="w-full p-2 border rounded"
+          className="neumorphic-input w-full p-3 rounded-lg"
           disabled={!!feature}
         >
           <option value="">-- Sélectionnez un besoin --</option>
@@ -104,104 +111,105 @@ export default function FeatureForm({ feature, besoins, epics = [], onSubmit, on
         </select>
       </div>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">EPIC (optionnel)</label>
-        <select
-          value={epicId || ''}
-          onChange={(e) => setEpicId(e.target.value || null)}
-          className="w-full p-2 border rounded"
-          disabled={!besoinId || !!feature}
-        >
-          <option value="">-- Aucune EPIC --</option>
-          {epicsForSelectedBesoin.map((epic) => (
-            <option key={epic.id} value={epic.id}>
-              {epic.titre}
-            </option>
-          ))}
-        </select>
-      </div>
+      {epicsForSelectedBesoin.length > 0 && (
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-neumorphic-muted">EPIC</label>
+          <select
+            value={epicId || ''}
+            onChange={(e) => setEpicId(e.target.value || null)}
+            className="neumorphic-input w-full p-3 rounded-lg"
+          >
+            <option value="">-- Aucune EPIC --</option>
+            {epicsForSelectedBesoin.map((epic) => (
+              <option key={epic.id} value={epic.id}>
+                {epic.titre}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Titre *</label>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-neumorphic-muted">Titre *</label>
         <input
           type="text"
           value={titre}
           onChange={(e) => setTitre(e.target.value)}
           required
-          className="w-full p-2 border rounded"
+          className="neumorphic-input w-full p-3 rounded-lg"
+          placeholder="Entrez le titre de la Feature"
         />
       </div>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Description</label>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-neumorphic-muted">Description</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full p-2 border rounded"
-          rows={3}
+          className="neumorphic-input w-full p-3 rounded-lg"
+          rows={4}
+          placeholder="Décrivez la Feature (optionnel)"
         />
       </div>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Priorité</label>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-neumorphic-muted">Priorité</label>
         <select
           value={priorite}
-          onChange={(e) => setPriorite(e.target.value as 'Faible' | 'Moyenne' | 'Élevée' | 'Critique')}
-          className="w-full p-2 border rounded"
+          onChange={(e) => setPriorite(e.target.value as 'Faible' | 'Moyenne' | 'Elevee' | 'Critique')}
+          className="neumorphic-input w-full p-3 rounded-lg"
         >
           {priorites.map((p) => (
             <option key={p} value={p}>
-              {p}
+              {getPrioriteDisplay(p)}
             </option>
           ))}
         </select>
       </div>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Statut</label>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-neumorphic-muted">Statut</label>
         <select
           value={statut}
-          onChange={(e) => setStatut(e.target.value as 'À faire' | 'En cours' | 'Terminé' | 'Annulé')}
-          className="w-full p-2 border rounded"
+          onChange={(e) => setStatut(e.target.value as 'A faire' | 'En cours' | 'Termine' | 'Annule')}
+          className="neumorphic-input w-full p-3 rounded-lg"
         >
           {statutsFeature.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {getStatutDisplay(s)}
             </option>
           ))}
         </select>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 pt-4">
         <button
           type="submit"
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+          className="neumorphic-button px-6 py-2 bg-green-500/20 hover:bg-green-500/40 text-green-300 font-medium"
         >
           {feature ? 'Modifier' : 'Créer'}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+          className="neumorphic-button px-6 py-2 bg-gray-500/20 hover:bg-gray-500/40 text-neumorphic-muted font-medium"
         >
           Annuler
         </button>
-        {/* Bouton Générer par IA (visible uniquement en mode création) */}
         {onGenerateAI && !feature && selectedBesoin && (
           <button
             type="button"
             onClick={() => onGenerateAI(selectedBesoin)}
-            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+            className="neumorphic-button px-6 py-2 bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 font-medium"
           >
             Générer par IA
           </button>
         )}
-        {/* Bouton Amélioration IA (visible uniquement en mode modification) */}
         {onImproveAI && feature && (
           <button
             type="button"
             onClick={handleImproveAI}
-            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+            className="neumorphic-button px-6 py-2 bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 font-medium"
           >
             Amélioration IA
           </button>

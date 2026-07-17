@@ -2,15 +2,23 @@
 
 import { useState, useEffect } from 'react'
 import type { Besoin } from '@/types/besoin'
+import type { Epic } from '@/types/epic'
 
 type EpicAIGeneratorModalProps = {
   besoin: Besoin | null
   onClose: () => void
-  onGenerate: (epics: { titre: string; description: string }[]) => void
+  onGenerate: (epics: Epic[]) => void
 }
 
-// Suggestions d'EPICS prédfinies par type de besoin (simulation de l'IA)
-const getAISuggestions = (besoinTitre: string): { titre: string; description: string }[] => {
+// Générer un ID unique
+const generateId = (): string => {
+  return Date.now().toString(36) + Math.random().toString(36).substring(2)
+}
+
+// Suggestions d'EPICS prédéfinies par type de besoin (simulation de l'IA)
+const getAISuggestions = (besoinTitre: string, besoinId: string): Epic[] => {
+  const now = new Date().toISOString()
+  
   const suggestionsMap: Record<string, { titre: string; description: string }[]> = {
     // Exemples de suggestions pour des besoins courants
     'Gestion des utilisateurs': [
@@ -49,205 +57,166 @@ const getAISuggestions = (besoinTitre: string): { titre: string; description: st
         description: 'Permettre aux utilisateurs de laisser des avis et évaluations sur les produits.',
       },
     ],
-    'Gestion des commandes': [
+    'Automatiser la gestion des réservations pour un hôtel en ligne': [
       {
-        titre: 'Passage et suivi de commande',
-        description: 'Permettre aux utilisateurs de passer des commandes et suivre leur état.',
+        titre: 'Gestion des réservations clients',
+        description: 'Permettre aux clients de réserver, modifier ou annuler une chambre.',
       },
       {
-        titre: 'Gestion des paniers',
-        description: 'Gérer les paniers d\'achat des utilisateurs.',
+        titre: 'Gestion des disponibilités',
+        description: 'Permettre aux gestionnaires de suivre et mettre à jour les disponibilités.',
       },
       {
-        titre: 'Paiements et facturation',
-        description: 'Intégrer les systèmes de paiement et générer des factures.',
+        titre: 'Paiement et facturation',
+        description: 'Intégrer un système de paiement sécurisé et générer des factures automatiques.',
       },
       {
-        titre: 'Retours et remboursements',
-        description: 'Gérer les retours de produits et les remboursements.',
-      },
-    ],
-    'Tableau de bord': [
-      {
-        titre: 'Analyse et reporting',
-        description: 'Fournir des outils d\'analyse et des rapports pour le suivi des performances.',
-      },
-      {
-        titre: 'Personnalisation de l\'interface',
-        description: 'Permettre aux utilisateurs de personnaliser leur tableau de bord.',
-      },
-      {
-        titre: 'Alertes et notifications',
-        description: 'Configurer et afficher des alertes et notifications importantes.',
+        titre: 'Gestion des clients',
+        description: 'Gérer les informations clients et leur historique de réservations.',
       },
     ],
-    'Gestion des paiements': [
-      {
-        titre: 'Intégration des passerelles de paiement',
-        description: 'Intégrer différentes passerelles de paiement (Stripe, PayPal, etc.).',
-      },
-      {
-        titre: 'Gestion des abonnements',
-        description: 'Permettre la gestion des abonnements récurrents.',
-      },
-      {
-        titre: 'Facturation et historique',
-        description: 'Générer des factures et conserver un historique des transactions.',
-      },
-    ],
+    // Ajoutez d'autres types de besoins ici
   }
 
-  // Si le besoin n'est pas dans la liste, générer des suggestions génériques
-  const defaultSuggestions = [
+  // Trouver une correspondance ou utiliser des suggestions génériques
+  const suggestions = suggestionsMap[besoinTitre] || [
     {
-      titre: 'Fonctionnalités principales',
-      description: `Regrouper les fonctionnalités principales liées à ${besoinTitre}.`,
+      titre: 'Implémentation principale',
+      description: `Implémentation principale pour le besoin: ${besoinTitre}`,
     },
     {
-      titre: 'Gestion avancée',
-      description: `Ajouter des fonctionnalités avancées pour ${besoinTitre}.`,
+      titre: 'Gestion des données',
+      description: 'Gestion des données liées à ce besoin.',
     },
     {
-      titre: 'Intégrations',
-      description: `Intégrer des services externes liés à ${besoinTitre}.`,
+      titre: 'Interface utilisateur',
+      description: 'Développement de l\'interface utilisateur pour ce besoin.',
     },
     {
-      titre: 'Optimisation',
-      description: `Optimiser les performances et l\'expérience utilisateur pour ${besoinTitre}.`,
+      titre: 'Intégration et tests',
+      description: 'Intégration et tests de cette fonctionnalité.',
     },
   ]
 
-  // Trouver le besoin le plus proche dans la map (pour gérer les variations de titre)
-  const findBestMatch = (title: string): string => {
-    const lowerTitle = title.toLowerCase()
-    for (const key in suggestionsMap) {
-      if (lowerTitle.includes(key.toLowerCase()) || key.toLowerCase().includes(lowerTitle)) {
-        return key
-      }
-    }
-    return ''
-  }
-
-  const matchedKey = findBestMatch(besoinTitre)
-  return matchedKey ? suggestionsMap[matchedKey] : defaultSuggestions
+  // Convertir en EPICS avec toutes les propriétés requises
+  return suggestions.map((suggestion) => ({
+    id: generateId(),
+    titre: suggestion.titre,
+    description: suggestion.description,
+    statut: 'A faire' as const,
+    besoinId,
+    created_at: now,
+    updated_at: now,
+  }))
 }
 
 export default function EpicAIGeneratorModal({ besoin, onClose, onGenerate }: EpicAIGeneratorModalProps) {
-  const [selectedEpics, setSelectedEpics] = useState<number[]>([])
-  const [suggestions, setSuggestions] = useState<{ titre: string; description: string }[]>([])
-  const [isGenerating, setIsGenerating] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
+  const [suggestions, setSuggestions] = useState<Epic[]>([])
+  const [selectedSuggestions, setSelectedSuggestions] = useState<boolean[]>([])
+  const [loading, setLoading] = useState(false)
 
-  // Générer les suggestions au chargement de la modale
   useEffect(() => {
+    setIsOpen(!!besoin)
     if (besoin) {
-      setIsGenerating(true)
-      // Simulation d'un appel à l'API Mistral (remplacer par un vrai appel si disponible)
+      setLoading(true)
+      // Simuler un délai de génération IA
       setTimeout(() => {
-        const generatedSuggestions = getAISuggestions(besoin.titre)
+        const generatedSuggestions = getAISuggestions(besoin.titre, besoin.id)
         setSuggestions(generatedSuggestions)
-        setIsGenerating(false)
-      }, 500) // Délai pour simuler le chargement
+        setSelectedSuggestions(new Array(generatedSuggestions.length).fill(true))
+        setLoading(false)
+      }, 1000)
     }
   }, [besoin])
 
-  // Gérer la sélection/désélection d'une suggestion
-  const toggleEpicSelection = (index: number) => {
-    setSelectedEpics((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
-    )
-  }
-
-  // Valider et générer les EPICS sélectionnées
-  const handleGenerate = () => {
-    const selected = suggestions.filter((_, index) => selectedEpics.includes(index))
-    onGenerate(selected)
+  const handleClose = () => {
+    setIsOpen(false)
     onClose()
   }
 
-  if (!besoin) {
-    return null
+  const handleGenerate = () => {
+    const selectedEpics = suggestions.filter((_, index) => selectedSuggestions[index])
+    onGenerate(selectedEpics)
+    handleClose()
   }
 
+  const toggleSuggestion = (index: number) => {
+    const updated = [...selectedSuggestions]
+    updated[index] = !updated[index]
+    setSelectedSuggestions(updated)
+  }
+
+  if (!isOpen || !besoin) return null
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="neumorphic-card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">Génération IA d'EPICS</h2>
+            <h2 className="text-xl font-bold text-neumorphic">🤖 Génération IA d&apos;EPICS</h2>
             <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-2xl"
+              onClick={handleClose}
+              className="neumorphic-button p-2 hover:bg-red-500/20"
             >
-              ×
+              ❌
             </button>
           </div>
 
           <div className="mb-4">
-            <p className="text-sm text-gray-600">
-              Besoin sélectionné : <strong>{besoin.titre}</strong>
+            <p className="text-neumorphic-muted">
+              Besoin: <span className="text-neumorphic font-medium">{besoin.titre}</span>
             </p>
-            {besoin.description && (
-              <p className="text-sm text-gray-500 mt-1">{besoin.description}</p>
-            )}
           </div>
 
-          {isGenerating ? (
+          {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-              <span className="ml-3">Génération en cours...</span>
-            </div>
-          ) : suggestions.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <p>Aucune suggestion générée.</p>
+              <div className="flex items-center gap-2 text-neumorphic">
+                <span className="animate-spin">🌀</span>
+                <span>Génération en cours...</span>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-sm text-gray-600">
-                Sélectionnez les EPICS que vous souhaitez générer :
+              <p className="text-neumorphic-muted mb-4">
+                L&apos;IA a généré {suggestions.length} suggestions d&apos;EPICS pour ce besoin.
+                Sélectionnez celles que vous souhaitez ajouter.
               </p>
+
               <div className="space-y-3">
                 {suggestions.map((suggestion, index) => (
                   <div
-                    key={index}
-                    onClick={() => toggleEpicSelection(index)}
-                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                      selectedEpics.includes(index) ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-300'
-                    }`}
+                    key={suggestion.id}
+                    className={`neumorphic-card p-4 ${selectedSuggestions[index] ? 'border-l-4 border-green-500' : ''}`}
                   >
                     <div className="flex items-start gap-3">
                       <input
                         type="checkbox"
-                        checked={selectedEpics.includes(index)}
-                        onChange={() => toggleEpicSelection(index)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="mt-1 w-4 h-4"
+                        checked={selectedSuggestions[index]}
+                        onChange={() => toggleSuggestion(index)}
+                        className="mt-1 w-5 h-5"
                       />
                       <div className="flex-1">
-                        <h3 className="font-medium">{suggestion.titre}</h3>
-                        <p className="text-sm text-gray-600 mt-1">{suggestion.description}</p>
+                        <div className="font-medium text-neumorphic">{suggestion.titre}</div>
+                        <div className="text-sm text-neumorphic-muted mt-1">{suggestion.description}</div>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="flex justify-end gap-2 mt-6">
+              <div className="flex gap-3 mt-6">
                 <button
-                  onClick={onClose}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                  onClick={handleClose}
+                  className="neumorphic-button px-6 py-2 bg-gray-500/20 hover:bg-gray-500/40 text-neumorphic-muted"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={handleGenerate}
-                  disabled={selectedEpics.length === 0}
-                  className={`px-4 py-2 rounded ${
-                    selectedEpics.length === 0
-                      ? 'bg-blue-200 text-blue-400 cursor-not-allowed'
-                      : 'bg-blue-500 text-white hover:bg-blue-600'
-                  }`}
+                  className="neumorphic-button px-6 py-2 bg-green-500/20 hover:bg-green-500/40 text-green-300"
                 >
-                  Valider ({selectedEpics.length} sélectionné(s))
+                  ✅ Générer les EPICS sélectionnées
                 </button>
               </div>
             </div>

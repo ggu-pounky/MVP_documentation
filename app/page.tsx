@@ -13,7 +13,6 @@ export default function Home() {
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
-  // Charger les besoins depuis localStorage
   const loadBesoins = () => {
     const savedBesoins = localStorage.getItem('besoins')
     if (savedBesoins) {
@@ -24,25 +23,21 @@ export default function Home() {
 
   useEffect(() => {
     loadBesoins()
-    // Écouter les changements de localStorage (y compris les événements personnalisés)
     const handleStorageChange = () => loadBesoins()
     window.addEventListener('storage', handleStorageChange)
     return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
 
-  // Sauvegarder dans localStorage
   useEffect(() => {
     if (!loading) {
       localStorage.setItem('besoins', JSON.stringify(besoins))
     }
   }, [besoins, loading])
 
-  // Générer un ID unique
   const generateId = (): string => {
     return Date.now().toString(36) + Math.random().toString(36).substring(2)
   }
 
-  // Afficher une notification temporaire
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
     setNotification({ message, type })
     setTimeout(() => setNotification(null), 3000)
@@ -76,7 +71,6 @@ export default function Home() {
         }
         setBesoins([...besoins, newBesoin])
         showNotification('Besoin créé avec succès !')
-        // Scroll vers la liste après création
         setTimeout(() => listRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
       }
       setShowForm(false)
@@ -104,10 +98,10 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[200px]">
         <div className="neumorphic-card px-6 py-4">
           <div className="flex items-center gap-2 text-neumorphic">
-            <span className="animate-spin">⏳</span>
+            <span className="animate-spin">🌀</span>
             <span>Chargement...</span>
           </div>
         </div>
@@ -116,25 +110,22 @@ export default function Home() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      {/* Header */}
+    <div className="space-y-6">
       <div className="neumorphic-card p-6">
-        <h1 className="text-2xl font-bold text-neumorphic mb-2">Gestion des Besoins</h1>
+        <h1 className="text-2xl font-bold text-neumorphic mb-2">✨ Gestion des Besoins</h1>
         <p className="text-neumorphic-muted">Créez, modifiez et gérez vos besoins projet</p>
       </div>
 
-      {/* Notification */}
       {notification && (
         <div
           className={`neumorphic-card p-4 notification-slide-in ${
-            notification.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+            notification.type === 'success' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
           }`}
         >
           {notification.message}
         </div>
       )}
 
-      {/* Bouton Ajouter */}
       <button
         onClick={() => {
           setEditingBesoin(null)
@@ -148,6 +139,9 @@ export default function Home() {
 
       {showForm && (
         <div className="neumorphic-card p-6">
+          <h2 className="text-lg font-semibold text-neumorphic mb-4">
+            {editingBesoin ? 'Modifier le besoin' : 'Créer un nouveau besoin'}
+          </h2>
           <BesoinForm
             besoin={editingBesoin}
             onSubmit={handleSubmit}
@@ -159,9 +153,10 @@ export default function Home() {
         </div>
       )}
 
-      {/* Liste des besoins */}
       <div ref={listRef} className="neumorphic-card p-6">
-        <h2 className="text-lg font-semibold text-neumorphic mb-4">Liste des besoins</h2>
+        <h2 className="text-lg font-semibold text-neumorphic mb-4">
+          Liste des besoins ({besoins.length})
+        </h2>
         <BesoinList
           besoins={besoins}
           onEdit={handleEdit}

@@ -1,341 +1,247 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
-
-type ExigenceInfo = {
-  id: string
-  titre: string
-  featureTitre: string
-  besoinTitre: string
-  description?: string
-}
+import { useState, useEffect } from 'react'
+import type { Exigence } from '@/types/exigence'
+import type { Test } from '@/types/test'
 
 type TestAIGeneratorModalProps = {
-  exigence: ExigenceInfo | null
+  exigence: Exigence | null
   onClose: () => void
-  onGenerate: (tests: { titre: string; description: string }[]) => void
+  onGenerate: (tests: Test[]) => void
 }
 
-// Suggestions de tests prédéfinies par type d'exigence (simulation de l'IA)
-const getAISuggestions = (exigenceTitre: string): { titre: string; description: string }[] => {
-  const suggestionsMap: Record<string, { titre: string; description: string }[]> = {
-    // Exemples de suggestions pour des exigences courantes
-    'Vérification de l\'email': [
+// Générer un ID unique
+const generateId = (): string => {
+  return Date.now().toString(36) + Math.random().toString(36).substring(2)
+}
+
+// Suggestions de Tests prédéfinies par type d'Exigence (simulation de l'IA)
+const getAISuggestions = (exigenceTitre: string, exigenceId: string): Test[] => {
+  const now = new Date().toISOString()
+  
+  const suggestionsMap: Record<string, { titre: string; description: string; type: 'Unitaire' | 'Integration' | 'E2E' | 'Performance' | 'Securite'; priorite: 'Faible' | 'Moyenne' | 'Elevee' | 'Critique' }[]> = {
+    // Exemples de suggestions pour des Exigences courantes
+    'Sélection de chambre disponible': [
       {
-        titre: 'Test email valide',
-        description: 'Vérifier que le système accepte un email au format valide (ex: test@example.com).',
+        titre: 'Test de sélection valide',
+        description: 'Vérifier que l\'utilisateur peut sélectionner une chambre disponible.',
+        type: 'Unitaire',
+        priorite: 'Elevee',
       },
       {
-        titre: 'Test email invalide',
-        description: 'Vérifier que le système rejette un email au format invalide (ex: test@example).',
+        titre: 'Test de sélection invalide',
+        description: 'Vérifier que l\'utilisateur ne peut pas sélectionner une chambre non disponible.',
+        type: 'Unitaire',
+        priorite: 'Moyenne',
       },
       {
-        titre: 'Test email vide',
-        description: 'Vérifier que le système affiche une erreur si l\'email est vide.',
-      },
-      {
-        titre: 'Test email avec espaces',
-        description: 'Vérifier que le système rejette un email avec des espaces.',
-      },
-      {
-        titre: 'Test email trop long',
-        description: 'Vérifier que le système gère correctement un email dépassant la limite de caractères.',
-      },
-    ],
-    'Mot de passe sécurisé': [
-      {
-        titre: 'Test mot de passe valide',
-        description: 'Vérifier que le système accepte un mot de passe avec 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial.',
-      },
-      {
-        titre: 'Test mot de passe trop court',
-        description: 'Vérifier que le système rejette un mot de passe avec moins de 8 caractères.',
-      },
-      {
-        titre: 'Test mot de passe sans majuscule',
-        description: 'Vérifier que le système rejette un mot de passe sans majuscule.',
-      },
-      {
-        titre: 'Test mot de passe sans chiffre',
-        description: 'Vérifier que le système rejette un mot de passe sans chiffre.',
-      },
-      {
-        titre: 'Test mot de passe sans caractère spécial',
-        description: 'Vérifier que le système rejette un mot de passe sans caractère spécial.',
+        titre: 'Test d\'affichage des chambres',
+        description: 'Vérifier que toutes les chambres disponibles sont affichées correctement.',
+        type: 'Integration',
+        priorite: 'Moyenne',
       },
     ],
-    'Recherche de produits': [
+    'Confirmation de réservation': [
       {
-        titre: 'Test recherche exacte',
-        description: 'Vérifier que la recherche retourne le produit exact correspondant au mot-clé.',
+        titre: 'Test d\'envoi d\'email',
+        description: 'Vérifier que l\'email de confirmation est envoyé après réservation.',
+        type: 'Integration',
+        priorite: 'Elevee',
       },
       {
-        titre: 'Test recherche partielle',
-        description: 'Vérifier que la recherche retourne les produits contenant partiellement le mot-clé.',
-      },
-      {
-        titre: 'Test recherche sans résultat',
-        description: 'Vérifier que le système affiche un message approprié lorsqu\'aucun produit n\'est trouvé.',
-      },
-      {
-        titre: 'Test recherche avec filtre catégorie',
-        description: 'Vérifier que le filtrage par catégorie fonctionne correctement avec la recherche.',
-      },
-      {
-        titre: 'Test recherche avec caractères spéciaux',
-        description: 'Vérifier que la recherche gère correctement les caractères spéciaux.',
+        titre: 'Test de contenu de l\'email',
+        description: 'Vérifier que l\'email contient toutes les informations nécessaires.',
+        type: 'Unitaire',
+        priorite: 'Moyenne',
       },
     ],
-    'Passage de commande': [
+    'Paiement en ligne': [
       {
-        titre: 'Test commande avec panier valide',
-        description: 'Vérifier que la commande est validée avec un panier contenant des produits.',
+        titre: 'Test de paiement réussi',
+        description: 'Vérifier que le paiement est traité correctement.',
+        type: 'E2E',
+        priorite: 'Critique',
       },
       {
-        titre: 'Test commande avec panier vide',
-        description: 'Vérifier que le système empêche le passage de commande avec un panier vide.',
+        titre: 'Test de paiement échoué',
+        description: 'Vérifier que le système gère correctement les échecs de paiement.',
+        type: 'E2E',
+        priorite: 'Elevee',
       },
       {
-        titre: 'Test calcul du total',
-        description: 'Vérifier que le total de la commande est calculé correctement (produits + taxes + frais).',
-      },
-      {
-        titre: 'Test confirmation de commande',
-        description: 'Vérifier que l\'email de confirmation est envoyé après validation de la commande.',
-      },
-      {
-        titre: 'Test stock insuffisant',
-        description: 'Vérifier que le système empêche la commande si un produit n\'a pas assez de stock.',
+        titre: 'Test de sécurité du paiement',
+        description: 'Vérifier que les informations de paiement sont sécurisées.',
+        type: 'Securite',
+        priorite: 'Critique',
       },
     ],
-    'Paiement': [
-      {
-        titre: 'Test paiement réussi',
-        description: 'Vérifier que le paiement est validé avec des informations de carte valides.',
-      },
-      {
-        titre: 'Test paiement échoué',
-        description: 'Vérifier que le système affiche une erreur avec des informations de carte invalides.',
-      },
-      {
-        titre: 'Test paiement avec montant incorrect',
-        description: 'Vérifier que le système rejette un paiement si le montant ne correspond pas au total.',
-      },
-      {
-        titre: 'Test confirmation de paiement',
-        description: 'Vérifier que l\'email de confirmation de paiement est envoyé.',
-      },
-      {
-        titre: 'Test remboursement',
-        description: 'Vérifier que le remboursement fonctionne correctement.',
-      },
-    ],
+    // Ajoutez d'autres types d'Exigences ici
   }
 
-  // Si l'exigence n'est pas dans la liste, générer des suggestions génériques
-  const defaultSuggestions = [
+  // Trouver une correspondance ou utiliser des suggestions génériques
+  const suggestions = suggestionsMap[exigenceTitre] || [
     {
-      titre: 'Test fonctionnalité de base',
-      description: `Vérifier que la fonctionnalité de base de l'exigence "${exigenceTitre}" fonctionne correctement.`,
+      titre: 'Test fonctionnel principal',
+      description: `Test fonctionnel principal pour l'exigence: ${exigenceTitre}`,
+      type: 'Unitaire',
+      priorite: 'Moyenne',
     },
     {
-      titre: 'Test cas nominal',
-      description: `Vérifier le comportement normal pour l'exigence "${exigenceTitre}".`,
+      titre: 'Test d\'intégration',
+      description: 'Vérifier que cette exigence s\'intègre correctement avec les autres composants.',
+      type: 'Integration',
+      priorite: 'Moyenne',
     },
     {
-      titre: 'Test cas limite',
-      description: `Vérifier les cas limites pour l'exigence "${exigenceTitre}".`,
+      titre: 'Test de performance',
+      description: 'Vérifier que cette exigence a de bonnes performances.',
+      type: 'Performance',
+      priorite: 'Faible',
     },
     {
-      titre: 'Test erreur',
-      description: `Vérifier que les erreurs sont gérées correctement pour l'exigence "${exigenceTitre}".`,
-    },
-    {
-      titre: 'Test performance',
-      description: `Vérifier que les performances sont acceptables pour l'exigence "${exigenceTitre}".`,
+      titre: 'Test de sécurité',
+      description: 'Vérifier que cette exigence est sécurisée.',
+      type: 'Securite',
+      priorite: 'Elevee',
     },
   ]
 
-  // Trouver l'exigence la plus proche dans la map (pour gérer les variations de titre)
-  const findBestMatch = (title: string): string => {
-    const lowerTitle = title.toLowerCase()
-    for (const key in suggestionsMap) {
-      if (lowerTitle.includes(key.toLowerCase()) || key.toLowerCase().includes(lowerTitle)) {
-        return key
-      }
-    }
-    return ''
-  }
-
-  const matchedKey = findBestMatch(exigenceTitre)
-  return matchedKey ? suggestionsMap[matchedKey] : defaultSuggestions
+  // Convertir en Tests avec toutes les propriétés requises
+  return suggestions.map((suggestion) => ({
+    id: generateId(),
+    titre: suggestion.titre,
+    description: suggestion.description,
+    type: suggestion.type,
+    statut: 'A faire' as const,
+    exigenceId,
+    isTNR: false,
+    isAutomatisable: suggestion.type !== 'E2E',
+    priorite: suggestion.priorite,
+    created_at: now,
+    updated_at: now,
+  }))
 }
 
 export default function TestAIGeneratorModal({ exigence, onClose, onGenerate }: TestAIGeneratorModalProps) {
-  const [selectedTests, setSelectedTests] = useState<number[]>([])
-  const [suggestions, setSuggestions] = useState<{ titre: string; description: string }[]>([])
-  const [isGenerating, setIsGenerating] = useState(false)
-  const modalRef = useRef<HTMLDivElement>(null)
+  const [isOpen, setIsOpen] = useState(false)
+  const [suggestions, setSuggestions] = useState<Test[]>([])
+  const [selectedSuggestions, setSelectedSuggestions] = useState<boolean[]>([])
+  const [loading, setLoading] = useState(false)
 
-  // Générer les suggestions au chargement de la modale
   useEffect(() => {
+    setIsOpen(!!exigence)
     if (exigence) {
-      setIsGenerating(true)
-      // Simulation d'un appel à l'API Mistral (remplacer par un vrai appel si disponible)
+      setLoading(true)
+      // Simuler un délai de génération IA
       setTimeout(() => {
-        const generatedSuggestions = getAISuggestions(exigence.titre)
+        const generatedSuggestions = getAISuggestions(exigence.titre, exigence.id)
         setSuggestions(generatedSuggestions)
-        setIsGenerating(false)
-      }, 500) // Délai pour simuler le chargement
+        setSelectedSuggestions(new Array(generatedSuggestions.length).fill(true))
+        setLoading(false)
+      }, 1000)
     }
   }, [exigence])
 
-  // Gérer la sélection/désélection d'une suggestion
-  const toggleTestSelection = useCallback((index: number) => {
-    setSelectedTests((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
-    )
-  }, [])
-
-  // Valider et générer les tests sélectionnés
-  const handleGenerate = () => {
-    const selected = suggestions.filter((_, index) => selectedTests.includes(index))
-    onGenerate(selected)
+  const handleClose = () => {
+    setIsOpen(false)
     onClose()
   }
 
-  // Empêcher la propagation des clics vers le fond
-  const handleModalClick = (e: React.MouseEvent) => {
-    if (e.target === modalRef.current) {
-      onClose()
-    }
+  const handleGenerate = () => {
+    const selectedTests = suggestions.filter((_, index) => selectedSuggestions[index])
+    onGenerate(selectedTests)
+    handleClose()
   }
 
-  // Gérer le clic sur le checkbox uniquement
-  const handleCheckboxChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation()
-    toggleTestSelection(index)
+  const toggleSuggestion = (index: number) => {
+    const updated = [...selectedSuggestions]
+    updated[index] = !updated[index]
+    setSelectedSuggestions(updated)
   }
 
-  // Gérer le clic sur la ligne (sélection par clic sur la ligne)
-  const handleRowClick = (index: number, e: React.MouseEvent) => {
-    // Ne pas déclencher si le clic vient du checkbox ou de ses enfants
-    if ((e.target as HTMLElement).closest('input[type="checkbox"]')) {
-      return
-    }
-    toggleTestSelection(index)
-  }
-
-  // Fermer avec la touche Escape
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose()
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
-
-  if (!exigence) {
-    return null
-  }
+  if (!isOpen || !exigence) return null
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4"
-      onClick={handleModalClick}
-    >
-      <div
-        ref={modalRef}
-        className="neumorphic-card max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="neumorphic-card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-neumorphic">Génération IA de Tests</h2>
+            <h2 className="text-xl font-bold text-neumorphic">🤖 Génération IA de Tests</h2>
             <button
-              onClick={onClose}
-              className="text-neumorphic-muted hover:text-neumorphic text-2xl"
-              type="button"
+              onClick={handleClose}
+              className="neumorphic-button p-2 hover:bg-red-500/20"
             >
-              ×
+              ❌
             </button>
           </div>
 
           <div className="mb-4">
-            <p className="text-sm text-neumorphic-muted">
-              Exigence sélectionnée : <strong className="text-neumorphic">{exigence.titre}</strong>
-            </p>
-            {exigence.description && (
-              <p className="text-sm text-neumorphic-muted mt-1">{exigence.description}</p>
-            )}
-            <p className="text-sm text-neumorphic-muted mt-1">
-              Feature : {exigence.featureTitre} | Besoin : {exigence.besoinTitre}
+            <p className="text-neumorphic-muted">
+              Exigence: <span className="text-neumorphic font-medium">{exigence.titre}</span>
             </p>
           </div>
 
-          {isGenerating ? (
+          {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-              <span className="ml-3 text-neumorphic">Génération en cours...</span>
-            </div>
-          ) : suggestions.length === 0 ? (
-            <div className="text-center py-8 text-neumorphic-muted">
-              <p>Aucune suggestion générée.</p>
+              <div className="flex items-center gap-2 text-neumorphic">
+                <span className="animate-spin">🌀</span>
+                <span>Génération en cours...</span>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-sm text-neumorphic-muted">
-                Sélectionnez les tests que vous souhaitez générer :
+              <p className="text-neumorphic-muted mb-4">
+                L&apos;IA a généré {suggestions.length} suggestions de Tests pour cette Exigence.
+                Sélectionnez celles que vous souhaitez ajouter.
               </p>
+
               <div className="space-y-3">
                 {suggestions.map((suggestion, index) => (
                   <div
-                    key={index}
-                    onClick={(e) => handleRowClick(index, e)}
-                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                      selectedTests.includes(index)
-                        ? 'border-blue-500 bg-blue-900/20'
-                        : 'border-neumorphic-border hover:border-neumorphic-highlight'
-                    }`}
+                    key={suggestion.id}
+                    className={`neumorphic-card p-4 ${selectedSuggestions[index] ? 'border-l-4 border-green-500' : ''}`}
                   >
                     <div className="flex items-start gap-3">
                       <input
                         type="checkbox"
-                        checked={selectedTests.includes(index)}
-                        onChange={(e) => handleCheckboxChange(index, e)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="mt-1 w-4 h-4 accent-blue-500 cursor-pointer"
+                        checked={selectedSuggestions[index]}
+                        onChange={() => toggleSuggestion(index)}
+                        className="mt-1 w-5 h-5"
                       />
                       <div className="flex-1">
-                        <h3 className="font-medium text-neumorphic">{suggestion.titre}</h3>
-                        <p className="text-sm text-neumorphic-muted mt-1">{suggestion.description}</p>
+                        <div className="flex justify-between items-start">
+                          <div className="font-medium text-neumorphic">{suggestion.titre}</div>
+                          <div className="flex gap-1">
+                            <span className={`px-2 py-1 rounded-full text-xs ${suggestion.type === 'Securite' ? 'bg-red-500/20 text-red-300' : suggestion.type === 'Integration' ? 'bg-indigo-500/20 text-indigo-300' : suggestion.type === 'E2E' ? 'bg-pink-500/20 text-pink-300' : suggestion.type === 'Performance' ? 'bg-teal-500/20 text-teal-300' : 'bg-cyan-500/20 text-cyan-300'}`}>
+                              {suggestion.type === 'Securite' ? 'Sécurité' : suggestion.type === 'Integration' ? 'Intégration' : suggestion.type}
+                            </span>
+                            <span className={`px-2 py-1 rounded-full text-xs ${suggestion.priorite === 'Critique' ? 'bg-red-500/20 text-red-300' : suggestion.priorite === 'Elevee' ? 'bg-orange-500/20 text-orange-300' : suggestion.priorite === 'Moyenne' ? 'bg-yellow-500/20 text-yellow-300' : 'bg-green-500/20 text-green-300'}`}>
+                              {suggestion.priorite === 'Elevee' ? 'Élevée' : suggestion.priorite}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-sm text-neumorphic-muted mt-1">{suggestion.description}</div>
+                        <div className="text-xs text-neumorphic-muted mt-1">
+                          {suggestion.isAutomatisable ? '✅ Automatisable' : '❌ Manuel'}
+                        </div>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="flex justify-end gap-2 mt-6">
+              <div className="flex gap-3 mt-6">
                 <button
-                  onClick={onClose}
-                  type="button"
-                  className="px-4 py-2 bg-neumorphic-bg-light text-neumorphic-muted rounded hover:bg-neumorphic-border transition-colors"
+                  onClick={handleClose}
+                  className="neumorphic-button px-6 py-2 bg-gray-500/20 hover:bg-gray-500/40 text-neumorphic-muted"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={handleGenerate}
-                  disabled={selectedTests.length === 0}
-                  className={`px-4 py-2 rounded transition-colors ${
-                    selectedTests.length === 0
-                      ? 'bg-blue-900/30 text-blue-400 cursor-not-allowed'
-                      : 'bg-blue-500 text-white hover:bg-blue-600'
-                  }`}
-                  type="button"
+                  className="neumorphic-button px-6 py-2 bg-green-500/20 hover:bg-green-500/40 text-green-300"
                 >
-                  Valider ({selectedTests.length} sélectionné(s))
+                  ✅ Générer les Tests sélectionnés
                 </button>
               </div>
             </div>

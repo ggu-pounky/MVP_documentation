@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: [
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -29,6 +30,13 @@ module.exports = {
     'hover:bg-neumorphic-highlight',
     'hover:bg-neumorphic',
     'hover:bg-neumorphic-light',
+    // Dark mode classes
+    'dark',
+    'dark:bg-neumorphic',
+    'dark:bg-neumorphic-light',
+    'dark:bg-neumorphic-dark',
+    'dark:text-neumorphic',
+    'dark:text-neumorphic-muted',
   ],
   theme: {
     extend: {

@@ -4,11 +4,12 @@ export type Test = {
   id: string
   titre: string
   description: string | null
-  exigenceId: string  // Référence à l'exigence associée
-  isTNR: boolean      // Case à cocher : TNR possible
-  isAutomatisable: boolean  // Case à cocher : À automatiser
-  priorite: 'Faible' | 'Moyenne' | 'Élevée' | 'Critique'
-  statut: 'À faire' | 'En cours' | 'Terminé' | 'Annulé' | 'Validé'
+  exigenceId: string
+  isTNR: boolean
+  isAutomatisable: boolean
+  priorite: 'Faible' | 'Moyenne' | 'Elevee' | 'Critique'
+  statut: 'A faire' | 'En cours' | 'Termine' | 'Annule' | 'Valide'
+  type: 'Unitaire' | 'Integration' | 'E2E' | 'Performance' | 'Securite'
   created_at: string
   updated_at: string
 }
@@ -19,12 +20,16 @@ export type TestFormData = {
   exigenceId: string
   isTNR: boolean
   isAutomatisable: boolean
-  priorite: 'Faible' | 'Moyenne' | 'Élevée' | 'Critique'
-  statut: 'À faire' | 'En cours' | 'Terminé' | 'Annulé' | 'Validé'
+  priorite: 'Faible' | 'Moyenne' | 'Elevee' | 'Critique'
+  statut: 'A faire' | 'En cours' | 'Termine' | 'Annule' | 'Valide'
+  type: 'Unitaire' | 'Integration' | 'E2E' | 'Performance' | 'Securite'
 }
 
 // Priorités disponibles
-export const prioritesTest = ['Faible', 'Moyenne', 'Élevée', 'Critique'] as const
+export const prioritesTest = ['Faible', 'Moyenne', 'Elevee', 'Critique'] as const
 
 // Statuts disponibles
-export const statutsTest = ['À faire', 'En cours', 'Terminé', 'Annulé', 'Validé'] as const
+export const statutsTest = ['A faire', 'En cours', 'Termine', 'Annule', 'Valide'] as const
+
+// Types disponibles
+export const typesTest = ['Unitaire', 'Integration', 'E2E', 'Performance', 'Securite'] as const

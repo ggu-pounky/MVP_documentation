@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import type { Besoin, BesoinFormData } from '@/types/besoin'
+import { statutsBesoin } from '@/types/besoin'
 
 type BesoinFormProps = {
   besoin?: Besoin | null
@@ -12,7 +13,7 @@ type BesoinFormProps = {
 export default function BesoinForm({ besoin, onSubmit, onCancel }: BesoinFormProps) {
   const [titre, setTitre] = useState('')
   const [description, setDescription] = useState('')
-  const [statut, setStatut] = useState('À faire')
+  const [statut, setStatut] = useState<'A faire' | 'En cours' | 'Termine' | 'Annule'>('A faire')
 
   useEffect(() => {
     if (besoin) {
@@ -22,7 +23,7 @@ export default function BesoinForm({ besoin, onSubmit, onCancel }: BesoinFormPro
     } else {
       setTitre('')
       setDescription('')
-      setStatut('À faire')
+      setStatut('A faire')
     }
   }, [besoin])
 
@@ -35,54 +36,72 @@ export default function BesoinForm({ besoin, onSubmit, onCancel }: BesoinFormPro
     })
   }
 
+  const getStatutDisplay = (statut: string): string => {
+    switch (statut) {
+      case 'A faire':
+        return 'À faire'
+      case 'En cours':
+        return 'En cours'
+      case 'Termine':
+        return 'Terminé'
+      case 'Annule':
+        return 'Annulé'
+      default:
+        return statut
+    }
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow mb-4">
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Titre *</label>
+    <form onSubmit={handleSubmit} className="w-full space-y-4">
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-neumorphic-muted">Titre *</label>
         <input
           type="text"
           value={titre}
           onChange={(e) => setTitre(e.target.value)}
           required
-          className="w-full p-2 border rounded"
+          className="neumorphic-input w-full p-3 rounded-lg"
+          placeholder="Entrez le titre du besoin"
         />
       </div>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Description</label>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-neumorphic-muted">Description</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full p-2 border rounded"
-          rows={3}
+          className="neumorphic-input w-full p-3 rounded-lg"
+          rows={4}
+          placeholder="Décrivez le besoin (optionnel)"
         />
       </div>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Statut</label>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-neumorphic-muted">Statut</label>
         <select
           value={statut}
-          onChange={(e) => setStatut(e.target.value)}
-          className="w-full p-2 border rounded"
+          onChange={(e) => setStatut(e.target.value as 'A faire' | 'En cours' | 'Termine' | 'Annule')}
+          className="neumorphic-input w-full p-3 rounded-lg"
         >
-          <option value="À faire">À faire</option>
-          <option value="En cours">En cours</option>
-          <option value="Terminé">Terminé</option>
-          <option value="Annulé">Annulé</option>
+          {statutsBesoin.map((s) => (
+            <option key={s} value={s}>
+              {getStatutDisplay(s)}
+            </option>
+          ))}
         </select>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 pt-4">
         <button
           type="submit"
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+          className="neumorphic-button px-6 py-2 bg-green-500/20 hover:bg-green-500/40 text-green-300 font-medium"
         >
           {besoin ? 'Modifier' : 'Créer'}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+          className="neumorphic-button px-6 py-2 bg-gray-500/20 hover:bg-gray-500/40 text-neumorphic-muted font-medium"
         >
           Annuler
         </button>

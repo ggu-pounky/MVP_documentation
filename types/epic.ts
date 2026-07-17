@@ -4,8 +4,8 @@ export type Epic = {
   id: string
   titre: string
   description: string | null
-  statut: 'À faire' | 'En cours' | 'Terminé' | 'Annulé'
-  besoinId: string  // Référence au besoin parent
+  statut: 'A faire' | 'En cours' | 'Termine' | 'Annule'
+  besoinId: string
   created_at: string
   updated_at: string
 }
@@ -13,9 +13,9 @@ export type Epic = {
 export type EpicFormData = {
   titre: string
   description: string | null
-  statut: 'À faire' | 'En cours' | 'Terminé' | 'Annulé'
+  statut: 'A faire' | 'En cours' | 'Termine' | 'Annule'
   besoinId: string
 }
 
 // Statuts disponibles pour le sélecteur
-export const statutsEpic = ['À faire', 'En cours', 'Terminé', 'Annulé'] as const
+export const statutsEpic = ['A faire', 'En cours', 'Termine', 'Annule'] as const

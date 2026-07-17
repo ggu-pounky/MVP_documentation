@@ -4,10 +4,10 @@ export type Feature = {
   id: string
   titre: string
   description: string | null
-  priorite: 'Faible' | 'Moyenne' | 'Élevée' | 'Critique'
-  statut: 'À faire' | 'En cours' | 'Terminé' | 'Annulé'
-  besoinId: string  // Référence au besoin parent
-  epicId: string | null  // Référence à l'EPIC parente (nullable pour rétrocompatibilité)
+  priorite: 'Faible' | 'Moyenne' | 'Elevee' | 'Critique'
+  statut: 'A faire' | 'En cours' | 'Termine' | 'Annule'
+  besoinId: string
+  epicId: string | null
   created_at: string
   updated_at: string
 }
@@ -15,14 +15,14 @@ export type Feature = {
 export type FeatureFormData = {
   titre: string
   description: string | null
-  priorite: 'Faible' | 'Moyenne' | 'Élevée' | 'Critique'
-  statut: 'À faire' | 'En cours' | 'Terminé' | 'Annulé'
+  priorite: 'Faible' | 'Moyenne' | 'Elevee' | 'Critique'
+  statut: 'A faire' | 'En cours' | 'Termine' | 'Annule'
   besoinId: string
   epicId?: string | null
 }
 
 // Priorités disponibles pour le sélecteur
-export const priorites = ['Faible', 'Moyenne', 'Élevée', 'Critique'] as const
+export const priorites = ['Faible', 'Moyenne', 'Elevee', 'Critique'] as const
 
 // Statuts disponibles pour le sélecteur
-export const statutsFeature = ['À faire', 'En cours', 'Terminé', 'Annulé'] as const
+export const statutsFeature = ['A faire', 'En cours', 'Termine', 'Annule'] as const
