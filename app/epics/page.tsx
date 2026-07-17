@@ -249,6 +249,20 @@ export default function EpicsPage() {
         </div>
       )}
 
+      {/* En-tête global pour les EPICS avec bouton Ajouter */}
+      <div className="card-header">
+        <h2 className="text-lg font-semibold text-gray-800">EPICS</h2>
+        <button
+          onClick={() => {
+            setEditingEpic(null)
+            setShowForm(true)
+          }}
+          className="btn btn-primary btn-sm"
+        >
+          ✚ Ajouter
+        </button>
+      </div>
+
       {/* Tableaux des EPICS groupés par besoin */}
       {besoins.length === 0 ? (
         <div className="card">
@@ -270,22 +284,51 @@ export default function EpicsPage() {
             if (besoinEpics.length === 0) return null
             
             return (
-              <div key={besoin.id} className="space-y-2">
-                <h2 className="text-xl font-bold text-gray-800 border-b pb-2">
-                  {besoin.titre}
-                </h2>
-                <DataTable
-                  data={besoinEpics}
-                  columns={columns}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onAdd={() => {
-                    setEditingEpic(null)
-                    setShowForm(true)
-                  }}
-                  title="EPICS"
-                  emptyMessage="Aucune EPIC enregistrée pour ce besoin. Cliquez sur 'Ajouter' pour commencer."
-                />
+              <div key={besoin.id} className="card">
+                <div className="px-6 pt-4 pb-2">
+                  <h3 className="text-lg font-semibold text-gray-800">{besoin.titre}</h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        {columns.map((column) => (
+                          <th key={column.key}>
+                            <div className="flex items-center gap-1">
+                              <span>{column.header}</span>
+                            </div>
+                          </th>
+                        ))}
+                        <th style={{ width: '120px' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {besoinEpics.map((epic) => (
+                        <tr key={epic.id}>
+                          {columns.map((column) => (
+                            <td key={`${epic.id}-${column.key}`}>{column.render(epic)}</td>
+                          ))}
+                          <td>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleEdit(epic)}
+                                className="btn btn-secondary btn-sm"
+                              >
+                                Modifier
+                              </button>
+                              <button
+                                onClick={() => handleDelete(epic.id)}
+                                className="btn btn-danger btn-sm"
+                              >
+                                Supprimer
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )
           })}
@@ -295,14 +338,8 @@ export default function EpicsPage() {
             <div className="card">
               <div className="text-center py-8">
                 <p className="text-muted">
-                  Aucune EPIC enregistrée. Cliquez sur "Ajouter" pour commencer.
+                  Aucune EPIC enregistrée. Utilisez le bouton "Ajouter" ci-dessus pour commencer.
                 </p>
-                <button onClick={() => {
-                  setEditingEpic(null)
-                  setShowForm(true)
-                }} className="btn btn-primary mt-4">
-                  Ajouter une EPIC
-                </button>
               </div>
             </div>
           )}
