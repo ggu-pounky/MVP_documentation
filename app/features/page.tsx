@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import DataTable from '@/components/DataTable'
 import FeatureForm from '@/components/FeatureForm'
-import FeatureList from '@/components/FeatureList'
 import FeatureAIGeneratorModal from '@/components/FeatureAIGeneratorModal'
 import AIImprovementModal from '@/components/AIImprovementModal'
 import type { Feature, FeatureFormData } from '@/types/feature'
 import type { Besoin } from '@/types/besoin'
 import type { Epic } from '@/types/epic'
+import { getStatutDisplay, getPrioriteDisplay } from '@/utils/statutDisplay'
 
 type Suggestion = {
   field: 'titre' | 'description'
@@ -165,8 +166,8 @@ export default function FeaturesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
-        <div className="neumorphic-card px-6 py-4">
-          <div className="flex items-center gap-2 text-neumorphic">
+        <div className="card">
+          <div className="flex items-center gap-2 text-gray-600">
             <span className="animate-spin">🌀</span>
             <span>Chargement...</span>
           </div>
@@ -175,77 +176,128 @@ export default function FeaturesPage() {
     )
   }
 
+  // Définir les colonnes du tableau
+  const columns = [
+    {
+      key: 'titre',
+      header: 'Titre',
+      sortable: true,
+      render: (feature: Feature) => (
+        <div className="font-medium text-gray-800">{feature.titre}</div>
+      ),
+    },
+    {
+      key: 'epic',
+      header: 'EPIC',
+      sortable: true,
+      render: (feature: Feature) => {
+        const epic = epics.find((e) => e.id === feature.epicId)
+        return (
+          <div className="text-gray-600 text-sm">
+            {epic?.titre || 'Aucune'}
+          </div>
+        )
+      },
+    },
+    {
+      key: 'priorite',
+      header: 'Priorité',
+      sortable: true,
+      render: (feature: Feature) => (
+        <span className={`env-badge ${
+          feature.priorite === 'Critique' ? 'bg-error-light text-error' :
+          feature.priorite === 'Elevee' ? 'bg-warning-light text-warning' :
+          feature.priorite === 'Moyenne' ? 'bg-gray-200 text-gray-600' :
+          'bg-success-light text-success'
+        }`}>
+          {getPrioriteDisplay(feature.priorite)}
+        </span>
+      ),
+    },
+    {
+      key: 'statut',
+      header: 'Statut',
+      sortable: true,
+      render: (feature: Feature) => (
+        <span className={`status-badge in-table ${
+          feature.statut === 'Termine' ? 'ready' :
+          feature.statut === 'En cours' ? 'processing' :
+          feature.statut === 'Annule' ? 'error' :
+          'canceled'
+        }`}>
+          {getStatutDisplay(feature.statut)}
+        </span>
+      ),
+    },
+    {
+      key: 'description',
+      header: 'Description',
+      sortable: false,
+      render: (feature: Feature) => (
+        <div className="text-gray-600 text-sm">
+          {feature.description || '-'}
+        </div>
+      ),
+    },
+  ]
+
   return (
     <div className="space-y-6">
-      <div className="neumorphic-card p-6">
-        <h1 className="text-2xl font-bold text-neumorphic mb-2">🔧 Gestion des Features</h1>
-        <p className="text-neumorphic-muted">Créez et gérez les Features pour vos EPICS</p>
-      </div>
-
+      {/* Notification */}
       {notification && (
-        <div
-          className={`neumorphic-card p-4 notification-slide-in ${
-            notification.type === 'success' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
-          }`}
-        >
+        <div className={`notification ${notification.type}`}>
           {notification.message}
         </div>
       )}
 
+      {/* Formulaire */}
+      {showForm && (
+        <div className="form-container">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            {editingFeature ? 'Modifier la Feature' : 'Créer une nouvelle Feature'}
+          </h2>
+          <FeatureForm
+            feature={editingFeature}
+            besoins={besoins}
+            epics={epics}
+            onSubmit={handleSubmit}
+            onCancel={() => {
+              setShowForm(false)
+              setEditingFeature(null)
+            }}
+            onGenerateAI={handleGenerateAI}
+            onImproveAI={handleImproveAI}
+          />
+        </div>
+      )}
+
+      {/* Tableau des Features */}
       {epics.length === 0 ? (
-        <div className="neumorphic-card p-6 text-center">
-          <p className="text-neumorphic-muted mb-4">
-            ⚠️ Vous devez d'abord créer une EPIC avant de pouvoir ajouter des Features.
-          </p>
-          <a href="/epics" className="neumorphic-button px-6 py-2 inline-block">
-            Aller aux EPICS
-          </a>
+        <div className="card">
+          <div className="text-center py-8">
+            <p className="text-muted mb-4">
+              ⚠️ Vous devez d'abord créer une EPIC avant de pouvoir ajouter des Features.
+            </p>
+            <a href="/epics" className="btn btn-primary">
+              Aller aux EPICS
+            </a>
+          </div>
         </div>
       ) : (
-        <>
-          <button
-            onClick={() => {
+        <div ref={listRef}>
+          <DataTable
+            data={features}
+            columns={columns}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onAdd={() => {
               setEditingFeature(null)
-              setShowForm(!showForm)
+              setShowForm(true)
             }}
-            className="neumorphic-button px-6 py-3 flex items-center gap-2"
-          >
-            <span>{showForm ? '❌' : '➕'}</span>
-            <span>{showForm ? 'Annuler' : 'Ajouter une Feature'}</span>
-          </button>
-
-          {showForm && (
-            <div className="neumorphic-card p-6">
-              <h2 className="text-lg font-semibold text-neumorphic mb-4">
-                {editingFeature ? 'Modifier la Feature' : 'Créer une nouvelle Feature'}
-              </h2>
-              <FeatureForm
-                feature={editingFeature}
-                besoins={besoins}
-                epics={epics}
-                onSubmit={handleSubmit}
-                onCancel={() => {
-                  setShowForm(false)
-                  setEditingFeature(null)
-                }}
-                onGenerateAI={handleGenerateAI}
-                onImproveAI={handleImproveAI}
-              />
-            </div>
-          )}
-
-          <div ref={listRef} className="neumorphic-card p-6">
-            <h2 className="text-lg font-semibold text-neumorphic mb-4">
-              Liste des Features ({features.length})
-            </h2>
-            <FeatureList
-              features={features}
-              epics={epics}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          </div>
-        </>
+            title="Features"
+            emptyMessage="Aucune Feature enregistrée. Cliquez sur 'Ajouter' pour commencer."
+          />
+        </div>
       )}
 
       <FeatureAIGeneratorModal

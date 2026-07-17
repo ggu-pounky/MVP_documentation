@@ -15,12 +15,11 @@ const generateId = (): string => {
   return Date.now().toString(36) + Math.random().toString(36).substring(2)
 }
 
-// Suggestions d'Exigences prédéfinies par type de Feature (simulation de l'IA)
+// Suggestions d'Exigences prédéfinies
 const getAISuggestions = (featureTitre: string, featureId: string): Exigence[] => {
   const now = new Date().toISOString()
   
   const suggestionsMap: Record<string, { titre: string; description: string; type: 'Fonctionnelle' | 'Non fonctionnelle' | 'Technique' }[]> = {
-    // Exemples de suggestions pour des Features courantes
     'Réservation d\'une chambre': [
       {
         titre: 'Sélection de chambre disponible',
@@ -43,44 +42,8 @@ const getAISuggestions = (featureTitre: string, featureId: string): Exigence[] =
         type: 'Technique',
       },
     ],
-    'Authentification': [
-      {
-        titre: 'Connexion sécurisée',
-        description: 'Les utilisateurs doivent pouvoir se connecter de manière sécurisée.',
-        type: 'Fonctionnelle',
-      },
-      {
-        titre: 'Protection contre les attaques',
-        description: 'Le système doit être protégé contre les attaques par force brute.',
-        type: 'Technique',
-      },
-      {
-        titre: 'Gestion des sessions',
-        description: 'Les sessions utilisateurs doivent être gérées correctement.',
-        type: 'Technique',
-      },
-    ],
-    'Paiement et facturation': [
-      {
-        titre: 'Paiement en ligne',
-        description: 'Les utilisateurs doivent pouvoir payer en ligne de manière sécurisée.',
-        type: 'Fonctionnelle',
-      },
-      {
-        titre: 'Génération de factures',
-        description: 'Le système doit générer automatiquement des factures après chaque paiement.',
-        type: 'Fonctionnelle',
-      },
-      {
-        titre: 'Conformité PCI DSS',
-        description: 'Le système doit être conforme aux normes PCI DSS pour les paiements.',
-        type: 'Non fonctionnelle',
-      },
-    ],
-    // Ajoutez d'autres types de Features ici
   }
 
-  // Trouver une correspondance ou utiliser des suggestions génériques
   const suggestions = suggestionsMap[featureTitre] || [
     {
       titre: 'Fonctionnalité principale',
@@ -104,7 +67,6 @@ const getAISuggestions = (featureTitre: string, featureId: string): Exigence[] =
     },
   ]
 
-  // Convertir en Exigences avec toutes les propriétés requises
   return suggestions.map((suggestion) => ({
     id: generateId(),
     titre: suggestion.titre,
@@ -117,6 +79,19 @@ const getAISuggestions = (featureTitre: string, featureId: string): Exigence[] =
   }))
 }
 
+const getTypeDisplay = (type: string): string => {
+  switch (type) {
+    case 'Fonctionnelle':
+      return 'Fonctionnelle'
+    case 'Non fonctionnelle':
+      return 'Non fonctionnelle'
+    case 'Technique':
+      return 'Technique'
+    default:
+      return type
+  }
+}
+
 export default function ExigenceAIGeneratorModal({ feature, onClose, onGenerate }: ExigenceAIGeneratorModalProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [suggestions, setSuggestions] = useState<Exigence[]>([])
@@ -127,7 +102,6 @@ export default function ExigenceAIGeneratorModal({ feature, onClose, onGenerate 
     setIsOpen(!!feature)
     if (feature) {
       setLoading(true)
-      // Simuler un délai de génération IA
       setTimeout(() => {
         const generatedSuggestions = getAISuggestions(feature.titre, feature.id)
         setSuggestions(generatedSuggestions)
@@ -158,34 +132,34 @@ export default function ExigenceAIGeneratorModal({ feature, onClose, onGenerate 
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="neumorphic-card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-neumorphic">🤖 Génération IA d&apos;Exigences</h2>
+            <h2 className="text-xl font-bold text-gray-800">🤖 Génération IA d&apos;Exigences</h2>
             <button
               onClick={handleClose}
-              className="neumorphic-button p-2 hover:bg-red-500/20"
+              className="text-gray-400 hover:text-gray-600 text-xl"
             >
               ❌
             </button>
           </div>
 
           <div className="mb-4">
-            <p className="text-neumorphic-muted">
-              Feature: <span className="text-neumorphic font-medium">{feature.titre}</span>
+            <p className="text-muted">
+              Feature: <span className="text-gray-800 font-medium">{feature.titre}</span>
             </p>
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="flex items-center gap-2 text-neumorphic">
+              <div className="flex items-center gap-2 text-gray-600">
                 <span className="animate-spin">🌀</span>
                 <span>Génération en cours...</span>
               </div>
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-neumorphic-muted mb-4">
+              <p className="text-muted mb-4">
                 L&apos;IA a généré {suggestions.length} suggestions d&apos;Exigences pour cette Feature.
                 Sélectionnez celles que vous souhaitez ajouter.
               </p>
@@ -194,7 +168,7 @@ export default function ExigenceAIGeneratorModal({ feature, onClose, onGenerate 
                 {suggestions.map((suggestion, index) => (
                   <div
                     key={suggestion.id}
-                    className={`neumorphic-card p-4 ${selectedSuggestions[index] ? 'border-l-4 border-green-500' : ''}`}
+                    className={`p-4 border border-gray-200 rounded-lg ${selectedSuggestions[index] ? 'border-l-4 border-primary' : ''}`}
                   >
                     <div className="flex items-start gap-3">
                       <input
@@ -205,12 +179,12 @@ export default function ExigenceAIGeneratorModal({ feature, onClose, onGenerate 
                       />
                       <div className="flex-1">
                         <div className="flex justify-between items-start">
-                          <div className="font-medium text-neumorphic">{suggestion.titre}</div>
-                          <span className={`px-2 py-1 rounded-full text-xs ${suggestion.type === 'Fonctionnelle' ? 'bg-blue-500/20 text-blue-300' : suggestion.type === 'Non fonctionnelle' ? 'bg-purple-500/20 text-purple-300' : 'bg-orange-500/20 text-orange-300'}`}>
-                            {suggestion.type}
+                          <div className="font-medium text-gray-800">{suggestion.titre}</div>
+                          <span className="env-badge">
+                            {getTypeDisplay(suggestion.type)}
                           </span>
                         </div>
-                        <div className="text-sm text-neumorphic-muted mt-1">{suggestion.description}</div>
+                        <div className="text-sm text-muted mt-1">{suggestion.description}</div>
                       </div>
                     </div>
                   </div>
@@ -220,13 +194,13 @@ export default function ExigenceAIGeneratorModal({ feature, onClose, onGenerate 
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={handleClose}
-                  className="neumorphic-button px-6 py-2 bg-gray-500/20 hover:bg-gray-500/40 text-neumorphic-muted"
+                  className="btn btn-secondary"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={handleGenerate}
-                  className="neumorphic-button px-6 py-2 bg-green-500/20 hover:bg-green-500/40 text-green-300"
+                  className="btn btn-primary"
                 >
                   ✅ Générer les Exigences sélectionnées
                 </button>

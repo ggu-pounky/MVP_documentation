@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import DataTable from '@/components/DataTable'
 import EpicForm from '@/components/EpicForm'
-import EpicList from '@/components/EpicList'
 import EpicAIGeneratorModal from '@/components/EpicAIGeneratorModal'
 import AIImprovementModal from '@/components/AIImprovementModal'
 import type { Epic, EpicFormData } from '@/types/epic'
 import type { Besoin } from '@/types/besoin'
+import { getStatutDisplay } from '@/utils/statutDisplay'
 
 type Suggestion = {
   field: 'titre' | 'description'
@@ -157,8 +158,8 @@ export default function EpicsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
-        <div className="neumorphic-card px-6 py-4">
-          <div className="flex items-center gap-2 text-neumorphic">
+        <div className="card">
+          <div className="flex items-center gap-2 text-gray-600">
             <span className="animate-spin">🌀</span>
             <span>Chargement...</span>
           </div>
@@ -167,76 +168,122 @@ export default function EpicsPage() {
     )
   }
 
+  // Définir les colonnes du tableau
+  const columns = [
+    {
+      key: 'titre',
+      header: 'Titre',
+      sortable: true,
+      render: (epic: Epic) => (
+        <div className="font-medium text-gray-800">{epic.titre}</div>
+      ),
+    },
+    {
+      key: 'besoin',
+      header: 'Besoin',
+      sortable: true,
+      render: (epic: Epic) => {
+        const besoin = besoins.find((b) => b.id === epic.besoinId)
+        return (
+          <div className="text-gray-600 text-sm">
+            {besoin?.titre || 'Inconnu'}
+          </div>
+        )
+      },
+    },
+    {
+      key: 'statut',
+      header: 'Statut',
+      sortable: true,
+      render: (epic: Epic) => (
+        <span className={`status-badge in-table ${
+          epic.statut === 'Termine' ? 'ready' :
+          epic.statut === 'En cours' ? 'processing' :
+          epic.statut === 'Annule' ? 'error' :
+          'canceled'
+        }`}>
+          {getStatutDisplay(epic.statut)}
+        </span>
+      ),
+    },
+    {
+      key: 'description',
+      header: 'Description',
+      sortable: false,
+      render: (epic: Epic) => (
+        <div className="text-gray-600 text-sm">
+          {epic.description || '-'}
+        </div>
+      ),
+    },
+    {
+      key: 'created_at',
+      header: 'Créé le',
+      sortable: true,
+      render: (epic: Epic) => (
+        <div className="text-muted text-sm">
+          {new Date(epic.created_at).toLocaleDateString('fr-FR')}
+        </div>
+      ),
+    },
+  ]
+
   return (
     <div className="space-y-6">
-      <div className="neumorphic-card p-6">
-        <h1 className="text-2xl font-bold text-neumorphic mb-2">🎯 Gestion des EPICS</h1>
-        <p className="text-neumorphic-muted">Créez et gérez les EPICS pour vos besoins</p>
-      </div>
-
+      {/* Notification */}
       {notification && (
-        <div
-          className={`neumorphic-card p-4 notification-slide-in ${
-            notification.type === 'success' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
-          }`}
-        >
+        <div className={`notification ${notification.type}`}>
           {notification.message}
         </div>
       )}
 
+      {/* Formulaire */}
+      {showForm && (
+        <div className="form-container">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            {editingEpic ? 'Modifier l\'EPIC' : 'Créer une nouvelle EPIC'}
+          </h2>
+          <EpicForm
+            epic={editingEpic}
+            besoins={besoins}
+            onSubmit={handleSubmit}
+            onCancel={() => {
+              setShowForm(false)
+              setEditingEpic(null)
+            }}
+            onGenerateAI={handleGenerateAI}
+            onImproveAI={handleImproveAI}
+          />
+        </div>
+      )}
+
+      {/* Tableau des EPICS */}
       {besoins.length === 0 ? (
-        <div className="neumorphic-card p-6 text-center">
-          <p className="text-neumorphic-muted mb-4">
-            ⚠️ Vous devez d'abord créer un besoin avant de pouvoir ajouter des EPICS.
-          </p>
-          <a href="/" className="neumorphic-button px-6 py-2 inline-block">
-            Aller aux Besoins
-          </a>
+        <div className="card">
+          <div className="text-center py-8">
+            <p className="text-muted mb-4">
+              ⚠️ Vous devez d'abord créer un besoin avant de pouvoir ajouter des EPICS.
+            </p>
+            <a href="/" className="btn btn-primary">
+              Aller aux Besoins
+            </a>
+          </div>
         </div>
       ) : (
-        <>
-          <button
-            onClick={() => {
+        <div ref={listRef}>
+          <DataTable
+            data={epics}
+            columns={columns}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onAdd={() => {
               setEditingEpic(null)
-              setShowForm(!showForm)
+              setShowForm(true)
             }}
-            className="neumorphic-button px-6 py-3 flex items-center gap-2"
-          >
-            <span>{showForm ? '❌' : '➕'}</span>
-            <span>{showForm ? 'Annuler' : 'Ajouter une EPIC'}</span>
-          </button>
-
-          {showForm && (
-            <div className="neumorphic-card p-6">
-              <h2 className="text-lg font-semibold text-neumorphic mb-4">
-                {editingEpic ? 'Modifier l\'EPIC' : 'Créer une nouvelle EPIC'}
-              </h2>
-              <EpicForm
-                epic={editingEpic}
-                besoins={besoins}
-                onSubmit={handleSubmit}
-                onCancel={() => {
-                  setShowForm(false)
-                  setEditingEpic(null)
-                }}
-                onGenerateAI={handleGenerateAI}
-                onImproveAI={handleImproveAI}
-              />
-            </div>
-          )}
-
-          <div ref={listRef} className="neumorphic-card p-6">
-            <h2 className="text-lg font-semibold text-neumorphic mb-4">
-              Liste des EPICS ({epics.length})
-            </h2>
-            <EpicList
-              epics={epics}
-              besoins={besoins}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          </div>
-        </>
+            title="EPICS"
+            emptyMessage="Aucune EPIC enregistrée. Cliquez sur 'Ajouter' pour commencer."
+          />
+        </div>
       )}
 
       <EpicAIGeneratorModal

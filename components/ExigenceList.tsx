@@ -2,7 +2,7 @@
 
 import type { Exigence } from '@/types/exigence'
 import type { Feature } from '@/types/feature'
-import { getStatutDisplay, getStatutColor, getTypeColor } from '@/utils/statutDisplay'
+import { getStatutDisplay, getTypeDisplay } from '@/utils/statutDisplay'
 
 type ExigenceListProps = {
   exigences: Exigence[]
@@ -19,9 +19,9 @@ export default function ExigenceList({ exigences, features, onEdit, onDelete }: 
 
   if (exigences.length === 0) {
     return (
-      <div className="neumorphic-card p-6 text-center">
-        <p className="text-neumorphic-muted">Aucune Exigence enregistrée pour le moment.</p>
-        <p className="mt-2 text-sm text-neumorphic-muted">
+      <div className="card text-center py-8">
+        <p className="text-muted">Aucune Exigence enregistrée pour le moment.</p>
+        <p className="mt-2 text-sm text-muted">
           Sélectionnez une Feature et utilisez le bouton "Ajouter une Exigence" pour commencer.
         </p>
       </div>
@@ -29,45 +29,50 @@ export default function ExigenceList({ exigences, features, onEdit, onDelete }: 
   }
 
   return (
-    <div className="w-full overflow-x-auto">
-      <table className="w-full text-neumorphic">
-        <thead className="bg-neumorphic-dark">
+    <div className="overflow-x-auto">
+      <table className="data-table">
+        <thead>
           <tr>
-            <th className="p-3 text-left text-neumorphic-muted">Feature</th>
-            <th className="p-3 text-left text-neumorphic-muted">Titre</th>
-            <th className="p-3 text-left text-neumorphic-muted">Type</th>
-            <th className="p-3 text-left text-neumorphic-muted">Statut</th>
-            <th className="p-3 text-left text-neumorphic-muted">Description</th>
-            <th className="p-3 text-left text-neumorphic-muted">Actions</th>
+            <th>Feature</th>
+            <th>Titre</th>
+            <th>Type</th>
+            <th>Statut</th>
+            <th>Description</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {exigences.map((exigence) => (
-            <tr key={exigence.id} className="border-t border-neumorphic-border">
-              <td className="p-3">{getFeatureTitre(exigence.featureId)}</td>
-              <td className="p-3">{exigence.titre}</td>
-              <td className="p-3">
-                <span className={`px-2 py-1 rounded-full text-xs ${getTypeColor(exigence.type)}`}>
-                  {exigence.type}
+            <tr key={exigence.id} className="hover:bg-gray-50">
+              <td className="p-4">{getFeatureTitre(exigence.featureId)}</td>
+              <td className="p-4 font-medium text-gray-800">{exigence.titre}</td>
+              <td className="p-4">
+                <span className="env-badge">
+                  {getTypeDisplay(exigence.type)}
                 </span>
               </td>
-              <td className="p-3">
-                <span className={`px-2 py-1 rounded-full text-xs ${getStatutColor(exigence.statut)}`}>
+              <td className="p-4">
+                <span className={`status-badge in-table ${
+                  exigence.statut === 'Termine' || exigence.statut === 'Valide' ? 'ready' :
+                  exigence.statut === 'En cours' ? 'processing' :
+                  exigence.statut === 'Annule' ? 'error' :
+                  'canceled'
+                }`}>
                   {getStatutDisplay(exigence.statut)}
                 </span>
               </td>
-              <td className="p-3">{exigence.description || '-'}</td>
-              <td className="p-3">
+              <td className="p-4 text-gray-600 text-sm">{exigence.description || '-'}</td>
+              <td className="p-4">
                 <div className="flex gap-2">
                   <button
                     onClick={() => onEdit(exigence)}
-                    className="neumorphic-button px-3 py-1 text-sm"
+                    className="btn btn-secondary btn-sm"
                   >
                     Modifier
                   </button>
                   <button
                     onClick={() => onDelete(exigence.id)}
-                    className="neumorphic-button px-3 py-1 text-sm bg-red-500/20 hover:bg-red-500/40"
+                    className="btn btn-danger btn-sm"
                   >
                     Supprimer
                   </button>

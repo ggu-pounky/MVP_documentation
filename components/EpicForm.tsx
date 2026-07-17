@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import type { Epic, EpicFormData } from '@/types/epic'
 import { statutsEpic } from '@/types/epic'
 import type { Besoin } from '@/types/besoin'
+import { getStatutDisplay } from '@/utils/statutDisplay'
 
 type EpicFormProps = {
   epic?: Epic | null
@@ -56,30 +57,15 @@ export default function EpicForm({ epic, besoins, onSubmit, onCancel, onGenerate
     }
   }
 
-  const getStatutDisplay = (statut: string): string => {
-    switch (statut) {
-      case 'A faire':
-        return 'À faire'
-      case 'En cours':
-        return 'En cours'
-      case 'Termine':
-        return 'Terminé'
-      case 'Annule':
-        return 'Annulé'
-      default:
-        return statut
-    }
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-4">
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-neumorphic-muted">Besoin *</label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="form-field">
+        <label htmlFor="besoinId">Besoin *</label>
         <select
+          id="besoinId"
           value={besoinId}
           onChange={(e) => setBesoinId(e.target.value)}
           required
-          className="neumorphic-input w-full p-3 rounded-lg"
           disabled={!!epic}
         >
           <option value="">-- Sélectionnez un besoin --</option>
@@ -91,35 +77,35 @@ export default function EpicForm({ epic, besoins, onSubmit, onCancel, onGenerate
         </select>
       </div>
 
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-neumorphic-muted">Titre *</label>
+      <div className="form-field">
+        <label htmlFor="titre">Titre *</label>
         <input
+          id="titre"
           type="text"
           value={titre}
           onChange={(e) => setTitre(e.target.value)}
           required
-          className="neumorphic-input w-full p-3 rounded-lg"
           placeholder="Entrez le titre de l'EPIC"
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-neumorphic-muted">Description</label>
+      <div className="form-field">
+        <label htmlFor="description">Description</label>
         <textarea
+          id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="neumorphic-input w-full p-3 rounded-lg"
-          rows={4}
           placeholder="Décrivez l'EPIC (optionnel)"
+          rows={4}
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-neumorphic-muted">Statut</label>
+      <div className="form-field">
+        <label htmlFor="statut">Statut</label>
         <select
+          id="statut"
           value={statut}
           onChange={(e) => setStatut(e.target.value as 'A faire' | 'En cours' | 'Termine' | 'Annule')}
-          className="neumorphic-input w-full p-3 rounded-lg"
         >
           {statutsEpic.map((s) => (
             <option key={s} value={s}>
@@ -129,25 +115,18 @@ export default function EpicForm({ epic, besoins, onSubmit, onCancel, onGenerate
         </select>
       </div>
 
-      <div className="flex gap-2 pt-4">
-        <button
-          type="submit"
-          className="neumorphic-button px-6 py-2 bg-green-500/20 hover:bg-green-500/40 text-green-300 font-medium"
-        >
+      <div className="flex gap-3 pt-2">
+        <button type="submit" className="btn btn-primary">
           {epic ? 'Modifier' : 'Créer'}
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="neumorphic-button px-6 py-2 bg-gray-500/20 hover:bg-gray-500/40 text-neumorphic-muted font-medium"
-        >
+        <button type="button" onClick={onCancel} className="btn btn-secondary">
           Annuler
         </button>
         {onGenerateAI && !epic && selectedBesoin && (
           <button
             type="button"
             onClick={() => onGenerateAI(selectedBesoin)}
-            className="neumorphic-button px-6 py-2 bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 font-medium"
+            className="btn btn-primary"
           >
             Générer par IA
           </button>
@@ -156,7 +135,7 @@ export default function EpicForm({ epic, besoins, onSubmit, onCancel, onGenerate
           <button
             type="button"
             onClick={handleImproveAI}
-            className="neumorphic-button px-6 py-2 bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 font-medium"
+            className="btn btn-secondary"
           >
             Amélioration IA
           </button>

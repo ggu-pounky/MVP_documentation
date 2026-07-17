@@ -2,7 +2,7 @@
 
 import type { Test } from '@/types/test'
 import type { Exigence } from '@/types/exigence'
-import { getStatutDisplay, getStatutColor, getTypeColor } from '@/utils/statutDisplay'
+import { getStatutDisplay, getTypeDisplay, getPrioriteDisplay } from '@/utils/statutDisplay'
 
 type TestListProps = {
   tests: Test[]
@@ -19,9 +19,9 @@ export default function TestList({ tests, exigences, onEdit, onDelete }: TestLis
 
   if (tests.length === 0) {
     return (
-      <div className="neumorphic-card p-6 text-center">
-        <p className="text-neumorphic-muted">Aucun Test enregistré pour le moment.</p>
-        <p className="mt-2 text-sm text-neumorphic-muted">
+      <div className="card text-center py-8">
+        <p className="text-muted">Aucun Test enregistré pour le moment.</p>
+        <p className="mt-2 text-sm text-muted">
           Sélectionnez une Exigence et utilisez le bouton "Ajouter un Test" pour commencer.
         </p>
       </div>
@@ -29,51 +29,67 @@ export default function TestList({ tests, exigences, onEdit, onDelete }: TestLis
   }
 
   return (
-    <div className="w-full overflow-x-auto">
-      <table className="w-full text-neumorphic">
-        <thead className="bg-neumorphic-dark">
+    <div className="overflow-x-auto">
+      <table className="data-table">
+        <thead>
           <tr>
-            <th className="p-3 text-left text-neumorphic-muted">Exigence</th>
-            <th className="p-3 text-left text-neumorphic-muted">Titre</th>
-            <th className="p-3 text-left text-neumorphic-muted">Type</th>
-            <th className="p-3 text-left text-neumorphic-muted">Statut</th>
-            <th className="p-3 text-left text-neumorphic-muted">TNR</th>
-            <th className="p-3 text-left text-neumorphic-muted">Auto</th>
-            <th className="p-3 text-left text-neumorphic-muted">Actions</th>
+            <th>Exigence</th>
+            <th>Titre</th>
+            <th>Type</th>
+            <th>Priorité</th>
+            <th>Statut</th>
+            <th>TNR</th>
+            <th>Auto</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {tests.map((test) => (
-            <tr key={test.id} className="border-t border-neumorphic-border">
-              <td className="p-3">{getExigenceTitre(test.exigenceId)}</td>
-              <td className="p-3">{test.titre}</td>
-              <td className="p-3">
-                <span className={`px-2 py-1 rounded-full text-xs ${getTypeColor(test.type)}`}>
-                  {test.type === 'Securite' ? 'Sécurité' : test.type === 'Integration' ? 'Intégration' : test.type}
+            <tr key={test.id} className="hover:bg-gray-50">
+              <td className="p-4">{getExigenceTitre(test.exigenceId)}</td>
+              <td className="p-4 font-medium text-gray-800">{test.titre}</td>
+              <td className="p-4">
+                <span className="env-badge">
+                  {getTypeDisplay(test.type)}
                 </span>
               </td>
-              <td className="p-3">
-                <span className={`px-2 py-1 rounded-full text-xs ${getStatutColor(test.statut)}`}>
+              <td className="p-4">
+                <span className={`env-badge ${
+                  test.priorite === 'Critique' ? 'bg-error-light text-error' :
+                  test.priorite === 'Elevee' ? 'bg-warning-light text-warning' :
+                  test.priorite === 'Moyenne' ? 'bg-gray-200 text-gray-600' :
+                  'bg-success-light text-success'
+                }`}>
+                  {getPrioriteDisplay(test.priorite)}
+                </span>
+              </td>
+              <td className="p-4">
+                <span className={`status-badge in-table ${
+                  test.statut === 'Termine' || test.statut === 'Valide' ? 'ready' :
+                  test.statut === 'En cours' ? 'processing' :
+                  test.statut === 'Annule' ? 'error' :
+                  'canceled'
+                }`}>
                   {getStatutDisplay(test.statut)}
                 </span>
               </td>
-              <td className="p-3 text-center">
+              <td className="p-4 text-center">
                 {test.isTNR ? '✅' : '❌'}
               </td>
-              <td className="p-3 text-center">
+              <td className="p-4 text-center">
                 {test.isAutomatisable ? '✅' : '❌'}
               </td>
-              <td className="p-3">
+              <td className="p-4">
                 <div className="flex gap-2">
                   <button
                     onClick={() => onEdit(test)}
-                    className="neumorphic-button px-3 py-1 text-sm"
+                    className="btn btn-secondary btn-sm"
                   >
                     Modifier
                   </button>
                   <button
                     onClick={() => onDelete(test.id)}
-                    className="neumorphic-button px-3 py-1 text-sm bg-red-500/20 hover:bg-red-500/40"
+                    className="btn btn-danger btn-sm"
                   >
                     Supprimer
                   </button>

@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import DataTable from '@/components/DataTable'
 import ExigenceForm from '@/components/ExigenceForm'
-import ExigenceList from '@/components/ExigenceList'
 import ExigenceAIGeneratorModal from '@/components/ExigenceAIGeneratorModal'
 import AIImprovementModal from '@/components/AIImprovementModal'
 import type { Exigence, ExigenceFormData } from '@/types/exigence'
 import type { Feature } from '@/types/feature'
+import { getStatutDisplay, getTypeDisplay } from '@/utils/statutDisplay'
 
 type Suggestion = {
   field: 'titre' | 'description'
@@ -159,8 +160,8 @@ export default function ExigencesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
-        <div className="neumorphic-card px-6 py-4">
-          <div className="flex items-center gap-2 text-neumorphic">
+        <div className="card">
+          <div className="flex items-center gap-2 text-gray-600">
             <span className="animate-spin">🌀</span>
             <span>Chargement...</span>
           </div>
@@ -169,76 +170,122 @@ export default function ExigencesPage() {
     )
   }
 
+  // Définir les colonnes du tableau
+  const columns = [
+    {
+      key: 'titre',
+      header: 'Titre',
+      sortable: true,
+      render: (exigence: Exigence) => (
+        <div className="font-medium text-gray-800">{exigence.titre}</div>
+      ),
+    },
+    {
+      key: 'feature',
+      header: 'Feature',
+      sortable: true,
+      render: (exigence: Exigence) => {
+        const feature = features.find((f) => f.id === exigence.featureId)
+        return (
+          <div className="text-gray-600 text-sm">
+            {feature?.titre || 'Inconnu'}
+          </div>
+        )
+      },
+    },
+    {
+      key: 'type',
+      header: 'Type',
+      sortable: true,
+      render: (exigence: Exigence) => (
+        <span className="env-badge">
+          {getTypeDisplay(exigence.type)}
+        </span>
+      ),
+    },
+    {
+      key: 'statut',
+      header: 'Statut',
+      sortable: true,
+      render: (exigence: Exigence) => (
+        <span className={`status-badge in-table ${
+          exigence.statut === 'Termine' || exigence.statut === 'Valide' ? 'ready' :
+          exigence.statut === 'En cours' ? 'processing' :
+          exigence.statut === 'Annule' ? 'error' :
+          'canceled'
+        }`}>
+          {getStatutDisplay(exigence.statut)}
+        </span>
+      ),
+    },
+    {
+      key: 'description',
+      header: 'Description',
+      sortable: false,
+      render: (exigence: Exigence) => (
+        <div className="text-gray-600 text-sm">
+          {exigence.description || '-'}
+        </div>
+      ),
+    },
+  ]
+
   return (
     <div className="space-y-6">
-      <div className="neumorphic-card p-6">
-        <h1 className="text-2xl font-bold text-neumorphic mb-2">📋 Gestion des Exigences</h1>
-        <p className="text-neumorphic-muted">Créez et gérez les exigences pour vos Features</p>
-      </div>
-
+      {/* Notification */}
       {notification && (
-        <div
-          className={`neumorphic-card p-4 notification-slide-in ${
-            notification.type === 'success' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
-          }`}
-        >
+        <div className={`notification ${notification.type}`}>
           {notification.message}
         </div>
       )}
 
+      {/* Formulaire */}
+      {showForm && (
+        <div className="form-container">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            {editingExigence ? 'Modifier l\'Exigence' : 'Créer une nouvelle Exigence'}
+          </h2>
+          <ExigenceForm
+            exigence={editingExigence}
+            features={features}
+            onSubmit={handleSubmit}
+            onCancel={() => {
+              setShowForm(false)
+              setEditingExigence(null)
+            }}
+            onGenerateAI={handleGenerateAI}
+            onImproveAI={handleImproveAI}
+          />
+        </div>
+      )}
+
+      {/* Tableau des Exigences */}
       {features.length === 0 ? (
-        <div className="neumorphic-card p-6 text-center">
-          <p className="text-neumorphic-muted mb-4">
-            ⚠️ Vous devez d'abord créer une Feature avant de pouvoir ajouter des Exigences.
-          </p>
-          <a href="/features" className="neumorphic-button px-6 py-2 inline-block">
-            Aller aux Features
-          </a>
+        <div className="card">
+          <div className="text-center py-8">
+            <p className="text-muted mb-4">
+              ⚠️ Vous devez d'abord créer une Feature avant de pouvoir ajouter des Exigences.
+            </p>
+            <a href="/features" className="btn btn-primary">
+              Aller aux Features
+            </a>
+          </div>
         </div>
       ) : (
-        <>
-          <button
-            onClick={() => {
+        <div ref={listRef}>
+          <DataTable
+            data={exigences}
+            columns={columns}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onAdd={() => {
               setEditingExigence(null)
-              setShowForm(!showForm)
+              setShowForm(true)
             }}
-            className="neumorphic-button px-6 py-3 flex items-center gap-2"
-          >
-            <span>{showForm ? '❌' : '➕'}</span>
-            <span>{showForm ? 'Annuler' : 'Ajouter une Exigence'}</span>
-          </button>
-
-          {showForm && (
-            <div className="neumorphic-card p-6">
-              <h2 className="text-lg font-semibold text-neumorphic mb-4">
-                {editingExigence ? 'Modifier l\'Exigence' : 'Créer une nouvelle Exigence'}
-              </h2>
-              <ExigenceForm
-                exigence={editingExigence}
-                features={features}
-                onSubmit={handleSubmit}
-                onCancel={() => {
-                  setShowForm(false)
-                  setEditingExigence(null)
-                }}
-                onGenerateAI={handleGenerateAI}
-                onImproveAI={handleImproveAI}
-              />
-            </div>
-          )}
-
-          <div ref={listRef} className="neumorphic-card p-6">
-            <h2 className="text-lg font-semibold text-neumorphic mb-4">
-              Liste des Exigences ({exigences.length})
-            </h2>
-            <ExigenceList
-              exigences={exigences}
-              features={features}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          </div>
-        </>
+            title="Exigences"
+            emptyMessage="Aucune Exigence enregistrée. Cliquez sur 'Ajouter' pour commencer."
+          />
+        </div>
       )}
 
       <ExigenceAIGeneratorModal
