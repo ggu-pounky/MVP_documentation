@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import DataTable from '@/components/DataTable'
 import BesoinForm from '@/components/BesoinForm'
-import BesoinList from '@/components/BesoinList'
 import type { Besoin, BesoinFormData } from '@/types/besoin'
+import { getStatutDisplay } from '@/utils/statutDisplay'
 
 export default function Home() {
   const [besoins, setBesoins] = useState<Besoin[]>([])
@@ -96,11 +97,16 @@ export default function Home() {
     setShowForm(true)
   }
 
+  const handleAdd = () => {
+    setEditingBesoin(null)
+    setShowForm(true)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
-        <div className="neumorphic-card px-6 py-4">
-          <div className="flex items-center gap-2 text-neumorphic">
+        <div className="card">
+          <div className="flex items-center gap-2 text-gray-600">
             <span className="animate-spin">🌀</span>
             <span>Chargement...</span>
           </div>
@@ -109,37 +115,66 @@ export default function Home() {
     )
   }
 
+  // Définir les colonnes du tableau
+  const columns = [
+    {
+      key: 'titre',
+      header: 'Titre',
+      sortable: true,
+      render: (besoin: Besoin) => (
+        <div className="font-medium text-gray-800">{besoin.titre}</div>
+      ),
+    },
+    {
+      key: 'statut',
+      header: 'Statut',
+      sortable: true,
+      render: (besoin: Besoin) => (
+        <span className={`status-badge in-table ${
+          besoin.statut === 'Termine' ? 'ready' :
+          besoin.statut === 'En cours' ? 'processing' :
+          besoin.statut === 'Annule' ? 'error' :
+          'canceled'
+        }`}>
+          {getStatutDisplay(besoin.statut)}
+        </span>
+      ),
+    },
+    {
+      key: 'description',
+      header: 'Description',
+      sortable: false,
+      render: (besoin: Besoin) => (
+        <div className="text-gray-600 text-sm">
+          {besoin.description || '-'}
+        </div>
+      ),
+    },
+    {
+      key: 'created_at',
+      header: 'Créé le',
+      sortable: true,
+      render: (besoin: Besoin) => (
+        <div className="text-muted text-sm">
+          {new Date(besoin.created_at).toLocaleDateString('fr-FR')}
+        </div>
+      ),
+    },
+  ]
+
   return (
     <div className="space-y-6">
-      <div className="neumorphic-card p-6">
-        <h1 className="text-2xl font-bold text-neumorphic mb-2">✨ Gestion des Besoins</h1>
-        <p className="text-neumorphic-muted">Créez, modifiez et gérez vos besoins projet</p>
-      </div>
-
+      {/* Notification */}
       {notification && (
-        <div
-          className={`neumorphic-card p-4 notification-slide-in ${
-            notification.type === 'success' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
-          }`}
-        >
+        <div className={`notification ${notification.type}`}>
           {notification.message}
         </div>
       )}
 
-      <button
-        onClick={() => {
-          setEditingBesoin(null)
-          setShowForm(!showForm)
-        }}
-        className="neumorphic-button px-6 py-3 flex items-center gap-2"
-      >
-        <span>{showForm ? '❌' : '➕'}</span>
-        <span>{showForm ? 'Annuler' : 'Ajouter un besoin'}</span>
-      </button>
-
+      {/* Formulaire */}
       {showForm && (
-        <div className="neumorphic-card p-6">
-          <h2 className="text-lg font-semibold text-neumorphic mb-4">
+        <div className="form-container">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">
             {editingBesoin ? 'Modifier le besoin' : 'Créer un nouveau besoin'}
           </h2>
           <BesoinForm
@@ -153,14 +188,16 @@ export default function Home() {
         </div>
       )}
 
-      <div ref={listRef} className="neumorphic-card p-6">
-        <h2 className="text-lg font-semibold text-neumorphic mb-4">
-          Liste des besoins ({besoins.length})
-        </h2>
-        <BesoinList
-          besoins={besoins}
+      {/* Tableau des besoins */}
+      <div ref={listRef}>
+        <DataTable
+          data={besoins}
+          columns={columns}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onAdd={handleAdd}
+          title="Besoins"
+          emptyMessage="Aucun besoin enregistré. Cliquez sur 'Ajouter' pour commencer."
         />
       </div>
     </div>

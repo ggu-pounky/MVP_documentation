@@ -15,61 +15,11 @@ const generateId = (): string => {
   return Date.now().toString(36) + Math.random().toString(36).substring(2)
 }
 
-// Suggestions de Features prédéfinies par type de besoin (simulation de l'IA)
+// Suggestions de Features prédéfinies
 const getAISuggestions = (besoinTitre: string, besoinId: string): Feature[] => {
   const now = new Date().toISOString()
   
   const suggestionsMap: Record<string, { titre: string; description: string; priorite: 'Faible' | 'Moyenne' | 'Elevee' | 'Critique' }[]> = {
-    // Exemples de suggestions pour des besoins courants
-    'Gestion des utilisateurs': [
-      {
-        titre: 'Authentification',
-        description: 'Permettre aux utilisateurs de se connecter avec un email et un mot de passe.',
-        priorite: 'Elevee',
-      },
-      {
-        titre: 'Inscription',
-        description: 'Permettre aux nouveaux utilisateurs de créer un compte.',
-        priorite: 'Elevee',
-      },
-      {
-        titre: 'Réinitialisation du mot de passe',
-        description: 'Permettre aux utilisateurs de réinitialiser leur mot de passe en cas d\'oubli.',
-        priorite: 'Moyenne',
-      },
-      {
-        titre: 'Gestion des profils',
-        description: 'Permettre aux utilisateurs de modifier leurs informations personnelles.',
-        priorite: 'Moyenne',
-      },
-      {
-        titre: 'Rôles et permissions',
-        description: 'Gérer les rôles des utilisateurs et leurs permissions d\'accès.',
-        priorite: 'Elevee',
-      },
-    ],
-    'Gestion des produits': [
-      {
-        titre: 'Création de produit',
-        description: 'Permettre aux administrateurs de créer de nouveaux produits.',
-        priorite: 'Elevee',
-      },
-      {
-        titre: 'Modification de produit',
-        description: 'Permettre aux administrateurs de modifier les informations d\'un produit.',
-        priorite: 'Moyenne',
-      },
-      {
-        titre: 'Suppression de produit',
-        description: 'Permettre aux administrateurs de supprimer un produit.',
-        priorite: 'Faible',
-      },
-      {
-        titre: 'Recherche de produits',
-        description: 'Permettre aux utilisateurs de rechercher des produits par nom ou catégorie.',
-        priorite: 'Moyenne',
-      },
-    ],
     'Automatiser la gestion des réservations pour un hôtel en ligne': [
       {
         titre: 'Réservation d\'une chambre',
@@ -97,10 +47,8 @@ const getAISuggestions = (besoinTitre: string, besoinId: string): Feature[] => {
         priorite: 'Faible',
       },
     ],
-    // Ajoutez d'autres types de besoins ici
   }
 
-  // Trouver une correspondance ou utiliser des suggestions génériques
   const suggestions = suggestionsMap[besoinTitre] || [
     {
       titre: 'Implémentation principale',
@@ -124,7 +72,6 @@ const getAISuggestions = (besoinTitre: string, besoinId: string): Feature[] => {
     },
   ]
 
-  // Convertir en Features avec toutes les propriétés requises
   return suggestions.map((suggestion) => ({
     id: generateId(),
     titre: suggestion.titre,
@@ -148,7 +95,6 @@ export default function FeatureAIGeneratorModal({ besoin, onClose, onGenerate }:
     setIsOpen(!!besoin)
     if (besoin) {
       setLoading(true)
-      // Simuler un délai de génération IA
       setTimeout(() => {
         const generatedSuggestions = getAISuggestions(besoin.titre, besoin.id)
         setSuggestions(generatedSuggestions)
@@ -175,38 +121,47 @@ export default function FeatureAIGeneratorModal({ besoin, onClose, onGenerate }:
     setSelectedSuggestions(updated)
   }
 
+  const getPrioriteDisplay = (priorite: string): string => {
+    switch (priorite) {
+      case 'Elevee':
+        return 'Élevée'
+      default:
+        return priorite
+    }
+  }
+
   if (!isOpen || !besoin) return null
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="neumorphic-card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-neumorphic">🤖 Génération IA de Features</h2>
+            <h2 className="text-xl font-bold text-gray-800">🤖 Génération IA de Features</h2>
             <button
               onClick={handleClose}
-              className="neumorphic-button p-2 hover:bg-red-500/20"
+              className="text-gray-400 hover:text-gray-600 text-xl"
             >
               ❌
             </button>
           </div>
 
           <div className="mb-4">
-            <p className="text-neumorphic-muted">
-              Besoin: <span className="text-neumorphic font-medium">{besoin.titre}</span>
+            <p className="text-muted">
+              Besoin: <span className="text-gray-800 font-medium">{besoin.titre}</span>
             </p>
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="flex items-center gap-2 text-neumorphic">
+              <div className="flex items-center gap-2 text-gray-600">
                 <span className="animate-spin">🌀</span>
                 <span>Génération en cours...</span>
               </div>
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-neumorphic-muted mb-4">
+              <p className="text-muted mb-4">
                 L&apos;IA a généré {suggestions.length} suggestions de Features pour ce besoin.
                 Sélectionnez celles que vous souhaitez ajouter.
               </p>
@@ -215,7 +170,7 @@ export default function FeatureAIGeneratorModal({ besoin, onClose, onGenerate }:
                 {suggestions.map((suggestion, index) => (
                   <div
                     key={suggestion.id}
-                    className={`neumorphic-card p-4 ${selectedSuggestions[index] ? 'border-l-4 border-green-500' : ''}`}
+                    className={`p-4 border border-gray-200 rounded-lg ${selectedSuggestions[index] ? 'border-l-4 border-primary' : ''}`}
                   >
                     <div className="flex items-start gap-3">
                       <input
@@ -226,12 +181,17 @@ export default function FeatureAIGeneratorModal({ besoin, onClose, onGenerate }:
                       />
                       <div className="flex-1">
                         <div className="flex justify-between items-start">
-                          <div className="font-medium text-neumorphic">{suggestion.titre}</div>
-                          <span className={`px-2 py-1 rounded-full text-xs ${suggestion.priorite === 'Elevee' ? 'bg-orange-500/20 text-orange-300' : suggestion.priorite === 'Critique' ? 'bg-red-500/20 text-red-300' : suggestion.priorite === 'Moyenne' ? 'bg-yellow-500/20 text-yellow-300' : 'bg-green-500/20 text-green-300'}`}>
-                            {suggestion.priorite === 'Elevee' ? 'Élevée' : suggestion.priorite}
+                          <div className="font-medium text-gray-800">{suggestion.titre}</div>
+                          <span className={`env-badge ${
+                            suggestion.priorite === 'Elevee' ? 'bg-warning-light text-warning' :
+                            suggestion.priorite === 'Critique' ? 'bg-error-light text-error' :
+                            suggestion.priorite === 'Moyenne' ? 'bg-gray-200 text-gray-600' :
+                            'bg-success-light text-success'
+                          }`}>
+                            {getPrioriteDisplay(suggestion.priorite)}
                           </span>
                         </div>
-                        <div className="text-sm text-neumorphic-muted mt-1">{suggestion.description}</div>
+                        <div className="text-sm text-muted mt-1">{suggestion.description}</div>
                       </div>
                     </div>
                   </div>
@@ -241,13 +201,13 @@ export default function FeatureAIGeneratorModal({ besoin, onClose, onGenerate }:
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={handleClose}
-                  className="neumorphic-button px-6 py-2 bg-gray-500/20 hover:bg-gray-500/40 text-neumorphic-muted"
+                  className="btn btn-secondary"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={handleGenerate}
-                  className="neumorphic-button px-6 py-2 bg-green-500/20 hover:bg-green-500/40 text-green-300"
+                  className="btn btn-primary"
                 >
                   ✅ Générer les Features sélectionnées
                 </button>

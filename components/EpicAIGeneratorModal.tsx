@@ -15,48 +15,11 @@ const generateId = (): string => {
   return Date.now().toString(36) + Math.random().toString(36).substring(2)
 }
 
-// Suggestions d'EPICS prédéfinies par type de besoin (simulation de l'IA)
+// Suggestions d'EPICS prédéfinies par type de besoin
 const getAISuggestions = (besoinTitre: string, besoinId: string): Epic[] => {
   const now = new Date().toISOString()
   
   const suggestionsMap: Record<string, { titre: string; description: string }[]> = {
-    // Exemples de suggestions pour des besoins courants
-    'Gestion des utilisateurs': [
-      {
-        titre: 'Authentification et sécurité',
-        description: 'Gérer l\'authentification des utilisateurs et la sécurité des comptes.',
-      },
-      {
-        titre: 'Gestion des profils',
-        description: 'Permettre aux utilisateurs de gérer leurs informations personnelles et préférences.',
-      },
-      {
-        titre: 'Gestion des rôles et permissions',
-        description: 'Définir et gérer les rôles des utilisateurs ainsi que leurs permissions d\'accès.',
-      },
-      {
-        titre: 'Communication et notifications',
-        description: 'Gérer les notifications et les communications entre utilisateurs.',
-      },
-    ],
-    'Gestion des produits': [
-      {
-        titre: 'Catalogue et inventaire',
-        description: 'Gérer le catalogue des produits et leur inventaire.',
-      },
-      {
-        titre: 'Prix et promotions',
-        description: 'Définir les prix des produits et gérer les promotions.',
-      },
-      {
-        titre: 'Catégorisation et filtrage',
-        description: 'Organiser les produits en catégories et permettre leur filtrage.',
-      },
-      {
-        titre: 'Avis et évaluations',
-        description: 'Permettre aux utilisateurs de laisser des avis et évaluations sur les produits.',
-      },
-    ],
     'Automatiser la gestion des réservations pour un hôtel en ligne': [
       {
         titre: 'Gestion des réservations clients',
@@ -75,10 +38,8 @@ const getAISuggestions = (besoinTitre: string, besoinId: string): Epic[] => {
         description: 'Gérer les informations clients et leur historique de réservations.',
       },
     ],
-    // Ajoutez d'autres types de besoins ici
   }
 
-  // Trouver une correspondance ou utiliser des suggestions génériques
   const suggestions = suggestionsMap[besoinTitre] || [
     {
       titre: 'Implémentation principale',
@@ -98,7 +59,6 @@ const getAISuggestions = (besoinTitre: string, besoinId: string): Epic[] => {
     },
   ]
 
-  // Convertir en EPICS avec toutes les propriétés requises
   return suggestions.map((suggestion) => ({
     id: generateId(),
     titre: suggestion.titre,
@@ -120,7 +80,6 @@ export default function EpicAIGeneratorModal({ besoin, onClose, onGenerate }: Ep
     setIsOpen(!!besoin)
     if (besoin) {
       setLoading(true)
-      // Simuler un délai de génération IA
       setTimeout(() => {
         const generatedSuggestions = getAISuggestions(besoin.titre, besoin.id)
         setSuggestions(generatedSuggestions)
@@ -151,34 +110,34 @@ export default function EpicAIGeneratorModal({ besoin, onClose, onGenerate }: Ep
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="neumorphic-card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-neumorphic">🤖 Génération IA d&apos;EPICS</h2>
+            <h2 className="text-xl font-bold text-gray-800">🤖 Génération IA d&apos;EPICS</h2>
             <button
               onClick={handleClose}
-              className="neumorphic-button p-2 hover:bg-red-500/20"
+              className="text-gray-400 hover:text-gray-600 text-xl"
             >
               ❌
             </button>
           </div>
 
           <div className="mb-4">
-            <p className="text-neumorphic-muted">
-              Besoin: <span className="text-neumorphic font-medium">{besoin.titre}</span>
+            <p className="text-muted">
+              Besoin: <span className="text-gray-800 font-medium">{besoin.titre}</span>
             </p>
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="flex items-center gap-2 text-neumorphic">
+              <div className="flex items-center gap-2 text-gray-600">
                 <span className="animate-spin">🌀</span>
                 <span>Génération en cours...</span>
               </div>
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-neumorphic-muted mb-4">
+              <p className="text-muted mb-4">
                 L&apos;IA a généré {suggestions.length} suggestions d&apos;EPICS pour ce besoin.
                 Sélectionnez celles que vous souhaitez ajouter.
               </p>
@@ -187,7 +146,7 @@ export default function EpicAIGeneratorModal({ besoin, onClose, onGenerate }: Ep
                 {suggestions.map((suggestion, index) => (
                   <div
                     key={suggestion.id}
-                    className={`neumorphic-card p-4 ${selectedSuggestions[index] ? 'border-l-4 border-green-500' : ''}`}
+                    className={`p-4 border border-gray-200 rounded-lg ${selectedSuggestions[index] ? 'border-l-4 border-primary' : ''}`}
                   >
                     <div className="flex items-start gap-3">
                       <input
@@ -197,8 +156,8 @@ export default function EpicAIGeneratorModal({ besoin, onClose, onGenerate }: Ep
                         className="mt-1 w-5 h-5"
                       />
                       <div className="flex-1">
-                        <div className="font-medium text-neumorphic">{suggestion.titre}</div>
-                        <div className="text-sm text-neumorphic-muted mt-1">{suggestion.description}</div>
+                        <div className="font-medium text-gray-800">{suggestion.titre}</div>
+                        <div className="text-sm text-muted mt-1">{suggestion.description}</div>
                       </div>
                     </div>
                   </div>
@@ -208,13 +167,13 @@ export default function EpicAIGeneratorModal({ besoin, onClose, onGenerate }: Ep
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={handleClose}
-                  className="neumorphic-button px-6 py-2 bg-gray-500/20 hover:bg-gray-500/40 text-neumorphic-muted"
+                  className="btn btn-secondary"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={handleGenerate}
-                  className="neumorphic-button px-6 py-2 bg-green-500/20 hover:bg-green-500/40 text-green-300"
+                  className="btn btn-primary"
                 >
                   ✅ Générer les EPICS sélectionnées
                 </button>

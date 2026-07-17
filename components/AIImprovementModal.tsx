@@ -157,26 +157,26 @@ export default function AIImprovementModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="neumorphic-card max-w-2xl w-full max-h-[90vh] overflow-y-auto" ref={modalRef}>
+      <div className="card max-w-2xl w-full max-h-[90vh] overflow-y-auto" ref={modalRef}>
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-neumorphic">🤖 Amélioration IA</h2>
+            <h2 className="text-xl font-bold text-gray-800">🤖 Amélioration IA</h2>
             <button
               onClick={onClose}
-              className="neumorphic-button p-2 hover:bg-red-500/20"
+              className="text-gray-400 hover:text-gray-600 text-xl"
             >
               ❌
             </button>
           </div>
 
           <div className="mb-4">
-            <p className="text-neumorphic-muted">
-              {itemType}: <span className="text-neumorphic font-medium">{item?.titre || 'Inconnu'}</span>
+            <p className="text-muted">
+              {itemType}: <span className="text-gray-800 font-medium">{item?.titre || 'Inconnu'}</span>
             </p>
           </div>
 
           <div className="space-y-4">
-            <p className="text-neumorphic-muted mb-4">
+            <p className="text-muted mb-4">
               L&apos;IA a généré {checkedSuggestions.length} suggestions d&apos;amélioration.
               Sélectionnez celles que vous souhaitez appliquer.
             </p>
@@ -184,7 +184,7 @@ export default function AIImprovementModal({
             <div className="flex gap-2 mb-4">
               <button
                 onClick={toggleAll}
-                className="neumorphic-button px-4 py-2 text-sm"
+                className="btn btn-secondary btn-sm"
               >
                 {checkedSuggestions.every((s) => s.checked) ? 'Désélectionner tout' : 'Tout sélectionner'}
               </button>
@@ -194,7 +194,7 @@ export default function AIImprovementModal({
               {checkedSuggestions.map((suggestion, index) => (
                 <div
                   key={index}
-                  className={`neumorphic-card p-4 ${suggestion.checked ? 'border-l-4 border-green-500' : ''}`}
+                  className={`p-4 border border-gray-200 rounded-lg ${suggestion.checked ? 'border-l-4 border-primary' : ''}`}
                 >
                   <div className="flex items-start gap-3">
                     <input
@@ -205,17 +205,17 @@ export default function AIImprovementModal({
                     />
                     <div className="flex-1">
                       <div className="flex justify-between items-start">
-                        <div className="font-medium text-neumorphic">
+                        <div className="font-medium text-gray-800">
                           {suggestion.field === 'titre' ? 'Titre' : 'Description'}
                         </div>
-                        <span className={`px-2 py-1 rounded-full text-xs ${suggestion.checked ? 'bg-green-500/20 text-green-300' : 'bg-gray-500/20 text-gray-300'}`}>
+                        <span className={`env-badge ${suggestion.checked ? 'bg-success-light text-success' : 'bg-gray-200 text-gray-600'}`}>
                           {suggestion.checked ? '✅ Sélectionné' : '❌ Non sélectionné'}
                         </span>
                       </div>
-                      <div className="text-sm text-neumorphic-muted mt-1">
+                      <div className="text-sm text-muted mt-1">
                         <strong>Ancienne valeur:</strong> {suggestion.oldValue || 'Aucune'}
                       </div>
-                      <div className="text-sm text-neumorphic mt-1">
+                      <div className="text-sm text-gray-800 mt-1">
                         <strong>Nouvelle valeur:</strong> {suggestion.newValue}
                       </div>
                     </div>
@@ -227,13 +227,13 @@ export default function AIImprovementModal({
             <div className="flex gap-3 mt-6">
               <button
                 onClick={onClose}
-                className="neumorphic-button px-6 py-2 bg-gray-500/20 hover:bg-gray-500/40 text-neumorphic-muted"
+                className="btn btn-secondary"
               >
                 Annuler
               </button>
               <button
                 onClick={handleApply}
-                className="neumorphic-button px-6 py-2 bg-green-500/20 hover:bg-green-500/40 text-green-300"
+                className="btn btn-primary"
               >
                 ✅ Appliquer les améliorations
               </button>

@@ -15,12 +15,11 @@ const generateId = (): string => {
   return Date.now().toString(36) + Math.random().toString(36).substring(2)
 }
 
-// Suggestions de Tests prédéfinies par type d'Exigence (simulation de l'IA)
+// Suggestions de Tests prédéfinies
 const getAISuggestions = (exigenceTitre: string, exigenceId: string): Test[] => {
   const now = new Date().toISOString()
   
   const suggestionsMap: Record<string, { titre: string; description: string; type: 'Unitaire' | 'Integration' | 'E2E' | 'Performance' | 'Securite'; priorite: 'Faible' | 'Moyenne' | 'Elevee' | 'Critique' }[]> = {
-    // Exemples de suggestions pour des Exigences courantes
     'Sélection de chambre disponible': [
       {
         titre: 'Test de sélection valide',
@@ -41,44 +40,8 @@ const getAISuggestions = (exigenceTitre: string, exigenceId: string): Test[] => 
         priorite: 'Moyenne',
       },
     ],
-    'Confirmation de réservation': [
-      {
-        titre: 'Test d\'envoi d\'email',
-        description: 'Vérifier que l\'email de confirmation est envoyé après réservation.',
-        type: 'Integration',
-        priorite: 'Elevee',
-      },
-      {
-        titre: 'Test de contenu de l\'email',
-        description: 'Vérifier que l\'email contient toutes les informations nécessaires.',
-        type: 'Unitaire',
-        priorite: 'Moyenne',
-      },
-    ],
-    'Paiement en ligne': [
-      {
-        titre: 'Test de paiement réussi',
-        description: 'Vérifier que le paiement est traité correctement.',
-        type: 'E2E',
-        priorite: 'Critique',
-      },
-      {
-        titre: 'Test de paiement échoué',
-        description: 'Vérifier que le système gère correctement les échecs de paiement.',
-        type: 'E2E',
-        priorite: 'Elevee',
-      },
-      {
-        titre: 'Test de sécurité du paiement',
-        description: 'Vérifier que les informations de paiement sont sécurisées.',
-        type: 'Securite',
-        priorite: 'Critique',
-      },
-    ],
-    // Ajoutez d'autres types d'Exigences ici
   }
 
-  // Trouver une correspondance ou utiliser des suggestions génériques
   const suggestions = suggestionsMap[exigenceTitre] || [
     {
       titre: 'Test fonctionnel principal',
@@ -106,7 +69,6 @@ const getAISuggestions = (exigenceTitre: string, exigenceId: string): Test[] => 
     },
   ]
 
-  // Convertir en Tests avec toutes les propriétés requises
   return suggestions.map((suggestion) => ({
     id: generateId(),
     titre: suggestion.titre,
@@ -122,6 +84,30 @@ const getAISuggestions = (exigenceTitre: string, exigenceId: string): Test[] => 
   }))
 }
 
+const getTypeDisplay = (type: string): string => {
+  switch (type) {
+    case 'Securite':
+      return 'Sécurité'
+    case 'Integration':
+      return 'Intégration'
+    case 'E2E':
+      return 'E2E'
+    case 'Performance':
+      return 'Performance'
+    default:
+      return type
+  }
+}
+
+const getPrioriteDisplay = (priorite: string): string => {
+  switch (priorite) {
+    case 'Elevee':
+      return 'Élevée'
+    default:
+      return priorite
+  }
+}
+
 export default function TestAIGeneratorModal({ exigence, onClose, onGenerate }: TestAIGeneratorModalProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [suggestions, setSuggestions] = useState<Test[]>([])
@@ -132,7 +118,6 @@ export default function TestAIGeneratorModal({ exigence, onClose, onGenerate }: 
     setIsOpen(!!exigence)
     if (exigence) {
       setLoading(true)
-      // Simuler un délai de génération IA
       setTimeout(() => {
         const generatedSuggestions = getAISuggestions(exigence.titre, exigence.id)
         setSuggestions(generatedSuggestions)
@@ -163,34 +148,34 @@ export default function TestAIGeneratorModal({ exigence, onClose, onGenerate }: 
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="neumorphic-card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-neumorphic">🤖 Génération IA de Tests</h2>
+            <h2 className="text-xl font-bold text-gray-800">🤖 Génération IA de Tests</h2>
             <button
               onClick={handleClose}
-              className="neumorphic-button p-2 hover:bg-red-500/20"
+              className="text-gray-400 hover:text-gray-600 text-xl"
             >
               ❌
             </button>
           </div>
 
           <div className="mb-4">
-            <p className="text-neumorphic-muted">
-              Exigence: <span className="text-neumorphic font-medium">{exigence.titre}</span>
+            <p className="text-muted">
+              Exigence: <span className="text-gray-800 font-medium">{exigence.titre}</span>
             </p>
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="flex items-center gap-2 text-neumorphic">
+              <div className="flex items-center gap-2 text-gray-600">
                 <span className="animate-spin">🌀</span>
                 <span>Génération en cours...</span>
               </div>
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-neumorphic-muted mb-4">
+              <p className="text-muted mb-4">
                 L&apos;IA a généré {suggestions.length} suggestions de Tests pour cette Exigence.
                 Sélectionnez celles que vous souhaitez ajouter.
               </p>
@@ -199,7 +184,7 @@ export default function TestAIGeneratorModal({ exigence, onClose, onGenerate }: 
                 {suggestions.map((suggestion, index) => (
                   <div
                     key={suggestion.id}
-                    className={`neumorphic-card p-4 ${selectedSuggestions[index] ? 'border-l-4 border-green-500' : ''}`}
+                    className={`p-4 border border-gray-200 rounded-lg ${selectedSuggestions[index] ? 'border-l-4 border-primary' : ''}`}
                   >
                     <div className="flex items-start gap-3">
                       <input
@@ -210,18 +195,23 @@ export default function TestAIGeneratorModal({ exigence, onClose, onGenerate }: 
                       />
                       <div className="flex-1">
                         <div className="flex justify-between items-start">
-                          <div className="font-medium text-neumorphic">{suggestion.titre}</div>
+                          <div className="font-medium text-gray-800">{suggestion.titre}</div>
                           <div className="flex gap-1">
-                            <span className={`px-2 py-1 rounded-full text-xs ${suggestion.type === 'Securite' ? 'bg-red-500/20 text-red-300' : suggestion.type === 'Integration' ? 'bg-indigo-500/20 text-indigo-300' : suggestion.type === 'E2E' ? 'bg-pink-500/20 text-pink-300' : suggestion.type === 'Performance' ? 'bg-teal-500/20 text-teal-300' : 'bg-cyan-500/20 text-cyan-300'}`}>
-                              {suggestion.type === 'Securite' ? 'Sécurité' : suggestion.type === 'Integration' ? 'Intégration' : suggestion.type}
+                            <span className="env-badge">
+                              {getTypeDisplay(suggestion.type)}
                             </span>
-                            <span className={`px-2 py-1 rounded-full text-xs ${suggestion.priorite === 'Critique' ? 'bg-red-500/20 text-red-300' : suggestion.priorite === 'Elevee' ? 'bg-orange-500/20 text-orange-300' : suggestion.priorite === 'Moyenne' ? 'bg-yellow-500/20 text-yellow-300' : 'bg-green-500/20 text-green-300'}`}>
-                              {suggestion.priorite === 'Elevee' ? 'Élevée' : suggestion.priorite}
+                            <span className={`env-badge ${
+                              suggestion.priorite === 'Critique' ? 'bg-error-light text-error' :
+                              suggestion.priorite === 'Elevee' ? 'bg-warning-light text-warning' :
+                              suggestion.priorite === 'Moyenne' ? 'bg-gray-200 text-gray-600' :
+                              'bg-success-light text-success'
+                            }`}>
+                              {getPrioriteDisplay(suggestion.priorite)}
                             </span>
                           </div>
                         </div>
-                        <div className="text-sm text-neumorphic-muted mt-1">{suggestion.description}</div>
-                        <div className="text-xs text-neumorphic-muted mt-1">
+                        <div className="text-sm text-muted mt-1">{suggestion.description}</div>
+                        <div className="text-xs text-muted mt-1">
                           {suggestion.isAutomatisable ? '✅ Automatisable' : '❌ Manuel'}
                         </div>
                       </div>
@@ -233,13 +223,13 @@ export default function TestAIGeneratorModal({ exigence, onClose, onGenerate }: 
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={handleClose}
-                  className="neumorphic-button px-6 py-2 bg-gray-500/20 hover:bg-gray-500/40 text-neumorphic-muted"
+                  className="btn btn-secondary"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={handleGenerate}
-                  className="neumorphic-button px-6 py-2 bg-green-500/20 hover:bg-green-500/40 text-green-300"
+                  className="btn btn-primary"
                 >
                   ✅ Générer les Tests sélectionnés
                 </button>

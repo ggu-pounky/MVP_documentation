@@ -5,6 +5,7 @@ import type { Feature, FeatureFormData } from '@/types/feature'
 import { priorites, statutsFeature } from '@/types/feature'
 import type { Besoin } from '@/types/besoin'
 import type { Epic } from '@/types/epic'
+import { getStatutDisplay, getPrioriteDisplay } from '@/utils/statutDisplay'
 
 type FeatureFormProps = {
   feature?: Feature | null
@@ -67,39 +68,15 @@ export default function FeatureForm({ feature, besoins, epics = [], onSubmit, on
     }
   }
 
-  const getPrioriteDisplay = (priorite: string): string => {
-    switch (priorite) {
-      case 'Elevee':
-        return 'Élevée'
-      default:
-        return priorite
-    }
-  }
-
-  const getStatutDisplay = (statut: string): string => {
-    switch (statut) {
-      case 'A faire':
-        return 'À faire'
-      case 'En cours':
-        return 'En cours'
-      case 'Termine':
-        return 'Terminé'
-      case 'Annule':
-        return 'Annulé'
-      default:
-        return statut
-    }
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="w-full space-y-4">
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-neumorphic-muted">Besoin *</label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="form-field">
+        <label htmlFor="besoinId">Besoin *</label>
         <select
+          id="besoinId"
           value={besoinId}
           onChange={(e) => setBesoinId(e.target.value)}
           required
-          className="neumorphic-input w-full p-3 rounded-lg"
           disabled={!!feature}
         >
           <option value="">-- Sélectionnez un besoin --</option>
@@ -112,12 +89,12 @@ export default function FeatureForm({ feature, besoins, epics = [], onSubmit, on
       </div>
 
       {epicsForSelectedBesoin.length > 0 && (
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-neumorphic-muted">EPIC</label>
+        <div className="form-field">
+          <label htmlFor="epicId">EPIC</label>
           <select
+            id="epicId"
             value={epicId || ''}
             onChange={(e) => setEpicId(e.target.value || null)}
-            className="neumorphic-input w-full p-3 rounded-lg"
           >
             <option value="">-- Aucune EPIC --</option>
             {epicsForSelectedBesoin.map((epic) => (
@@ -129,35 +106,35 @@ export default function FeatureForm({ feature, besoins, epics = [], onSubmit, on
         </div>
       )}
 
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-neumorphic-muted">Titre *</label>
+      <div className="form-field">
+        <label htmlFor="titre">Titre *</label>
         <input
+          id="titre"
           type="text"
           value={titre}
           onChange={(e) => setTitre(e.target.value)}
           required
-          className="neumorphic-input w-full p-3 rounded-lg"
           placeholder="Entrez le titre de la Feature"
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-neumorphic-muted">Description</label>
+      <div className="form-field">
+        <label htmlFor="description">Description</label>
         <textarea
+          id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="neumorphic-input w-full p-3 rounded-lg"
-          rows={4}
           placeholder="Décrivez la Feature (optionnel)"
+          rows={4}
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-neumorphic-muted">Priorité</label>
+      <div className="form-field">
+        <label htmlFor="priorite">Priorité</label>
         <select
+          id="priorite"
           value={priorite}
           onChange={(e) => setPriorite(e.target.value as 'Faible' | 'Moyenne' | 'Elevee' | 'Critique')}
-          className="neumorphic-input w-full p-3 rounded-lg"
         >
           {priorites.map((p) => (
             <option key={p} value={p}>
@@ -167,12 +144,12 @@ export default function FeatureForm({ feature, besoins, epics = [], onSubmit, on
         </select>
       </div>
 
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-neumorphic-muted">Statut</label>
+      <div className="form-field">
+        <label htmlFor="statut">Statut</label>
         <select
+          id="statut"
           value={statut}
           onChange={(e) => setStatut(e.target.value as 'A faire' | 'En cours' | 'Termine' | 'Annule')}
-          className="neumorphic-input w-full p-3 rounded-lg"
         >
           {statutsFeature.map((s) => (
             <option key={s} value={s}>
@@ -182,25 +159,18 @@ export default function FeatureForm({ feature, besoins, epics = [], onSubmit, on
         </select>
       </div>
 
-      <div className="flex gap-2 pt-4">
-        <button
-          type="submit"
-          className="neumorphic-button px-6 py-2 bg-green-500/20 hover:bg-green-500/40 text-green-300 font-medium"
-        >
+      <div className="flex gap-3 pt-2">
+        <button type="submit" className="btn btn-primary">
           {feature ? 'Modifier' : 'Créer'}
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="neumorphic-button px-6 py-2 bg-gray-500/20 hover:bg-gray-500/40 text-neumorphic-muted font-medium"
-        >
+        <button type="button" onClick={onCancel} className="btn btn-secondary">
           Annuler
         </button>
         {onGenerateAI && !feature && selectedBesoin && (
           <button
             type="button"
             onClick={() => onGenerateAI(selectedBesoin)}
-            className="neumorphic-button px-6 py-2 bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 font-medium"
+            className="btn btn-primary"
           >
             Générer par IA
           </button>
@@ -209,7 +179,7 @@ export default function FeatureForm({ feature, besoins, epics = [], onSubmit, on
           <button
             type="button"
             onClick={handleImproveAI}
-            className="neumorphic-button px-6 py-2 bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 font-medium"
+            className="btn btn-secondary"
           >
             Amélioration IA
           </button>

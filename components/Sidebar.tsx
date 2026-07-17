@@ -70,7 +70,7 @@ export default function Sidebar() {
       const features = [
         {
           id: generateId(),
-          titre: 'Réservation d’une chambre',
+          titre: 'Réservation d\'une chambre',
           description: 'Permettre à un client de sélectionner une chambre et de confirmer une réservation.',
           priorite: 'Elevee',
           statut: 'A faire',
@@ -81,7 +81,7 @@ export default function Sidebar() {
         },
         {
           id: generateId(),
-          titre: 'Modification d’une réservation',
+          titre: 'Modification d\'une réservation',
           description: 'Permettre à un client de modifier les dates ou le type de chambre.',
           priorite: 'Elevee',
           statut: 'A faire',
@@ -92,8 +92,8 @@ export default function Sidebar() {
         },
         {
           id: generateId(),
-          titre: 'Annulation d’une réservation',
-          description: 'Permettre à un client d’annuler une réservation avec remboursement si applicable.',
+          titre: 'Annulation d\'une réservation',
+          description: 'Permettre à un client d\'annuler une réservation avec remboursement si applicable.',
           priorite: 'Elevee',
           statut: 'A faire',
           besoinId: besoin.id,
@@ -152,7 +152,7 @@ export default function Sidebar() {
         {
           id: generateId(),
           titre: 'Sélection de chambre',
-          description: 'L’utilisateur doit pouvoir sélectionner une chambre parmi celles disponibles.',
+          description: 'L\'utilisateur doit pouvoir sélectionner une chambre parmi celles disponibles.',
           type: 'Fonctionnelle',
           statut: 'A faire',
           featureId: features[0].id,
@@ -162,7 +162,7 @@ export default function Sidebar() {
         {
           id: generateId(),
           titre: 'Confirmation de réservation',
-          description: 'L’utilisateur doit recevoir une confirmation par email après réservation.',
+          description: 'L\'utilisateur doit recevoir une confirmation par email après réservation.',
           type: 'Fonctionnelle',
           statut: 'A faire',
           featureId: features[0].id,
@@ -196,7 +196,7 @@ export default function Sidebar() {
         {
           id: generateId(),
           titre: 'Test de sélection de chambre',
-          description: 'Vérifier que l’utilisateur peut sélectionner une chambre disponible.',
+          description: 'Vérifier que l\'utilisateur peut sélectionner une chambre disponible.',
           type: 'Unitaire',
           statut: 'A faire',
           exigenceId: exigences[0].id,
@@ -209,7 +209,7 @@ export default function Sidebar() {
         {
           id: generateId(),
           titre: 'Test de confirmation email',
-          description: 'Vérifier que l’email de confirmation est envoyé après réservation.',
+          description: 'Vérifier que l\'email de confirmation est envoyé après réservation.',
           type: 'Integration',
           statut: 'A faire',
           exigenceId: exigences[1].id,
@@ -260,131 +260,112 @@ export default function Sidebar() {
   }
 
   return (
-    <div className={`neumorphic-sidebar w-64 min-h-screen p-4 transition-all duration-300 ${!isExpanded ? 'w-16' : ''}`}>
-      <div className="flex flex-col h-full">
-        {/* Logo / Toggle */}
-        <div className="flex items-center justify-between mb-8">
-          {isExpanded && (
-            <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-neumorphic">📋 MVP Docs</span>
-            </div>
-          )}
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="neumorphic-button p-2 rounded-lg"
-          >
-            <span>{isExpanded ? '◀' : '▶'}</span>
-          </button>
+    <div className={`sidebar ${!isExpanded ? 'collapsed' : ''}`}>
+      <div className="sidebar-content">
+        {/* Logo */}
+        <div className="logo">
+          <div className="logo-icon">M</div>
+          {isExpanded && <span>MVP_Documentation</span>}
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 space-y-2">
+        {/* Menu */}
+        <nav className="menu">
           <Link
             href="/"
-            className={`neumorphic-link block p-3 rounded-lg ${isActive('/') ? 'active' : ''}`}
+            className={`menu-item ${isActive('/') ? 'active' : ''}`}
           >
-            <span className="flex items-center gap-2">
-              <span>🎯</span>
-              {isExpanded && <span>Besoins</span>}
-            </span>
+            <span className="icon">📄</span>
+            {isExpanded && <span>Besoins</span>}
           </Link>
 
           <Link
             href="/epics"
-            className={`neumorphic-link block p-3 rounded-lg ${isActive('/epics') ? 'active' : ''}`}
+            className={`menu-item ${isActive('/epics') ? 'active' : ''}`}
           >
-            <span className="flex items-center gap-2">
-              <span>🏔️</span>
-              {isExpanded && <span>EPICS</span>}
-            </span>
+            <span className="icon">🏔️</span>
+            {isExpanded && <span>EPICS</span>}
           </Link>
 
           <Link
             href="/features"
-            className={`neumorphic-link block p-3 rounded-lg ${isActive('/features') ? 'active' : ''}`}
+            className={`menu-item ${isActive('/features') ? 'active' : ''}`}
           >
-            <span className="flex items-center gap-2">
-              <span>🔧</span>
-              {isExpanded && <span>Features</span>}
-            </span>
+            <span className="icon">🔧</span>
+            {isExpanded && <span>Features</span>}
           </Link>
 
           <Link
             href="/exigences"
-            className={`neumorphic-link block p-3 rounded-lg ${isActive('/exigences') ? 'active' : ''}`}
+            className={`menu-item ${isActive('/exigences') ? 'active' : ''}`}
           >
-            <span className="flex items-center gap-2">
-              <span>📋</span>
-              {isExpanded && <span>Exigences</span>}
-            </span>
+            <span className="icon">📋</span>
+            {isExpanded && <span>Exigences</span>}
           </Link>
 
           <Link
             href="/tests"
-            className={`neumorphic-link block p-3 rounded-lg ${isActive('/tests') ? 'active' : ''}`}
+            className={`menu-item ${isActive('/tests') ? 'active' : ''}`}
           >
-            <span className="flex items-center gap-2">
-              <span>🧪</span>
-              {isExpanded && <span>Tests</span>}
-            </span>
+            <span className="icon">🧪</span>
+            {isExpanded && <span>Tests</span>}
           </Link>
 
           <Link
             href="/code"
-            className={`neumorphic-link block p-3 rounded-lg ${isActive('/code') ? 'active' : ''}`}
+            className={`menu-item ${isActive('/code') ? 'active' : ''}`}
           >
-            <span className="flex items-center gap-2">
-              <span>💻</span>
-              {isExpanded && <span>Code</span>}
-            </span>
+            <span className="icon">💻</span>
+            {isExpanded && <span>Code</span>}
           </Link>
 
           <Link
             href="/prd"
-            className={`neumorphic-link block p-3 rounded-lg ${isActive('/prd') ? 'active' : ''}`}
+            className={`menu-item ${isActive('/prd') ? 'active' : ''}`}
           >
-            <span className="flex items-center gap-2">
-              <span>📄</span>
-              {isExpanded && <span>PRD</span>}
-            </span>
+            <span className="icon">📄</span>
+            {isExpanded && <span>PRD</span>}
           </Link>
 
           <Link
             href="/matrices"
-            className={`neumorphic-link block p-3 rounded-lg ${isActive('/matrices') ? 'active' : ''}`}
+            className={`menu-item ${isActive('/matrices') ? 'active' : ''}`}
           >
-            <span className="flex items-center gap-2">
-              <span>🔗</span>
-              {isExpanded && <span>Matrices</span>}
-            </span>
+            <span className="icon">🔗</span>
+            {isExpanded && <span>Matrices</span>}
           </Link>
         </nav>
 
         {/* Actions */}
-        <div className="space-y-2 pt-4 border-t border-neumorphic-border">
+        <div className="sidebar-actions">
           <button
             onClick={loadSampleData}
-            className="neumorphic-button w-full p-3 rounded-lg flex items-center justify-center gap-2"
+            className="menu-item"
           >
-            <span>📥</span>
-            {isExpanded && <span>Charger données exemple</span>}
+            <span className="icon">📥</span>
+            {isExpanded && <span>Charger données</span>}
           </button>
           <button
             onClick={clearAllData}
-            className="neumorphic-button w-full p-3 rounded-lg flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500/40"
+            className="menu-item"
           >
-            <span>🗑️</span>
+            <span className="icon">🗑️</span>
             {isExpanded && <span>Tout supprimer</span>}
           </button>
         </div>
       </div>
 
+      {/* Toggle button */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="sidebar-toggle"
+      >
+        {isExpanded ? '◀' : '▶'}
+      </button>
+
       {/* Notification */}
       {notification && (
         <div
-          className={`fixed bottom-4 left-4 neumorphic-card p-4 notification-slide-in z-50 ${
-            notification.type === 'success' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
-          }`}
+          className={`notification ${notification.type}`}
         >
           {notification.message}
         </div>

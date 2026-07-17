@@ -1,14 +1,22 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import DataTable from '@/components/DataTable'
 import TestForm from '@/components/TestForm'
-import TestList from '@/components/TestList'
 import TestAIGeneratorModal from '@/components/TestAIGeneratorModal'
 import AIImprovementModal from '@/components/AIImprovementModal'
 import type { Test, TestFormData } from '@/types/test'
 import type { Exigence } from '@/types/exigence'
 import type { Feature } from '@/types/feature'
 import type { Besoin } from '@/types/besoin'
+import { getStatutDisplay, getTypeDisplay, getPrioriteDisplay } from '@/utils/statutDisplay'
+
+type Suggestion = {
+  field: 'titre' | 'description'
+  oldValue: string
+  newValue: string
+  checked: boolean
+}
 
 type ExigenceInfo = {
   id: string
@@ -16,13 +24,6 @@ type ExigenceInfo = {
   featureTitre: string
   besoinTitre: string
   description?: string
-}
-
-type Suggestion = {
-  field: 'titre' | 'description'
-  oldValue: string
-  newValue: string
-  checked: boolean
 }
 
 export default function TestsPage() {
@@ -138,7 +139,6 @@ export default function TestsPage() {
   }
 
   const handleGenerateAI = (exigenceInfo: ExigenceInfo) => {
-    // Trouver l'exigence complète à partir de l'ID
     const exigence = exigences.find((e) => e.id === exigenceInfo.id)
     if (exigence) {
       setSelectedExigenceForAI(exigence)
@@ -185,8 +185,8 @@ export default function TestsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
-        <div className="neumorphic-card px-6 py-4">
-          <div className="flex items-center gap-2 text-neumorphic">
+        <div className="card">
+          <div className="flex items-center gap-2 text-gray-600">
             <span className="animate-spin">🌀</span>
             <span>Chargement...</span>
           </div>
@@ -208,76 +208,147 @@ export default function TestsPage() {
     }
   })
 
+  // Définir les colonnes du tableau
+  const columns = [
+    {
+      key: 'titre',
+      header: 'Titre',
+      sortable: true,
+      render: (test: Test) => (
+        <div className="font-medium text-gray-800">{test.titre}</div>
+      ),
+    },
+    {
+      key: 'exigence',
+      header: 'Exigence',
+      sortable: true,
+      render: (test: Test) => {
+        const exigence = exigences.find((e) => e.id === test.exigenceId)
+        return (
+          <div className="text-gray-600 text-sm">
+            {exigence?.titre || 'Inconnu'}
+          </div>
+        )
+      },
+    },
+    {
+      key: 'type',
+      header: 'Type',
+      sortable: true,
+      render: (test: Test) => (
+        <span className="env-badge">
+          {getTypeDisplay(test.type)}
+        </span>
+      ),
+    },
+    {
+      key: 'priorite',
+      header: 'Priorité',
+      sortable: true,
+      render: (test: Test) => (
+        <span className={`env-badge ${
+          test.priorite === 'Critique' ? 'bg-error-light text-error' :
+          test.priorite === 'Elevee' ? 'bg-warning-light text-warning' :
+          test.priorite === 'Moyenne' ? 'bg-gray-200 text-gray-600' :
+          'bg-success-light text-success'
+        }`}>
+          {getPrioriteDisplay(test.priorite)}
+        </span>
+      ),
+    },
+    {
+      key: 'statut',
+      header: 'Statut',
+      sortable: true,
+      render: (test: Test) => (
+        <span className={`status-badge in-table ${
+          test.statut === 'Termine' || test.statut === 'Valide' ? 'ready' :
+          test.statut === 'En cours' ? 'processing' :
+          test.statut === 'Annule' ? 'error' :
+          'canceled'
+        }`}>
+          {getStatutDisplay(test.statut)}
+        </span>
+      ),
+    },
+    {
+      key: 'tnr',
+      header: 'TNR',
+      sortable: false,
+      render: (test: Test) => (
+        <div className="text-center">
+          {test.isTNR ? '✅' : '❌'}
+        </div>
+      ),
+    },
+    {
+      key: 'automatisable',
+      header: 'Auto',
+      sortable: false,
+      render: (test: Test) => (
+        <div className="text-center">
+          {test.isAutomatisable ? '✅' : '❌'}
+        </div>
+      ),
+    },
+  ]
+
   return (
     <div className="space-y-6">
-      <div className="neumorphic-card p-6">
-        <h1 className="text-2xl font-bold text-neumorphic mb-2">🧪 Gestion des Tests</h1>
-        <p className="text-neumorphic-muted">Créez et gérez les tests pour vos Exigences</p>
-      </div>
-
+      {/* Notification */}
       {notification && (
-        <div
-          className={`neumorphic-card p-4 notification-slide-in ${
-            notification.type === 'success' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
-          }`}
-        >
+        <div className={`notification ${notification.type}`}>
           {notification.message}
         </div>
       )}
 
+      {/* Formulaire */}
+      {showForm && (
+        <div className="form-container">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+            {editingTest ? 'Modifier le Test' : 'Créer un nouveau Test'}
+          </h2>
+          <TestForm
+            test={editingTest}
+            exigences={exigencesWithInfo}
+            onSubmit={handleSubmit}
+            onCancel={() => {
+              setShowForm(false)
+              setEditingTest(null)
+            }}
+            onGenerateAI={handleGenerateAI}
+            onImproveAI={handleImproveAI}
+          />
+        </div>
+      )}
+
+      {/* Tableau des Tests */}
       {exigences.length === 0 ? (
-        <div className="neumorphic-card p-6 text-center">
-          <p className="text-neumorphic-muted mb-4">
-            ⚠️ Vous devez d'abord créer une Exigence avant de pouvoir ajouter des Tests.
-          </p>
-          <a href="/exigences" className="neumorphic-button px-6 py-2 inline-block">
-            Aller aux Exigences
-          </a>
+        <div className="card">
+          <div className="text-center py-8">
+            <p className="text-muted mb-4">
+              ⚠️ Vous devez d'abord créer une Exigence avant de pouvoir ajouter des Tests.
+            </p>
+            <a href="/exigences" className="btn btn-primary">
+              Aller aux Exigences
+            </a>
+          </div>
         </div>
       ) : (
-        <>
-          <button
-            onClick={() => {
+        <div ref={listRef}>
+          <DataTable
+            data={tests}
+            columns={columns}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onAdd={() => {
               setEditingTest(null)
-              setShowForm(!showForm)
+              setShowForm(true)
             }}
-            className="neumorphic-button px-6 py-3 flex items-center gap-2"
-          >
-            <span>{showForm ? '❌' : '➕'}</span>
-            <span>{showForm ? 'Annuler' : 'Ajouter un Test'}</span>
-          </button>
-
-          {showForm && (
-            <div className="neumorphic-card p-6">
-              <h2 className="text-lg font-semibold text-neumorphic mb-4">
-                {editingTest ? 'Modifier le Test' : 'Créer un nouveau Test'}
-              </h2>
-              <TestForm
-                test={editingTest}
-                exigences={exigencesWithInfo}
-                onSubmit={handleSubmit}
-                onCancel={() => {
-                  setShowForm(false)
-                  setEditingTest(null)
-                }}
-                onGenerateAI={handleGenerateAI}
-                onImproveAI={handleImproveAI}
-              />
-            </div>
-          )}
-
-          <div ref={listRef} className="neumorphic-card p-6">
-            <h2 className="text-lg font-semibold text-neumorphic mb-4">
-              Liste des Tests ({tests.length})
-            </h2>
-            <TestList
-              tests={tests}
-              exigences={exigences}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          </div>
-        </>
+            title="Tests"
+            emptyMessage="Aucun Test enregistré. Cliquez sur 'Ajouter' pour commencer."
+          />
+        </div>
       )}
 
       <TestAIGeneratorModal
