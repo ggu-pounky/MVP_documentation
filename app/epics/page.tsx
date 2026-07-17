@@ -160,7 +160,7 @@ export default function EpicsPage() {
       <div className="flex items-center justify-center min-h-[200px]">
         <div className="card">
           <div className="flex items-center gap-2 text-gray-600">
-            <span className="animate-spin">🌀</span>
+            <span className="animate-spin">🌐</span>
             <span>Chargement...</span>
           </div>
         </div>
@@ -168,7 +168,7 @@ export default function EpicsPage() {
     )
   }
 
-  // Définir les colonnes du tableau
+  // Définir les colonnes du tableau (sans la colonne "Besoin")
   const columns = [
     {
       key: 'titre',
@@ -177,19 +177,6 @@ export default function EpicsPage() {
       render: (epic: Epic) => (
         <div className="font-medium text-gray-800">{epic.titre}</div>
       ),
-    },
-    {
-      key: 'besoin',
-      header: 'Besoin',
-      sortable: true,
-      render: (epic: Epic) => {
-        const besoin = besoins.find((b) => b.id === epic.besoinId)
-        return (
-          <div className="text-gray-600 text-sm">
-            {besoin?.titre || 'Inconnu'}
-          </div>
-        )
-      },
     },
     {
       key: 'statut',
@@ -228,6 +215,11 @@ export default function EpicsPage() {
     },
   ]
 
+  // Filtrer les EPICS par besoin
+  const getEpicsByBesoin = (besoinId: string) => {
+    return epics.filter((epic) => epic.besoinId === besoinId)
+  }
+
   return (
     <div className="space-y-6">
       {/* Notification */}
@@ -257,7 +249,7 @@ export default function EpicsPage() {
         </div>
       )}
 
-      {/* Tableau des EPICS */}
+      {/* Tableaux des EPICS groupés par besoin */}
       {besoins.length === 0 ? (
         <div className="card">
           <div className="text-center py-8">
@@ -270,19 +262,50 @@ export default function EpicsPage() {
           </div>
         </div>
       ) : (
-        <div ref={listRef}>
-          <DataTable
-            data={epics}
-            columns={columns}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onAdd={() => {
-              setEditingEpic(null)
-              setShowForm(true)
-            }}
-            title="EPICS"
-            emptyMessage="Aucune EPIC enregistrée. Cliquez sur 'Ajouter' pour commencer."
-          />
+        <div ref={listRef} className="space-y-6">
+          {besoins.map((besoin) => {
+            const besoinEpics = getEpicsByBesoin(besoin.id)
+            
+            // Ne pas afficher les besoins sans EPICS
+            if (besoinEpics.length === 0) return null
+            
+            return (
+              <div key={besoin.id} className="space-y-2">
+                <h2 className="text-xl font-bold text-gray-800 border-b pb-2">
+                  {besoin.titre}
+                </h2>
+                <DataTable
+                  data={besoinEpics}
+                  columns={columns}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  onAdd={() => {
+                    setEditingEpic(null)
+                    setShowForm(true)
+                  }}
+                  title="EPICS"
+                  emptyMessage="Aucune EPIC enregistrée pour ce besoin. Cliquez sur 'Ajouter' pour commencer."
+                />
+              </div>
+            )
+          })}
+          
+          {/* Afficher un message si aucun besoin n'a d'EPICS */}
+          {besoins.every((besoin) => getEpicsByBesoin(besoin.id).length === 0) && (
+            <div className="card">
+              <div className="text-center py-8">
+                <p className="text-muted">
+                  Aucune EPIC enregistrée. Cliquez sur "Ajouter" pour commencer.
+                </p>
+                <button onClick={() => {
+                  setEditingEpic(null)
+                  setShowForm(true)
+                }} className="btn btn-primary mt-4">
+                  Ajouter une EPIC
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
