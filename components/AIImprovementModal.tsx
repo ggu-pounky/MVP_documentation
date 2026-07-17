@@ -10,15 +10,102 @@ type Suggestion = {
 }
 
 type AIImprovementModalProps = {
-  title: string
-  suggestions: Suggestion[]
+  isOpen: boolean
   onClose: () => void
-  onApply: (selectedSuggestions: Suggestion[]) => void
+  item: any | null
+  itemType: string
+  onGetSuggestions: (suggestions: Suggestion[]) => void
+  onApply: () => void
+  suggestions: Suggestion[]
 }
 
-export default function AIImprovementModal({ title, suggestions, onClose, onApply }: AIImprovementModalProps) {
-  const [checkedSuggestions, setCheckedSuggestions] = useState<Suggestion[]>(suggestions)
+// Générer des suggestions d'amélioration basées sur l'item
+const generateImprovementSuggestions = (item: any, itemType: string): Suggestion[] => {
+  if (!item) return []
+
+  const suggestions: Suggestion[] = []
+
+  // Suggestions pour le titre
+  if (item.titre) {
+    suggestions.push({
+      field: 'titre',
+      oldValue: item.titre,
+      newValue: `Amélioration: ${item.titre}`,
+      checked: false,
+    })
+  }
+
+  // Suggestions pour la description
+  if (item.description) {
+    suggestions.push({
+      field: 'description',
+      oldValue: item.description,
+      newValue: `${item.description} (amélioré par IA)`,
+      checked: false,
+    })
+  }
+
+  // Suggestions spécifiques par type
+  switch (itemType) {
+    case 'EPIC':
+      suggestions.push({
+        field: 'description',
+        oldValue: item.description || '',
+        newValue: `EPIC: ${item.titre}. ${item.description || 'Description détaillée à ajouter.'}`,
+        checked: true,
+      })
+      break
+    case 'Feature':
+      suggestions.push({
+        field: 'titre',
+        oldValue: item.titre,
+        newValue: `Feature: ${item.titre}`,
+        checked: true,
+      })
+      break
+    case 'Exigence':
+      suggestions.push({
+        field: 'titre',
+        oldValue: item.titre,
+        newValue: `Exigence: ${item.titre}`,
+        checked: true,
+      })
+      break
+    case 'Test':
+      suggestions.push({
+        field: 'titre',
+        oldValue: item.titre,
+        newValue: `Test: ${item.titre}`,
+        checked: true,
+      })
+      break
+  }
+
+  return suggestions
+}
+
+export default function AIImprovementModal({
+  isOpen,
+  onClose,
+  item,
+  itemType,
+  onGetSuggestions,
+  onApply,
+  suggestions: externalSuggestions,
+}: AIImprovementModalProps) {
+  const [checkedSuggestions, setCheckedSuggestions] = useState<Suggestion[]>(externalSuggestions)
   const modalRef = useRef<HTMLDivElement>(null)
+
+  // Mettre à jour les suggestions lorsque l'item change
+  useEffect(() => {
+    if (item && externalSuggestions.length === 0) {
+      const generated = generateImprovementSuggestions(item, itemType)
+      onGetSuggestions(generated)
+      setCheckedSuggestions(generated)
+    } else if (externalSuggestions.length > 0) {
+      setCheckedSuggestions(externalSuggestions)
+    }
+  }, [item, itemType, externalSuggestions, onGetSuggestions])
 
   // Gérer la sélection/désélection d'une suggestion
   const toggleSuggestion = useCallback((index: number) => {
@@ -34,8 +121,7 @@ export default function AIImprovementModal({ title, suggestions, onClose, onAppl
 
   // Appliquer les suggestions sélectionnées
   const handleApply = () => {
-    const selected = checkedSuggestions.filter((s) => s.checked)
-    onApply(selected)
+    onApply()
     onClose()
   }
 
@@ -50,134 +136,106 @@ export default function AIImprovementModal({ title, suggestions, onClose, onAppl
     )
   }
 
-  // Empêcher la propagation des clics vers le fond
-  const handleModalClick = (e: React.MouseEvent) => {
-    if (e.target === modalRef.current) {
-      onClose()
-    }
-  }
-
-  // Gérer le clic sur le checkbox uniquement
-  const handleCheckboxChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
-    e.stopPropagation()
-    toggleSuggestion(index)
-  }
-
-  // Gérer le clic sur la ligne (sélection par clic sur la ligne)
-  const handleRowClick = (index: number, e: React.MouseEvent) => {
-    // Ne pas déclencher si le clic vient du checkbox ou de ses enfants
-    if ((e.target as HTMLElement).closest('input[type="checkbox"]')) {
-      return
-    }
-    toggleSuggestion(index)
-  }
-
-  // Fermer avec la touche Escape
+  // Fermer le modal en cliquant à l'extérieur
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
         onClose()
       }
     }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isOpen, onClose])
+
+  if (!isOpen) return null
 
   return (
-    <div
-      className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4"
-      onClick={handleModalClick}
-    >
-      <div
-        ref={modalRef}
-        className="neumorphic-card max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="neumorphic-card max-w-2xl w-full max-h-[90vh] overflow-y-auto" ref={modalRef}>
         <div className="p-6">
-          {/* En-tête */}
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-neumorphic">Suggestions d'amélioration IA</h2>
+            <h2 className="text-xl font-bold text-neumorphic">🤖 Amélioration IA</h2>
             <button
               onClick={onClose}
-              className="text-neumorphic-muted hover:text-neumorphic text-2xl"
-              type="button"
+              className="neumorphic-button p-2 hover:bg-red-500/20"
             >
-              ×
+              ❌
             </button>
           </div>
 
-          {/* Description */}
-          <p className="text-sm text-neumorphic-muted mb-6">
-            L'IA a analysé <span className="font-medium text-neumorphic">{title}</span> et propose les améliorations suivantes. 
-            Cochez celles que vous souhaitez appliquer.
-          </p>
+          <div className="mb-4">
+            <p className="text-neumorphic-muted">
+              {itemType}: <span className="text-neumorphic font-medium">{item?.titre || 'Inconnu'}</span>
+            </p>
+          </div>
 
-          {/* Liste des suggestions */}
-          <div className="space-y-4 mb-6">
-            {checkedSuggestions.map((suggestion, index) => (
-              <div
-                key={index}
-                onClick={(e) => handleRowClick(index, e)}
-                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                  suggestion.checked 
-                    ? 'border-blue-500 bg-blue-900/20' 
-                    : 'border-neumorphic-border hover:border-neumorphic-highlight'
-                }`}
+          <div className="space-y-4">
+            <p className="text-neumorphic-muted mb-4">
+              L&apos;IA a généré {checkedSuggestions.length} suggestions d&apos;amélioration.
+              Sélectionnez celles que vous souhaitez appliquer.
+            </p>
+
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={toggleAll}
+                className="neumorphic-button px-4 py-2 text-sm"
               >
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    checked={suggestion.checked}
-                    onChange={(e) => handleCheckboxChange(index, e)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="mt-1 w-4 h-4 accent-blue-500 cursor-pointer"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium text-neumorphic-muted">
-                        {suggestion.field === 'titre' ? '📝 Titre' : '📄 Description'}
-                      </span>
-                    </div>
-                    <div className="text-sm text-neumorphic-muted line-through mb-1">
-                      Ancienne valeur : {suggestion.oldValue || '(vide)'}
-                    </div>
-                    <div className="font-medium text-neumorphic">
-                      Nouvelle valeur : {suggestion.newValue}
+                {checkedSuggestions.every((s) => s.checked) ? 'Désélectionner tout' : 'Tout sélectionner'}
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {checkedSuggestions.map((suggestion, index) => (
+                <div
+                  key={index}
+                  className={`neumorphic-card p-4 ${suggestion.checked ? 'border-l-4 border-green-500' : ''}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={suggestion.checked}
+                      onChange={() => toggleSuggestion(index)}
+                      className="mt-1 w-5 h-5"
+                    />
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start">
+                        <div className="font-medium text-neumorphic">
+                          {suggestion.field === 'titre' ? 'Titre' : 'Description'}
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs ${suggestion.checked ? 'bg-green-500/20 text-green-300' : 'bg-gray-500/20 text-gray-300'}`}>
+                          {suggestion.checked ? '✅ Sélectionné' : '❌ Non sélectionné'}
+                        </span>
+                      </div>
+                      <div className="text-sm text-neumorphic-muted mt-1">
+                        <strong>Ancienne valeur:</strong> {suggestion.oldValue || 'Aucune'}
+                      </div>
+                      <div className="text-sm text-neumorphic mt-1">
+                        <strong>Nouvelle valeur:</strong> {suggestion.newValue}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          {/* Boutons d'action */}
-          <div className="flex justify-between items-center">
-            <button
-              type="button"
-              onClick={toggleAll}
-              className="text-sm text-blue-400 hover:underline transition-colors"
-            >
-              {checkedSuggestions.every((s) => s.checked) ? 'Tout désélectionner' : 'Tout sélectionner'}
-            </button>
-            <div className="flex gap-2">
+            <div className="flex gap-3 mt-6">
               <button
                 onClick={onClose}
-                type="button"
-                className="px-4 py-2 bg-neumorphic-bg-light text-neumorphic-muted rounded hover:bg-neumorphic-border transition-colors"
+                className="neumorphic-button px-6 py-2 bg-gray-500/20 hover:bg-gray-500/40 text-neumorphic-muted"
               >
                 Annuler
               </button>
               <button
                 onClick={handleApply}
-                disabled={checkedSuggestions.filter((s) => s.checked).length === 0}
-                className={`px-4 py-2 rounded transition-colors ${
-                  checkedSuggestions.filter((s) => s.checked).length === 0
-                    ? 'bg-green-900/30 text-green-400 cursor-not-allowed'
-                    : 'bg-green-500 text-white hover:bg-green-600'
-                }`}
-                type="button"
+                className="neumorphic-button px-6 py-2 bg-green-500/20 hover:bg-green-500/40 text-green-300"
               >
-                Valider ({checkedSuggestions.filter((s) => s.checked).length} sélectionnée(s))
+                ✅ Appliquer les améliorations
               </button>
             </div>
           </div>

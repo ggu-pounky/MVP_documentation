@@ -10,24 +10,14 @@ type EpicFormProps = {
   besoins: Besoin[]
   onSubmit: (data: EpicFormData) => Promise<void>
   onCancel: () => void
-  onGenerateAI?: (besoin: Besoin) => void  // Pour la génération IA (création)
-  onImproveAI?: (epic: Epic) => void  // Pour l'amélioration IA (modification)
-}
-
-// Fonction pour générer une description IREB
-const generateIREBDescription = (titre: string): string => {
-  return `User Story: En tant qu'utilisateur, je veux ${titre.toLowerCase()}, afin de répondre à mes besoins.
-Critères d'acceptation:
-1. Le système doit permettre de gérer ${titre.toLowerCase()}.
-2. Les données doivent être validées avant toute opération.
-3. Une confirmation visuelle doit être affichée après chaque action.
-4. Les erreurs doivent être gérées et affichées clairement.`
+  onGenerateAI?: (besoin: Besoin) => void
+  onImproveAI?: (epic: Epic) => void
 }
 
 export default function EpicForm({ epic, besoins, onSubmit, onCancel, onGenerateAI, onImproveAI }: EpicFormProps) {
   const [titre, setTitre] = useState('')
   const [description, setDescription] = useState('')
-  const [statut, setStatut] = useState<'À faire' | 'En cours' | 'Terminé' | 'Annulé'>('À faire')
+  const [statut, setStatut] = useState<'A faire' | 'En cours' | 'Termine' | 'Annule'>('A faire')
   const [besoinId, setBesoinId] = useState('')
 
   useEffect(() => {
@@ -39,7 +29,7 @@ export default function EpicForm({ epic, besoins, onSubmit, onCancel, onGenerate
     } else {
       setTitre('')
       setDescription('')
-      setStatut('À faire')
+      setStatut('A faire')
       setBesoinId('')
     }
   }, [epic])
@@ -58,26 +48,39 @@ export default function EpicForm({ epic, besoins, onSubmit, onCancel, onGenerate
     })
   }
 
-  // Trouver le besoin sélectionné pour la génération IA
   const selectedBesoin = besoins.find((b) => b.id === besoinId)
 
-  // Gérer le clic sur "Amélioration IA"
   const handleImproveAI = () => {
     if (epic && onImproveAI) {
       onImproveAI(epic)
     }
   }
 
+  const getStatutDisplay = (statut: string): string => {
+    switch (statut) {
+      case 'A faire':
+        return 'À faire'
+      case 'En cours':
+        return 'En cours'
+      case 'Termine':
+        return 'Terminé'
+      case 'Annule':
+        return 'Annulé'
+      default:
+        return statut
+    }
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow mb-4">
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Besoin *</label>
+    <form onSubmit={handleSubmit} className="w-full space-y-4">
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-neumorphic-muted">Besoin *</label>
         <select
           value={besoinId}
           onChange={(e) => setBesoinId(e.target.value)}
           required
-          className="w-full p-2 border rounded"
-          disabled={!!epic} // Désactiver si on modifie une EPIC existante
+          className="neumorphic-input w-full p-3 rounded-lg"
+          disabled={!!epic}
         >
           <option value="">-- Sélectionnez un besoin --</option>
           {besoins.map((besoin) => (
@@ -88,72 +91,72 @@ export default function EpicForm({ epic, besoins, onSubmit, onCancel, onGenerate
         </select>
       </div>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Titre *</label>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-neumorphic-muted">Titre *</label>
         <input
           type="text"
           value={titre}
           onChange={(e) => setTitre(e.target.value)}
           required
-          className="w-full p-2 border rounded"
+          className="neumorphic-input w-full p-3 rounded-lg"
+          placeholder="Entrez le titre de l'EPIC"
         />
       </div>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Description</label>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-neumorphic-muted">Description</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full p-2 border rounded"
-          rows={3}
+          className="neumorphic-input w-full p-3 rounded-lg"
+          rows={4}
+          placeholder="Décrivez l'EPIC (optionnel)"
         />
       </div>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Statut</label>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-neumorphic-muted">Statut</label>
         <select
           value={statut}
-          onChange={(e) => setStatut(e.target.value as 'À faire' | 'En cours' | 'Terminé' | 'Annulé')}
-          className="w-full p-2 border rounded"
+          onChange={(e) => setStatut(e.target.value as 'A faire' | 'En cours' | 'Termine' | 'Annule')}
+          className="neumorphic-input w-full p-3 rounded-lg"
         >
           {statutsEpic.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {getStatutDisplay(s)}
             </option>
           ))}
         </select>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 pt-4">
         <button
           type="submit"
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+          className="neumorphic-button px-6 py-2 bg-green-500/20 hover:bg-green-500/40 text-green-300 font-medium"
         >
           {epic ? 'Modifier' : 'Créer'}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+          className="neumorphic-button px-6 py-2 bg-gray-500/20 hover:bg-gray-500/40 text-neumorphic-muted font-medium"
         >
           Annuler
         </button>
-        {/* Bouton Générer par IA (visible uniquement en mode création) */}
         {onGenerateAI && !epic && selectedBesoin && (
           <button
             type="button"
             onClick={() => onGenerateAI(selectedBesoin)}
-            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+            className="neumorphic-button px-6 py-2 bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 font-medium"
           >
             Générer par IA
           </button>
         )}
-        {/* Bouton Amélioration IA (visible uniquement en mode modification) */}
         {onImproveAI && epic && (
           <button
             type="button"
             onClick={handleImproveAI}
-            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+            className="neumorphic-button px-6 py-2 bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 font-medium"
           >
             Amélioration IA
           </button>

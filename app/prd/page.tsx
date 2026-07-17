@@ -1,404 +1,296 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import type { Besoin } from '@/types/besoin'
+import type { Epic } from '@/types/epic'
 import type { Feature } from '@/types/feature'
 import type { Exigence } from '@/types/exigence'
-import type { PRDEditableData } from '@/types/prd'
+import type { Test } from '@/types/test'
 
 export default function PRDPage() {
   const [besoins, setBesoins] = useState<Besoin[]>([])
+  const [epics, setEpics] = useState<Epic[]>([])
   const [features, setFeatures] = useState<Feature[]>([])
   const [exigences, setExigences] = useState<Exigence[]>([])
+  const [tests, setTests] = useState<Test[]>([])
   const [loading, setLoading] = useState(true)
-  const [editableData, setEditableData] = useState<PRDEditableData>({
-    titre: 'Product Requirements Document (PRD)',
-    description: 'Ce document décrit les exigences pour le produit en développement.',
-    objectifs: [
-      'Répondre aux besoins utilisateurs identifiés',
-      'Livrer une solution scalable et maintenable',
-      'Assurer une expérience utilisateur fluide',
-    ],
-    publicCible: 'Tous les utilisateurs finaux du produit',
-    hypotheses: [
-      'Les utilisateurs ont besoin d\'une solution simple pour gérer leurs tâches',
-      'La solution proposée résout un problème critique',
-    ],
-    metriquesSucces: [
-      'Taux d\'adoption de 80% dans les 3 premiers mois',
-      'Réduction de 50% du temps passé sur les tâches cibles',
-      'Score de satisfaction utilisateur > 4.5/5',
-    ],
-  })
-  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
-  const prdRef = useRef<HTMLDivElement>(null)
 
-  // Charger les données depuis localStorage
-  useEffect(() => {
+  const loadData = () => {
     const savedBesoins = localStorage.getItem('besoins')
+    const savedEpics = localStorage.getItem('epics')
     const savedFeatures = localStorage.getItem('features')
     const savedExigences = localStorage.getItem('exigences')
-    const savedPRDEditable = localStorage.getItem('prd_editable')
-
+    const savedTests = localStorage.getItem('tests')
     if (savedBesoins) setBesoins(JSON.parse(savedBesoins))
+    if (savedEpics) setEpics(JSON.parse(savedEpics))
     if (savedFeatures) setFeatures(JSON.parse(savedFeatures))
     if (savedExigences) setExigences(JSON.parse(savedExigences))
-    if (savedPRDEditable) setEditableData(JSON.parse(savedPRDEditable))
-
+    if (savedTests) setTests(JSON.parse(savedTests))
     setLoading(false)
+  }
+
+  useEffect(() => {
+    loadData()
+    const handleStorageChange = () => loadData()
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
   }, [])
 
-  // Sauvegarder les données modifiables dans localStorage
-  useEffect(() => {
-    if (!loading) {
-      localStorage.setItem('prd_editable', JSON.stringify(editableData))
-    }
-  }, [editableData, loading])
+  const getStats = () => {
+    const totalBesoins = besoins.length
+    const totalEpics = epics.length
+    const totalFeatures = features.length
+    const totalExigences = exigences.length
+    const totalTests = tests.length
 
-  // Afficher une notification temporaire
-  const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
-    setNotification({ message, type })
-    setTimeout(() => setNotification(null), 3000)
-  }
+    const completedBesoins = besoins.filter((b) => b.statut === 'Termine').length
+    const completedEpics = epics.filter((e) => e.statut === 'Termine').length
+    const completedFeatures = features.filter((f) => f.statut === 'Termine').length
+    const completedExigences = exigences.filter((e) => e.statut === 'Termine' || e.statut === 'Valide').length
+    const completedTests = tests.filter((t) => t.statut === 'Termine' || t.statut === 'Valide').length
 
-  // Générer le contenu du PRD
-  const generatePRDContent = () => {
-    // Organiser les données par Besoin → Features → Exigences
-    const besoinsWithFeatures = besoins.map((besoin) => {
-      const besoinFeatures = features.filter((f) => f.besoinId === besoin.id)
-      const featuresWithExigences = besoinFeatures.map((feature) => {
-        const featureExigences = exigences.filter((e) => e.featureId === feature.id)
-        return { feature, exigences: featureExigences }
-      })
-      return { besoin, features: featuresWithExigences }
-    })
+    const inProgressBesoins = besoins.filter((b) => b.statut === 'En cours').length
+    const inProgressEpics = epics.filter((e) => e.statut === 'En cours').length
+    const inProgressFeatures = features.filter((f) => f.statut === 'En cours').length
 
     return {
-      editableData,
-      besoinsWithFeatures,
+      total: {
+        besoins: totalBesoins,
+        epics: totalEpics,
+        features: totalFeatures,
+        exigences: totalExigences,
+        tests: totalTests,
+      },
+      completed: {
+        besoins: completedBesoins,
+        epics: completedEpics,
+        features: completedFeatures,
+        exigences: completedExigences,
+        tests: completedTests,
+      },
+      inProgress: {
+        besoins: inProgressBesoins,
+        epics: inProgressEpics,
+        features: inProgressFeatures,
+      },
     }
   }
 
-  // Télécharger le PRD en Markdown
-  const downloadPRD = () => {
-    const { editableData, besoinsWithFeatures } = generatePRDContent()
+  const stats = getStats()
 
-    let markdownContent = `# ${editableData.titre}\n\n`
-    markdownContent += `## Description\n${editableData.description}\n\n`
-
-    markdownContent += `## Objectifs\n`
-    editableData.objectifs.forEach((objectif, index) => {
-      markdownContent += `${index + 1}. ${objectif}\n`
-    })
-    markdownContent += '\n'
-
-    markdownContent += `## Public Cible\n${editableData.publicCible}\n\n`
-
-    markdownContent += `## Hypothèses\n`
-    editableData.hypotheses.forEach((hypothese, index) => {
-      markdownContent += `${index + 1}. ${hypothese}\n`
-    })
-    markdownContent += '\n'
-
-    markdownContent += `## Métriques de Succès\n`
-    editableData.metriquesSucces.forEach((metrique, index) => {
-      markdownContent += `${index + 1}. ${metrique}\n`
-    })
-    markdownContent += '\n'
-
-    markdownContent += `## Besoins, Features et Exigences\n\n`
-    besoinsWithFeatures.forEach(({ besoin, features: featuresWithExigences }) => {
-      markdownContent += `### ${besoin.titre}\n\n`
-      markdownContent += `**Statut:** ${besoin.statut}\n`
-      markdownContent += `**Description:** ${besoin.description || '-'}\n\n`
-
-      featuresWithExigences.forEach(({ feature, exigences: featureExigences }) => {
-        markdownContent += `#### Feature: ${feature.titre}\n\n`
-        markdownContent += `- **Priorité:** ${feature.priorite}\n`
-        markdownContent += `- **Statut:** ${feature.statut}\n`
-        markdownContent += `- **Description:** ${feature.description || '-'}\n\n`
-
-        if (featureExigences.length > 0) {
-          markdownContent += `**Exigences:**\n`
-          featureExigences.forEach((exigence) => {
-            markdownContent += `- [ ] ${exigence.titre} (Statut: ${exigence.statut})\n`
-            if (exigence.description) {
-              markdownContent += `  - ${exigence.description}\n`
-            }
-          })
-          markdownContent += '\n'
-        }
-      })
-    })
-
-    // Créer un blob et déclencher le téléchargement
-    const blob = new Blob([markdownContent], { type: 'text/markdown' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `PRD_${new Date().toISOString().split('T')[0]}.md`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-
-    showNotification('PRD téléchargé avec succès !')
+  const getProgressPercentage = (completed: number, total: number) => {
+    return total > 0 ? Math.round((completed / total) * 100) : 0
   }
 
-  // Mettre à jour un champ modifiable
-  const handleEditableChange = (field: keyof PRDEditableData, value: string | string[]) => {
-    setEditableData((prev) => ({
-      ...prev,
-      [field]: value,
-    }))
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <div className="neumorphic-card px-6 py-4">
+          <div className="flex items-center gap-2 text-neumorphic">
+            <span className="animate-spin">🌀</span>
+            <span>Chargement...</span>
+          </div>
+        </div>
+      </div>
+    )
   }
-
-  // Ajouter un élément à une liste
-  const handleAddToList = (field: 'objectifs' | 'hypotheses' | 'metriquesSucces') => {
-    setEditableData((prev) => ({
-      ...prev,
-      [field]: [...prev[field], ''],
-    }))
-  }
-
-  // Mettre à jour un élément d'une liste
-  const handleUpdateListItem = (field: 'objectifs' | 'hypotheses' | 'metriquesSucces', index: number, value: string) => {
-    setEditableData((prev) => {
-      const newList = [...prev[field]]
-      newList[index] = value
-      return { ...prev, [field]: newList }
-    })
-  }
-
-  // Supprimer un élément d'une liste
-  const handleRemoveFromList = (field: 'objectifs' | 'hypotheses' | 'metriquesSucces', index: number) => {
-    setEditableData((prev) => {
-      const newList = prev[field].filter((_, i) => i !== index)
-      return { ...prev, [field]: newList }
-    })
-  }
-
-  if (loading) return <div className="p-4">Chargement...</div>
-
-  const { besoinsWithFeatures } = generatePRDContent()
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Product Requirements Document (PRD)</h1>
-        <button
-          onClick={downloadPRD}
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-        >
-          📥 Télécharger PRD
-        </button>
+    <div className="space-y-6">
+      <div className="neumorphic-card p-6">
+        <h1 className="text-2xl font-bold text-neumorphic mb-2">📄 Product Requirements Document (PRD)</h1>
+        <p className="text-neumorphic-muted">Vue d&apos;ensemble du projet et progression</p>
       </div>
 
-      {/* Notification */}
-      {notification && (
-        <div
-          className={`mb-4 p-4 rounded ${
-            notification.type === 'success' ? 'bg-green-900/20 text-green-400' : 'bg-red-900/20 text-red-400'
-          }`}
-        >
-          {notification.message}
-        </div>
-      )}
-
-      <div ref={prdRef} className="neumorphic-card p-6 rounded ">
-        {/* Section Titre */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium mb-1">Titre du PRD</label>
-          <input
-            type="text"
-            value={editableData.titre}
-            onChange={(e) => handleEditableChange('titre', e.target.value)}
-            className="w-full p-2 border rounded"
-          />
-        </div>
-
-        {/* Section Description */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium mb-1">Description</label>
-          <textarea
-            value={editableData.description}
-            onChange={(e) => handleEditableChange('description', e.target.value)}
-            className="w-full p-2 border rounded"
-            rows={3}
-          />
-        </div>
-
-        {/* Section Objectifs */}
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-2">
-            <label className="text-sm font-medium">Objectifs</label>
-            <button
-              onClick={() => handleAddToList('objectifs')}
-              className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
-            >
-              + Ajouter
-            </button>
+      {/* Statistiques Générales */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="neumorphic-card p-4 text-center">
+          <div className="text-3xl font-bold text-neumorphic">{stats.total.besoins}</div>
+          <div className="text-neumorphic-muted text-sm">Besoins</div>
+          <div className="mt-2 h-2 bg-neumorphic-dark rounded-full">
+            <div
+              className="h-2 bg-green-500 rounded-full"
+              style={{ width: `${getProgressPercentage(stats.completed.besoins, stats.total.besoins)}%` }}
+            />
           </div>
-          <div className="space-y-2">
-            {editableData.objectifs.map((objectif, index) => (
-              <div key={index} className="flex gap-2">
-                <input
-                  type="text"
-                  value={objectif}
-                  onChange={(e) => handleUpdateListItem('objectifs', index, e.target.value)}
-                  className="flex-1 p-2 border rounded"
-                  placeholder={`Objectif ${index + 1}`}
-                />
-                <button
-                  onClick={() => handleRemoveFromList('objectifs', index)}
-                  className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
+          <div className="text-xs text-neumorphic-muted mt-1">
+            {getProgressPercentage(stats.completed.besoins, stats.total.besoins)}% complétés
           </div>
         </div>
 
-        {/* Section Public Cible */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium mb-1">Public Cible</label>
-          <textarea
-            value={editableData.publicCible}
-            onChange={(e) => handleEditableChange('publicCible', e.target.value)}
-            className="w-full p-2 border rounded"
-            rows={2}
-          />
-        </div>
-
-        {/* Section Hypothèses */}
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-2">
-            <label className="text-sm font-medium">Hypothèses</label>
-            <button
-              onClick={() => handleAddToList('hypotheses')}
-              className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
-            >
-              + Ajouter
-            </button>
+        <div className="neumorphic-card p-4 text-center">
+          <div className="text-3xl font-bold text-neumorphic">{stats.total.epics}</div>
+          <div className="text-neumorphic-muted text-sm">EPICS</div>
+          <div className="mt-2 h-2 bg-neumorphic-dark rounded-full">
+            <div
+              className="h-2 bg-green-500 rounded-full"
+              style={{ width: `${getProgressPercentage(stats.completed.epics, stats.total.epics)}%` }}
+            />
           </div>
-          <div className="space-y-2">
-            {editableData.hypotheses.map((hypothese, index) => (
-              <div key={index} className="flex gap-2">
-                <input
-                  type="text"
-                  value={hypothese}
-                  onChange={(e) => handleUpdateListItem('hypotheses', index, e.target.value)}
-                  className="flex-1 p-2 border rounded"
-                  placeholder={`Hypothèse ${index + 1}`}
-                />
-                <button
-                  onClick={() => handleRemoveFromList('hypotheses', index)}
-                  className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
+          <div className="text-xs text-neumorphic-muted mt-1">
+            {getProgressPercentage(stats.completed.epics, stats.total.epics)}% complétés
           </div>
         </div>
 
-        {/* Section Métriques de Succès */}
-        <div className="mb-6">
-          <div className="flex justify-between items-center mb-2">
-            <label className="text-sm font-medium">Métriques de Succès</label>
-            <button
-              onClick={() => handleAddToList('metriquesSucces')}
-              className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
-            >
-              + Ajouter
-            </button>
+        <div className="neumorphic-card p-4 text-center">
+          <div className="text-3xl font-bold text-neumorphic">{stats.total.features}</div>
+          <div className="text-neumorphic-muted text-sm">Features</div>
+          <div className="mt-2 h-2 bg-neumorphic-dark rounded-full">
+            <div
+              className="h-2 bg-yellow-500 rounded-full"
+              style={{ width: `${getProgressPercentage(stats.completed.features, stats.total.features)}%` }}
+            />
           </div>
-          <div className="space-y-2">
-            {editableData.metriquesSucces.map((metrique, index) => (
-              <div key={index} className="flex gap-2">
-                <input
-                  type="text"
-                  value={metrique}
-                  onChange={(e) => handleUpdateListItem('metriquesSucces', index, e.target.value)}
-                  className="flex-1 p-2 border rounded"
-                  placeholder={`Métrique ${index + 1}`}
-                />
-                <button
-                  onClick={() => handleRemoveFromList('metriquesSucces', index)}
-                  className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
+          <div className="text-xs text-neumorphic-muted mt-1">
+            {getProgressPercentage(stats.completed.features, stats.total.features)}% complétés
           </div>
         </div>
 
-        {/* Section Besoins, Features et Exigences (non modifiable) */}
-        <div className="mt-8">
-          <h2 className="text-xl font-bold mb-4">Besoins, Features et Exigences</h2>
-          <p className="text-sm text-neumorphic-muted mb-4">
-            Ces données sont générées automatiquement à partir des Besoins, Features et Exigences existants.
-          </p>
+        <div className="neumorphic-card p-4 text-center">
+          <div className="text-3xl font-bold text-neumorphic">{stats.total.exigences}</div>
+          <div className="text-neumorphic-muted text-sm">Exigences</div>
+          <div className="mt-2 h-2 bg-neumorphic-dark rounded-full">
+            <div
+              className="h-2 bg-blue-500 rounded-full"
+              style={{ width: `${getProgressPercentage(stats.completed.exigences, stats.total.exigences)}%` }}
+            />
+          </div>
+          <div className="text-xs text-neumorphic-muted mt-1">
+            {getProgressPercentage(stats.completed.exigences, stats.total.exigences)}% complétés
+          </div>
+        </div>
 
-          {besoinsWithFeatures.length === 0 ? (
-            <div className="neumorphic-card p-4 rounded text-center text-neumorphic-muted">
-              <p>Aucun besoin, feature ou exigence enregistré.</p>
-              <p className="mt-2 text-sm">
-                Créez des besoins, features et exigences pour générer le contenu du PRD.
-              </p>
+        <div className="neumorphic-card p-4 text-center">
+          <div className="text-3xl font-bold text-neumorphic">{stats.total.tests}</div>
+          <div className="text-neumorphic-muted text-sm">Tests</div>
+          <div className="mt-2 h-2 bg-neumorphic-dark rounded-full">
+            <div
+              className="h-2 bg-purple-500 rounded-full"
+              style={{ width: `${getProgressPercentage(stats.completed.tests, stats.total.tests)}%` }}
+            />
+          </div>
+          <div className="text-xs text-neumorphic-muted mt-1">
+            {getProgressPercentage(stats.completed.tests, stats.total.tests)}% complétés
+          </div>
+        </div>
+      </div>
+
+      {/* Progression par Type */}
+      <div className="neumorphic-card p-6">
+        <h2 className="text-lg font-semibold text-neumorphic mb-4">Progression par Type</h2>
+        <div className="space-y-4">
+          <div>
+            <div className="flex justify-between mb-1">
+              <span className="text-neumorphic">Besoins</span>
+              <span className="text-neumorphic-muted">
+                {stats.completed.besoins}/{stats.total.besoins} ({getProgressPercentage(stats.completed.besoins, stats.total.besoins)}%)
+              </span>
             </div>
-          ) : (
-            <div className="space-y-6">
-              {besoinsWithFeatures.map(({ besoin, features: featuresWithExigences }) => (
-                <div key={besoin.id} className="border rounded-lg p-4">
-                  <h3 className="text-lg font-semibold mb-2">{besoin.titre}</h3>
-                  <p className="text-sm text-neumorphic-muted mb-2">
-                    <strong>Statut:</strong> {besoin.statut}
-                  </p>
-                  {besoin.description && (
-                    <p className="text-sm text-neumorphic-muted mb-4"><strong>Description:</strong> {besoin.description}</p>
-                  )}
-
-                  <h4 className="font-medium mt-4 mb-2">Features:</h4>
-                  {featuresWithExigences.length === 0 ? (
-                    <p className="text-sm text-neumorphic-muted italic">Aucune feature pour ce besoin.</p>
-                  ) : (
-                    <div className="space-y-4 pl-4">
-                      {featuresWithExigences.map(({ feature, exigences: featureExigences }) => (
-                        <div key={feature.id} className="border-l-2 border-gray-200 pl-4">
-                          <h5 className="font-medium">{feature.titre}</h5>
-                          <p className="text-sm text-neumorphic-muted">
-                            <strong>Priorité:</strong> {feature.priorite} | <strong>Statut:</strong> {feature.statut}
-                          </p>
-                          {feature.description && (
-                            <p className="text-sm text-neumorphic-muted mt-1">{feature.description}</p>
-                          )}
-
-                          <h6 className="font-medium mt-2 mb-1">Exigences:</h6>
-                          {featureExigences.length === 0 ? (
-                            <p className="text-sm text-neumorphic-muted italic">Aucune exigence pour cette feature.</p>
-                          ) : (
-                            <ul className="list-disc list-inside space-y-1 text-sm">
-                              {featureExigences.map((exigence) => (
-                                <li key={exigence.id}>
-                                  {exigence.titre} (<span className="text-neumorphic-muted">{exigence.statut}</span>)
-                                  {exigence.description && (
-                                    <p className="text-xs text-neumorphic-muted mt-1 pl-4">{exigence.description}</p>
-                                  )}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div className="h-4 bg-neumorphic-dark rounded-full">
+              <div
+                className="h-4 bg-green-500 rounded-full"
+                style={{ width: `${getProgressPercentage(stats.completed.besoins, stats.total.besoins)}%` }}
+              />
             </div>
-          )}
+          </div>
+
+          <div>
+            <div className="flex justify-between mb-1">
+              <span className="text-neumorphic">EPICS</span>
+              <span className="text-neumorphic-muted">
+                {stats.completed.epics}/{stats.total.epics} ({getProgressPercentage(stats.completed.epics, stats.total.epics)}%)
+              </span>
+            </div>
+            <div className="h-4 bg-neumorphic-dark rounded-full">
+              <div
+                className="h-4 bg-yellow-500 rounded-full"
+                style={{ width: `${getProgressPercentage(stats.completed.epics, stats.total.epics)}%` }}
+              />
+            </div>
+          </div>
+
+          <div>
+            <div className="flex justify-between mb-1">
+              <span className="text-neumorphic">Features</span>
+              <span className="text-neumorphic-muted">
+                {stats.completed.features}/{stats.total.features} ({getProgressPercentage(stats.completed.features, stats.total.features)}%)
+              </span>
+            </div>
+            <div className="h-4 bg-neumorphic-dark rounded-full">
+              <div
+                className="h-4 bg-blue-500 rounded-full"
+                style={{ width: `${getProgressPercentage(stats.completed.features, stats.total.features)}%` }}
+              />
+            </div>
+          </div>
+
+          <div>
+            <div className="flex justify-between mb-1">
+              <span className="text-neumorphic">Exigences</span>
+              <span className="text-neumorphic-muted">
+                {stats.completed.exigences}/{stats.total.exigences} ({getProgressPercentage(stats.completed.exigences, stats.total.exigences)}%)
+              </span>
+            </div>
+            <div className="h-4 bg-neumorphic-dark rounded-full">
+              <div
+                className="h-4 bg-purple-500 rounded-full"
+                style={{ width: `${getProgressPercentage(stats.completed.exigences, stats.total.exigences)}%` }}
+              />
+            </div>
+          </div>
+
+          <div>
+            <div className="flex justify-between mb-1">
+              <span className="text-neumorphic">Tests</span>
+              <span className="text-neumorphic-muted">
+                {stats.completed.tests}/{stats.total.tests} ({getProgressPercentage(stats.completed.tests, stats.total.tests)}%)
+              </span>
+            </div>
+            <div className="h-4 bg-neumorphic-dark rounded-full">
+              <div
+                className="h-4 bg-red-500 rounded-full"
+                style={{ width: `${getProgressPercentage(stats.completed.tests, stats.total.tests)}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Résumé Textuel */}
+      <div className="neumorphic-card p-6">
+        <h2 className="text-lg font-semibold text-neumorphic mb-4">Résumé du Projet</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-neumorphic">
+          <div>
+            <h3 className="font-medium mb-2">📊 Statistiques</h3>
+            <p>
+              <strong>Total:</strong> {stats.total.besoins + stats.total.epics + stats.total.features + stats.total.exigences + stats.total.tests} éléments
+            </p>
+            <p>
+              <strong>Complétés:</strong> {stats.completed.besoins + stats.completed.epics + stats.completed.features + stats.completed.exigences + stats.completed.tests} (
+              {getProgressPercentage(
+                stats.completed.besoins + stats.completed.epics + stats.completed.features + stats.completed.exigences + stats.completed.tests,
+                stats.total.besoins + stats.total.epics + stats.total.features + stats.total.exigences + stats.total.tests
+              )}%)
+            </p>
+            <p>
+              <strong>En cours:</strong> {stats.inProgress.besoins + stats.inProgress.epics + stats.inProgress.features}
+            </p>
+          </div>
+          <div>
+            <h3 className="font-medium mb-2">🎯 Prochaines Étapes</h3>
+            {stats.inProgress.besoins > 0 && (
+              <p>✅ {stats.inProgress.besoins} besoin(s) en cours de finalisation</p>
+            )}
+            {stats.inProgress.epics > 0 && (
+              <p>✅ {stats.inProgress.epics} EPIC(s) en cours de développement</p>
+            )}
+            {stats.inProgress.features > 0 && (
+              <p>✅ {stats.inProgress.features} feature(s) en cours d&apos;implémentation</p>
+            )}
+            {stats.inProgress.besoins === 0 && stats.inProgress.epics === 0 && stats.inProgress.features === 0 && (
+              <p className="text-green-400">🎉 Tous les éléments sont terminés ou à faire !</p>
+            )}
+          </div>
         </div>
       </div>
     </div>

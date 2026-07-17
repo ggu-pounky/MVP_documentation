@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import type { Test, TestFormData } from '@/types/test'
-import { prioritesTest, statutsTest } from '@/types/test'
+import { prioritesTest, statutsTest, typesTest } from '@/types/test'
 
 type ExigenceInfo = {
   id: string
@@ -27,8 +27,9 @@ export default function TestForm({ test, exigences, onSubmit, onCancel, onGenera
   const [exigenceId, setExigenceId] = useState('')
   const [isTNR, setIsTNR] = useState(false)
   const [isAutomatisable, setIsAutomatisable] = useState(false)
-  const [priorite, setPriorite] = useState<'Faible' | 'Moyenne' | '\u00c9lev\u00e9e' | 'Critique'>('Moyenne')
-  const [statut, setStatut] = useState<'\u00c0 faire' | 'En cours' | 'Termin\u00e9' | 'Annul\u00e9' | 'Valid\u00e9'>('\u00c0 faire')
+  const [priorite, setPriorite] = useState<'Faible' | 'Moyenne' | 'Elevee' | 'Critique'>('Moyenne')
+  const [statut, setStatut] = useState<'A faire' | 'En cours' | 'Termine' | 'Annule' | 'Valide'>('A faire')
+  const [type, setType] = useState<'Unitaire' | 'Integration' | 'E2E' | 'Performance' | 'Securite'>('Unitaire')
 
   useEffect(() => {
     if (test) {
@@ -39,6 +40,7 @@ export default function TestForm({ test, exigences, onSubmit, onCancel, onGenera
       setIsAutomatisable(test.isAutomatisable)
       setPriorite(test.priorite)
       setStatut(test.statut)
+      setType(test.type)
     } else {
       setTitre('')
       setDescription('')
@@ -46,14 +48,15 @@ export default function TestForm({ test, exigences, onSubmit, onCancel, onGenera
       setIsTNR(false)
       setIsAutomatisable(false)
       setPriorite('Moyenne')
-      setStatut('\u00c0 faire')
+      setStatut('A faire')
+      setType('Unitaire')
     }
   }, [test])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!exigenceId) {
-      alert('Veuillez s\u00e9lectionner une exigence')
+      alert('Veuillez sélectionner une exigence')
       return
     }
     await onSubmit({
@@ -64,143 +67,200 @@ export default function TestForm({ test, exigences, onSubmit, onCancel, onGenera
       isAutomatisable,
       priorite,
       statut,
+      type,
     })
   }
 
-  // Trouver l'exigence s\u00e9lectionn\u00e9e pour la g\u00e9n\u00e9ration IA
   const selectedExigence = exigences.find((e) => e.id === exigenceId)
 
-  // G\u00e9rer le clic sur "Am\u00e9lioration IA"
   const handleImproveAI = () => {
     if (test && onImproveAI) {
       onImproveAI(test)
     }
   }
 
+  const getTypeDisplay = (type: string): string => {
+    switch (type) {
+      case 'Securite':
+        return 'Sécurité'
+      case 'Integration':
+        return 'Intégration'
+      case 'E2E':
+        return 'E2E'
+      default:
+        return type
+    }
+  }
+
+  const getStatutDisplay = (statut: string): string => {
+    switch (statut) {
+      case 'A faire':
+        return 'À faire'
+      case 'En cours':
+        return 'En cours'
+      case 'Termine':
+        return 'Terminé'
+      case 'Annule':
+        return 'Annulé'
+      case 'Valide':
+        return 'Validé'
+      default:
+        return statut
+    }
+  }
+
+  const getPrioriteDisplay = (priorite: string): string => {
+    switch (priorite) {
+      case 'Elevee':
+        return 'Élevée'
+      default:
+        return priorite
+    }
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow mb-4">
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Exigence *</label>
+    <form onSubmit={handleSubmit} className="w-full space-y-4">
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-neumorphic-muted">Exigence *</label>
         <select
           value={exigenceId}
           onChange={(e) => setExigenceId(e.target.value)}
           required
-          className="w-full p-2 border rounded"
+          className="neumorphic-input w-full p-3 rounded-lg"
           disabled={!!test}
         >
-          <option value="">-- S\u00e9lectionnez une exigence --</option>
+          <option value="">-- Sélectionnez une Exigence --</option>
           {exigences.map((exigence) => (
             <option key={exigence.id} value={exigence.id}>
-              {exigence.besoinTitre} \u2192 {exigence.featureTitre} \u2192 {exigence.titre}
+              {exigence.besoinTitre} &gt; {exigence.featureTitre} &gt; {exigence.titre}
             </option>
           ))}
         </select>
       </div>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Titre *</label>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-neumorphic-muted">Titre *</label>
         <input
           type="text"
           value={titre}
           onChange={(e) => setTitre(e.target.value)}
           required
-          className="w-full p-2 border rounded"
+          className="neumorphic-input w-full p-3 rounded-lg"
+          placeholder="Entrez le titre du test"
         />
       </div>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Description</label>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-neumorphic-muted">Description</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full p-2 border rounded"
-          rows={3}
+          className="neumorphic-input w-full p-3 rounded-lg"
+          rows={4}
+          placeholder="Décrivez le test (optionnel)"
         />
       </div>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Priorit\u00e9</label>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-neumorphic-muted">Type</label>
+        <select
+          value={type}
+          onChange={(e) => setType(e.target.value as 'Unitaire' | 'Integration' | 'E2E' | 'Performance' | 'Securite')}
+          className="neumorphic-input w-full p-3 rounded-lg"
+        >
+          {typesTest.map((t) => (
+            <option key={t} value={t}>
+              {getTypeDisplay(t)}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-neumorphic-muted">Priorité</label>
         <select
           value={priorite}
-          onChange={(e) => setPriorite(e.target.value as 'Faible' | 'Moyenne' | '\u00c9lev\u00e9e' | 'Critique')}
-          className="w-full p-2 border rounded"
+          onChange={(e) => setPriorite(e.target.value as 'Faible' | 'Moyenne' | 'Elevee' | 'Critique')}
+          className="neumorphic-input w-full p-3 rounded-lg"
         >
           {prioritesTest.map((p) => (
             <option key={p} value={p}>
-              {p}
+              {getPrioriteDisplay(p)}
             </option>
           ))}
         </select>
       </div>
 
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-1">Statut</label>
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-neumorphic-muted">Statut</label>
         <select
           value={statut}
-          onChange={(e) => setStatut(e.target.value as '\u00c0 faire' | 'En cours' | 'Termin\u00e9' | 'Annul\u00e9' | 'Valid\u00e9')}
-          className="w-full p-2 border rounded"
+          onChange={(e) => setStatut(e.target.value as 'A faire' | 'En cours' | 'Termine' | 'Annule' | 'Valide')}
+          className="neumorphic-input w-full p-3 rounded-lg"
         >
           {statutsTest.map((s) => (
             <option key={s} value={s}>
-              {s}
+              {getStatutDisplay(s)}
             </option>
           ))}
         </select>
       </div>
 
-      <div className="mb-4 flex gap-6">
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={isTNR}
-            onChange={(e) => setIsTNR(e.target.checked)}
-            className="w-4 h-4"
-          />
-          <span className="text-sm font-medium">TNR possible</span>
-        </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={isAutomatisable}
-            onChange={(e) => setIsAutomatisable(e.target.checked)}
-            className="w-4 h-4"
-          />
-          <span className="text-sm font-medium">\u00c0 automatiser</span>
-        </label>
+      <div className="grid grid-cols-2 gap-4 pt-2">
+        <div className="space-y-2">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={isTNR}
+              onChange={(e) => setIsTNR(e.target.checked)}
+              className="w-4 h-4"
+            />
+            <span className="text-sm text-neumorphic-muted">Test de Non-Régression (TNR)</span>
+          </label>
+        </div>
+        <div className="space-y-2">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={isAutomatisable}
+              onChange={(e) => setIsAutomatisable(e.target.checked)}
+              className="w-4 h-4"
+            />
+            <span className="text-sm text-neumorphic-muted">Automatisable</span>
+          </label>
+        </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 pt-4">
         <button
           type="submit"
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+          className="neumorphic-button px-6 py-2 bg-green-500/20 hover:bg-green-500/40 text-green-300 font-medium"
         >
-          {test ? 'Modifier' : 'Cr\u00e9er'}
+          {test ? 'Modifier' : 'Créer'}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+          className="neumorphic-button px-6 py-2 bg-gray-500/20 hover:bg-gray-500/40 text-neumorphic-muted font-medium"
         >
           Annuler
         </button>
-        {/* Bouton G\u00e9n\u00e9rer par IA (visible si on cr\u00e9e un nouveau test et qu'une exigence est s\u00e9lectionn\u00e9e) */}
         {onGenerateAI && !test && selectedExigence && (
           <button
             type="button"
             onClick={() => onGenerateAI(selectedExigence)}
-            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+            className="neumorphic-button px-6 py-2 bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 font-medium"
           >
-            G\u00e9n\u00e9rer par IA
+            Générer par IA
           </button>
         )}
-        {/* Bouton Am\u00e9lioration IA (visible si on modifie un test) */}
         {onImproveAI && test && (
           <button
             type="button"
             onClick={handleImproveAI}
-            className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
+            className="neumorphic-button px-6 py-2 bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 font-medium"
           >
-            Am\u00e9lioration IA
+            Amélioration IA
           </button>
         )}
       </div>

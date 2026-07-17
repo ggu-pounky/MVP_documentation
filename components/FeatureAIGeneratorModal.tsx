@@ -2,284 +2,254 @@
 
 import { useState, useEffect } from 'react'
 import type { Besoin } from '@/types/besoin'
+import type { Feature } from '@/types/feature'
 
 type FeatureAIGeneratorModalProps = {
   besoin: Besoin | null
   onClose: () => void
-  onGenerate: (features: { titre: string; description: string }[]) => void
+  onGenerate: (features: Feature[]) => void
 }
 
-// Suggestions de Features prédfinies par type de besoin (simulation de l'IA)
-const getAISuggestions = (besoinTitre: string): { titre: string; description: string }[] => {
-  const suggestionsMap: Record<string, { titre: string; description: string }[]> = {
+// Générer un ID unique
+const generateId = (): string => {
+  return Date.now().toString(36) + Math.random().toString(36).substring(2)
+}
+
+// Suggestions de Features prédéfinies par type de besoin (simulation de l'IA)
+const getAISuggestions = (besoinTitre: string, besoinId: string): Feature[] => {
+  const now = new Date().toISOString()
+  
+  const suggestionsMap: Record<string, { titre: string; description: string; priorite: 'Faible' | 'Moyenne' | 'Elevee' | 'Critique' }[]> = {
     // Exemples de suggestions pour des besoins courants
     'Gestion des utilisateurs': [
       {
         titre: 'Authentification',
         description: 'Permettre aux utilisateurs de se connecter avec un email et un mot de passe.',
+        priorite: 'Elevee',
       },
       {
         titre: 'Inscription',
         description: 'Permettre aux nouveaux utilisateurs de créer un compte.',
+        priorite: 'Elevee',
       },
       {
         titre: 'Réinitialisation du mot de passe',
         description: 'Permettre aux utilisateurs de réinitialiser leur mot de passe en cas d\'oubli.',
+        priorite: 'Moyenne',
       },
       {
         titre: 'Gestion des profils',
         description: 'Permettre aux utilisateurs de modifier leurs informations personnelles.',
+        priorite: 'Moyenne',
       },
       {
         titre: 'Rôles et permissions',
         description: 'Gérer les rôles des utilisateurs et leurs permissions d\'accès.',
+        priorite: 'Elevee',
       },
     ],
     'Gestion des produits': [
       {
         titre: 'Création de produit',
         description: 'Permettre aux administrateurs de créer de nouveaux produits.',
+        priorite: 'Elevee',
       },
       {
         titre: 'Modification de produit',
         description: 'Permettre aux administrateurs de modifier les informations d\'un produit.',
+        priorite: 'Moyenne',
       },
       {
         titre: 'Suppression de produit',
         description: 'Permettre aux administrateurs de supprimer un produit.',
+        priorite: 'Faible',
       },
       {
         titre: 'Recherche de produits',
         description: 'Permettre aux utilisateurs de rechercher des produits par nom ou catégorie.',
-      },
-      {
-        titre: 'Filtrage des produits',
-        description: 'Permettre aux utilisateurs de filtrer les produits par prix, catégorie, etc.',
+        priorite: 'Moyenne',
       },
     ],
-    'Gestion des commandes': [
+    'Automatiser la gestion des réservations pour un hôtel en ligne': [
       {
-        titre: 'Passage de commande',
-        description: 'Permettre aux utilisateurs de passer une commande.',
+        titre: 'Réservation d\'une chambre',
+        description: 'Permettre à un client de sélectionner une chambre et de confirmer une réservation.',
+        priorite: 'Elevee',
       },
       {
-        titre: 'Suivi de commande',
-        description: 'Permettre aux utilisateurs de suivre l\'état de leur commande.',
+        titre: 'Modification d\'une réservation',
+        description: 'Permettre à un client de modifier les dates ou le type de chambre.',
+        priorite: 'Elevee',
       },
       {
-        titre: 'Annulation de commande',
-        description: 'Permettre aux utilisateurs d\'annuler une commande.',
+        titre: 'Annulation d\'une réservation',
+        description: 'Permettre à un client d\'annuler une réservation avec remboursement si applicable.',
+        priorite: 'Elevee',
       },
       {
-        titre: 'Historique des commandes',
-        description: 'Permettre aux utilisateurs de consulter leur historique de commandes.',
+        titre: 'Calendrier des disponibilités',
+        description: 'Afficher un calendrier interactif pour visualiser les disponibilités.',
+        priorite: 'Moyenne',
       },
       {
-        titre: 'Gestion des retours',
-        description: 'Permettre aux utilisateurs de demander un retour de produit.',
-      },
-    ],
-    'Tableau de bord': [
-      {
-        titre: 'Statistiques globales',
-        description: 'Afficher les statistiques globales de l\'application.',
-      },
-      {
-        titre: 'Analyse des ventes',
-        description: 'Afficher une analyse détaillée des ventes.',
-      },
-      {
-        titre: 'Suivi des performances',
-        description: 'Suivre les performances des différentes fonctionnalités.',
-      },
-      {
-        titre: 'Alertes et notifications',
-        description: 'Afficher les alertes et notifications importantes.',
-      },
-      {
-        titre: 'Personnalisation du tableau de bord',
-        description: 'Permettre aux utilisateurs de personnaliser leur tableau de bord.',
+        titre: 'Notifications de disponibilité',
+        description: 'Envoyer des notifications aux gestionnaires pour les chambres disponibles.',
+        priorite: 'Faible',
       },
     ],
-    'Gestion des paiements': [
-      {
-        titre: 'Intégration de Stripe',
-        description: 'Intégrer le système de paiement Stripe pour les transactions.',
-      },
-      {
-        titre: 'Intégration de PayPal',
-        description: 'Intégrer le système de paiement PayPal pour les transactions.',
-      },
-      {
-        titre: 'Gestion des abonnements',
-        description: 'Permettre aux utilisateurs de souscrire à des abonnements.',
-      },
-      {
-        titre: 'Historique des paiements',
-        description: 'Permettre aux utilisateurs de consulter leur historique de paiements.',
-      },
-      {
-        titre: 'Remboursements',
-        description: 'Permettre aux administrateurs de traiter les remboursements.',
-      },
-    ],
+    // Ajoutez d'autres types de besoins ici
   }
 
-  // Si le besoin n'est pas dans la liste, générer des suggestions génériques
-  const defaultSuggestions = [
+  // Trouver une correspondance ou utiliser des suggestions génériques
+  const suggestions = suggestionsMap[besoinTitre] || [
     {
-      titre: 'Création',
-      description: `Permettre de créer des éléments liés à ${besoinTitre}.`,
+      titre: 'Implémentation principale',
+      description: `Implémentation principale pour le besoin: ${besoinTitre}`,
+      priorite: 'Moyenne',
     },
     {
-      titre: 'Modification',
-      description: `Permettre de modifier des éléments liés à ${besoinTitre}.`,
+      titre: 'Gestion des données',
+      description: 'Gestion des données liées à ce besoin.',
+      priorite: 'Moyenne',
     },
     {
-      titre: 'Suppression',
-      description: `Permettre de supprimer des éléments liés à ${besoinTitre}.`,
+      titre: 'Interface utilisateur',
+      description: 'Développement de l\'interface utilisateur pour ce besoin.',
+      priorite: 'Elevee',
     },
     {
-      titre: 'Liste',
-      description: `Afficher une liste des éléments liés à ${besoinTitre}.`,
-    },
-    {
-      titre: 'Recherche',
-      description: `Permettre de rechercher des éléments liés à ${besoinTitre}.`,
+      titre: 'Intégration et tests',
+      description: 'Intégration et tests de cette fonctionnalité.',
+      priorite: 'Faible',
     },
   ]
 
-  // Trouver le besoin le plus proche dans la map (pour gérer les variations de titre)
-  const findBestMatch = (title: string): string => {
-    const lowerTitle = title.toLowerCase()
-    for (const key in suggestionsMap) {
-      if (lowerTitle.includes(key.toLowerCase()) || key.toLowerCase().includes(lowerTitle)) {
-        return key
-      }
-    }
-    return ''
-  }
-
-  const matchedKey = findBestMatch(besoinTitre)
-  return matchedKey ? suggestionsMap[matchedKey] : defaultSuggestions
+  // Convertir en Features avec toutes les propriétés requises
+  return suggestions.map((suggestion) => ({
+    id: generateId(),
+    titre: suggestion.titre,
+    description: suggestion.description,
+    priorite: suggestion.priorite,
+    statut: 'A faire' as const,
+    besoinId,
+    epicId: null,
+    created_at: now,
+    updated_at: now,
+  }))
 }
 
 export default function FeatureAIGeneratorModal({ besoin, onClose, onGenerate }: FeatureAIGeneratorModalProps) {
-  const [selectedFeatures, setSelectedFeatures] = useState<number[]>([])
-  const [suggestions, setSuggestions] = useState<{ titre: string; description: string }[]>([])
-  const [isGenerating, setIsGenerating] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
+  const [suggestions, setSuggestions] = useState<Feature[]>([])
+  const [selectedSuggestions, setSelectedSuggestions] = useState<boolean[]>([])
+  const [loading, setLoading] = useState(false)
 
-  // Générer les suggestions au chargement de la modale
   useEffect(() => {
+    setIsOpen(!!besoin)
     if (besoin) {
-      setIsGenerating(true)
-      // Simulation d'un appel à l'API Mistral (remplacer par un vrai appel si disponible)
+      setLoading(true)
+      // Simuler un délai de génération IA
       setTimeout(() => {
-        const generatedSuggestions = getAISuggestions(besoin.titre)
+        const generatedSuggestions = getAISuggestions(besoin.titre, besoin.id)
         setSuggestions(generatedSuggestions)
-        setIsGenerating(false)
-      }, 500) // Délai pour simuler le chargement
+        setSelectedSuggestions(new Array(generatedSuggestions.length).fill(true))
+        setLoading(false)
+      }, 1000)
     }
   }, [besoin])
 
-  // Gérer la sélection/désélection d'une suggestion
-  const toggleFeatureSelection = (index: number) => {
-    setSelectedFeatures((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
-    )
-  }
-
-  // Valider et générer les Features sélectionnées
-  const handleGenerate = () => {
-    const selected = suggestions.filter((_, index) => selectedFeatures.includes(index))
-    onGenerate(selected)
+  const handleClose = () => {
+    setIsOpen(false)
     onClose()
   }
 
-  if (!besoin) {
-    return null
+  const handleGenerate = () => {
+    const selectedFeatures = suggestions.filter((_, index) => selectedSuggestions[index])
+    onGenerate(selectedFeatures)
+    handleClose()
   }
 
+  const toggleSuggestion = (index: number) => {
+    const updated = [...selectedSuggestions]
+    updated[index] = !updated[index]
+    setSelectedSuggestions(updated)
+  }
+
+  if (!isOpen || !besoin) return null
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="neumorphic-card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">Génération IA de Features</h2>
+            <h2 className="text-xl font-bold text-neumorphic">🤖 Génération IA de Features</h2>
             <button
-              onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-2xl"
+              onClick={handleClose}
+              className="neumorphic-button p-2 hover:bg-red-500/20"
             >
-              ×
+              ❌
             </button>
           </div>
 
           <div className="mb-4">
-            <p className="text-sm text-gray-600">
-              Besoin sélectionné : <strong>{besoin.titre}</strong>
+            <p className="text-neumorphic-muted">
+              Besoin: <span className="text-neumorphic font-medium">{besoin.titre}</span>
             </p>
-            {besoin.description && (
-              <p className="text-sm text-gray-500 mt-1">{besoin.description}</p>
-            )}
           </div>
 
-          {isGenerating ? (
+          {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-              <span className="ml-3">Génération en cours...</span>
-            </div>
-          ) : suggestions.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <p>Aucune suggestion générée.</p>
+              <div className="flex items-center gap-2 text-neumorphic">
+                <span className="animate-spin">🌀</span>
+                <span>Génération en cours...</span>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-sm text-gray-600">
-                Sélectionnez les Features que vous souhaitez générer :
+              <p className="text-neumorphic-muted mb-4">
+                L&apos;IA a généré {suggestions.length} suggestions de Features pour ce besoin.
+                Sélectionnez celles que vous souhaitez ajouter.
               </p>
+
               <div className="space-y-3">
                 {suggestions.map((suggestion, index) => (
                   <div
-                    key={index}
-                    onClick={() => toggleFeatureSelection(index)}
-                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                      selectedFeatures.includes(index) ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-300'
-                    }`}
+                    key={suggestion.id}
+                    className={`neumorphic-card p-4 ${selectedSuggestions[index] ? 'border-l-4 border-green-500' : ''}`}
                   >
                     <div className="flex items-start gap-3">
                       <input
                         type="checkbox"
-                        checked={selectedFeatures.includes(index)}
-                        onChange={() => toggleFeatureSelection(index)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="mt-1 w-4 h-4"
+                        checked={selectedSuggestions[index]}
+                        onChange={() => toggleSuggestion(index)}
+                        className="mt-1 w-5 h-5"
                       />
                       <div className="flex-1">
-                        <h3 className="font-medium">{suggestion.titre}</h3>
-                        <p className="text-sm text-gray-600 mt-1">{suggestion.description}</p>
+                        <div className="flex justify-between items-start">
+                          <div className="font-medium text-neumorphic">{suggestion.titre}</div>
+                          <span className={`px-2 py-1 rounded-full text-xs ${suggestion.priorite === 'Elevee' ? 'bg-orange-500/20 text-orange-300' : suggestion.priorite === 'Critique' ? 'bg-red-500/20 text-red-300' : suggestion.priorite === 'Moyenne' ? 'bg-yellow-500/20 text-yellow-300' : 'bg-green-500/20 text-green-300'}`}>
+                            {suggestion.priorite === 'Elevee' ? 'Élevée' : suggestion.priorite}
+                          </span>
+                        </div>
+                        <div className="text-sm text-neumorphic-muted mt-1">{suggestion.description}</div>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="flex justify-end gap-2 mt-6">
+              <div className="flex gap-3 mt-6">
                 <button
-                  onClick={onClose}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+                  onClick={handleClose}
+                  className="neumorphic-button px-6 py-2 bg-gray-500/20 hover:bg-gray-500/40 text-neumorphic-muted"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={handleGenerate}
-                  disabled={selectedFeatures.length === 0}
-                  className={`px-4 py-2 rounded ${
-                    selectedFeatures.length === 0
-                      ? 'bg-blue-200 text-blue-400 cursor-not-allowed'
-                      : 'bg-blue-500 text-white hover:bg-blue-600'
-                  }`}
+                  className="neumorphic-button px-6 py-2 bg-green-500/20 hover:bg-green-500/40 text-green-300"
                 >
-                  Valider ({selectedFeatures.length} sélectionné(s))
+                  ✅ Générer les Features sélectionnées
                 </button>
               </div>
             </div>
