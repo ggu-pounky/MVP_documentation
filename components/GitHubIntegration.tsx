@@ -63,11 +63,11 @@ export default function GitHubIntegration({
           onAuthChange(false, '', '')
         }
       } else {
-        setAuthError('Token invalide ou expiré')
+        setAuthError('Token invalide ou expire')
         onAuthChange(false, '', '')
       }
     } catch (error) {
-      setAuthError('Erreur de connexion à GitHub')
+      setAuthError('Erreur de connexion a GitHub')
       onAuthChange(false, '', '')
       console.error('GitHub auth error:', error)
     } finally {
@@ -105,10 +105,10 @@ export default function GitHubIntegration({
         const reposData: GitHubRepo[] = await response.json()
         setRepos(reposData)
       } else {
-        setRepoError('Impossible de récupérer les repositories')
+        setRepoError('Impossible de recuperer les repositories')
       }
     } catch (error) {
-      setRepoError('Erreur réseau lors de la récupération des repositories')
+      setRepoError('Erreur reseau lors de la recuperation des repositories')
       console.error('Fetch repos error:', error)
     } finally {
       setLoadingRepos(false)
@@ -169,8 +169,8 @@ export default function GitHubIntegration({
   }
 
   const getSortIcon = (field: 'name' | 'updated' | 'stars' | 'forks') => {
-    if (sortBy !== field) return '↕'
-    return sortDirection === 'asc' ? '↑' : '↓'
+    if (sortBy !== field) return '[<->]'
+    return sortDirection === 'asc' ? '[^]' : '[v]'
   }
 
   return (
@@ -178,7 +178,7 @@ export default function GitHubIntegration({
       {/* Section Connexion */}
       <div className="card">
         <div className="card-header">
-          <h2 className="text-lg font-semibold text-gray-800">Connexion à GitHub</h2>
+          <h2 className="text-lg font-semibold text-gray-800">Connexion a GitHub</h2>
         </div>
         
         <div className="space-y-4">
@@ -196,13 +196,13 @@ export default function GitHubIntegration({
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Nécessite les permissions: repo (read), user (read)
+                  Necessite les permissions: repo (read), user (read)
                 </p>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nom d'utilisateur GitHub
+                  Nom d&apos;utilisateur GitHub
                 </label>
                 <input
                   type="text"
@@ -221,10 +221,10 @@ export default function GitHubIntegration({
                 >
                   {loadingAuth ? (
                     <>
-                      <span className="animate-spin">🌐</span> Connexion...
+                      <span className="animate-spin">[*]</span> Connexion...
                     </>
                   ) : (
-                    'Se connecter à GitHub'
+                    'Se connecter a GitHub'
                   )}
                 </button>
               </div>
@@ -241,7 +241,7 @@ export default function GitHubIntegration({
                 )}
                 <div>
                   <div className="font-medium text-green-800">
-                    Connecté en tant que {userInfo?.name || githubUsername}
+                    Connecte en tant que {userInfo?.name || githubUsername}
                   </div>
                   <div className="text-sm text-green-600">@{githubUsername}</div>
                 </div>
@@ -250,7 +250,7 @@ export default function GitHubIntegration({
                 onClick={handleGitHubLogout}
                 className="btn btn-secondary btn-sm"
               >
-                Déconnexion
+                Deconnexion
               </button>
             </div>
           )}
@@ -291,13 +291,13 @@ export default function GitHubIntegration({
                   onClick={() => toggleSortDirection('updated')}
                   className="px-3 py-2 bg-gray-100 rounded-md text-sm hover:bg-gray-200"
                 >
-                  Mis à jour {getSortIcon('updated')}
+                  Mis a jour {getSortIcon('updated')}
                 </button>
                 <button
                   onClick={() => toggleSortDirection('stars')}
                   className="px-3 py-2 bg-gray-100 rounded-md text-sm hover:bg-gray-200"
                 >
-                  Étoiles {getSortIcon('stars')}
+                  Etoiles {getSortIcon('stars')}
                 </button>
               </div>
             </div>
@@ -305,7 +305,7 @@ export default function GitHubIntegration({
             {loadingRepos ? (
               <div className="flex items-center justify-center py-8">
                 <div className="flex items-center gap-2 text-gray-600">
-                  <span className="animate-spin">🌐</span>
+                  <span className="animate-spin">[*]</span>
                   <span>Chargement des repositories...</span>
                 </div>
               </div>
@@ -313,7 +313,7 @@ export default function GitHubIntegration({
               <div className="text-red-600 text-center py-4">{repoError}</div>
             ) : filteredRepos.length === 0 ? (
               <div className="text-center py-4 text-gray-500">
-                Aucun repository trouvé.
+                Aucun repository trouve.
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -332,7 +332,7 @@ export default function GitHubIntegration({
                         <div className="font-medium text-gray-800 flex items-center gap-2">
                           {repo.name}
                           {repo.private && (
-                            <span className="text-xs bg-gray-200 px-2 py-1 rounded">Privé</span>
+                            <span className="text-xs bg-gray-200 px-2 py-1 rounded">Prive</span>
                           )}
                         </div>
                         {repo.description && (
@@ -348,12 +348,12 @@ export default function GitHubIntegration({
                             {repo.language}
                           </span>
                         )}
-                        <span className="text-xs text-gray-500">⭐ {repo.stargazers_count}</span>
-                        <span className="text-xs text-gray-500">🍴 {repo.forks_count}</span>
+                        <span className="text-xs text-gray-500">* {repo.stargazers_count}</span>
+                        <span className="text-xs text-gray-500">F {repo.forks_count}</span>
                       </div>
                       
                       {selectedRepo?.id === repo.id && (
-                        <span className="text-green-600">✓ Sélectionné</span>
+                        <span className="text-green-600">[OK] Selectionne</span>
                       )}
                     </div>
                   </div>

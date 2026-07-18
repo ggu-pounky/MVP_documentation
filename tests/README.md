@@ -1,158 +1,274 @@
-# Tests IHM pour MVP Documentation
+# Tests de Non-Régression
 
-Ce dossier contient des scripts pour tester manuellement l'application avec des données factices.
+Ce dossier contient tous les tests automatisés pour l'application MVP Documentation.
 
-## 📁 Fichiers disponibles
+## Structure
 
-### 1. `load-test-data.js` - Script principal de test
-
-Ce script permet de charger des données factices dans le localStorage pour tester l'application.
-
-## 🚀 Comment utiliser
-
-### Méthode 1: Directement dans la console du navigateur
-
-1. **Ouvrez votre navigateur** et allez sur l'application (ex: `http://localhost:3000` ou votre URL Vercel)
-2. **Ouvrez la console du navigateur** :
-   - Chrome/Edge: `F12` ou `Ctrl+Shift+I` → onglet "Console"
-   - Firefox: `F12` ou `Ctrl+Shift+K` → onglet "Console"
-   - Safari: `Cmd+Option+I` → onglet "Console"
-3. **Copiez-collez et exécutez** une des commandes suivantes :
-
-```javascript
-// Charger les données de test
-loadTestData()
-
-// Supprimer les données de test
-clearTestData()
-
-// Vérifier la matrice Exigence-Tests
-checkExigenceTestsMatrix()
+```
+tests/
+├── playwright/                    # Tests Playwright (E2E)
+│   ├── full-ihm-test.spec.js     # Tests complets de l'IHM
+│   ├── matrices.spec.js          # Tests pour les matrices
+│   └── code-analysis.spec.js     # Tests pour la page CODE (nouveau)
+├── run-regression-tests.js       # Script pour exécuter tous les tests
+└── README.md                     # Ce fichier
 ```
 
-### Méthode 2: Importer le script dans votre page HTML
+## Prérequis
 
-Ajoutez ce script à votre page pour avoir les fonctions disponibles :
+- Node.js 18+ 
+- npm ou yarn
+- Playwright installé (`npm install -D @playwright/test`)
 
-```html
-<script src="/tests/load-test-data.js"></script>
+## Installation
+
+```bash
+# Installer les dépendances
+npm install
+
+# Installer les navigateurs Playwright
+npx playwright install
 ```
 
-Puis appelez les fonctions depuis la console ou via des boutons.
+## Exécution des Tests
 
-## 📊 Données de test incluses
+### Exécuter tous les tests
 
-Le script `load-test-data.js` charge les données suivantes :
+```bash
+# Méthode 1: Utiliser le script Node.js
+node tests/run-regression-tests.js
 
-- **2 Besoins** :
-  - Gestion des utilisateurs
-  - Gestion des produits
+# Méthode 2: Exécuter directement avec Playwright
+npx playwright test
 
-- **2 EPICS** :
-  - Épic - Authentification (lié à Gestion des utilisateurs)
-  - Épic - Catalogue (lié à Gestion des produits)
+# Méthode 3: Exécuter un fichier spécifique
+npx playwright test tests/playwright/code-analysis.spec.js
+```
 
-- **4 Features** :
-  - Inscription utilisateur
-  - Connexion utilisateur
-  - Ajouter produit
-  - Modifier produit
+### Exécuter avec UI
 
-- **5 Exigences** :
-  - Validation format email
-  - Validation complexité mot de passe
-  - Affichage message erreur connexion
-  - Vérification droits administrateur
-  - Validation champs produit
+Pour voir l'interface graphique des tests :
 
-- **5 Tests** :
-  - Test email valide (lié à Validation format email)
-  - Test email invalide (lié à Validation format email)
-  - Test mot de passe valide (lié à Validation complexité mot de passe)
-  - Test mot de passe trop court (lié à Validation complexité mot de passe)
-  - Test affichage erreur connexion (lié à Affichage message erreur connexion)
+```bash
+npx playwright test --ui
+```
 
-## 🎯 Ce que vous pouvez tester
+### Exécuter en mode headed (pour le débogage)
 
-### Après avoir chargé les données avec `loadTestData()` :
+```bash
+npx playwright test tests/playwright/code-analysis.spec.js --headed
+```
 
-1. **Navigation dans le menu** :
-   - Vérifiez que tous les liens du sidebar fonctionnent
-   - Vérifiez que les modules sont correctement séparés
+## Tests Disponibles
 
-2. **Page Besoins** :
-   - Vérifiez que 2 besoins s'affichent
-   - Testez l'ajout/modification/suppression
+### 1. full-ihm-test.spec.js
 
-3. **Page Features** :
-   - Vérifiez que 4 features s'affichent
-   - Testez le bouton "Générer par IA"
-   - Testez le bouton "Amélioration IA"
+Tests complets de l'interface utilisateur :
+- ✅ Page Besoins - Chargement et affichage
+- ✅ Sidebar - Navigation et modules
+- ✅ Page Features - Fonctionnalités de base
+- ✅ Page Exigences - Fonctionnalités de base
+- ✅ Page Tests - Fonctionnalités de base
+- ✅ Matrice Exigence-Tests - Fonctionnalités complètes
+- ✅ Matrice - Navigation vers les détails
 
-4. **Page Exigences** :
-   - Vérifiez que 5 exigences s'affichent
-   - Vérifiez les liens vers les features
+### 2. matrices.spec.js
 
-5. **Page Tests** :
-   - Vérifiez que 5 tests s'affichent
-   - Testez le bouton "Générer par IA" (devrait proposer des tests basés sur l'exigence sélectionnée)
-   - Testez le bouton "Amélioration IA"
+Tests spécifiques pour les matrices :
+- ✅ Matrice Exigence-Tests - Affichage et couverture
+- ✅ Matrice - Filtres et tri
+- ✅ Matrice - Export des données
 
-6. **Page Matrices** :
-   - Sélectionnez "Matrice Exigence - Tests"
-   - Vérifiez que la matrice s'affiche avec :
-     - **Métrique de couverture** : Devrait afficher ~60% (3/5 exigences couvertes)
-     - **Tableau** : 5 lignes (exigences) × 5 colonnes (tests)
-     - **Pastilles vertes** (✓) : Pour les associations existantes
-     - **Pastilles rouges** (✗) : Pour les exigences sans tests
-   - Vérifiez que les liens vers les exigences et tests fonctionnent
+### 3. code-analysis.spec.js (NOUVEAU)
 
-7. **Modales IA** :
-   - Ouvrez la page Tests
-   - Cliquez sur "Ajouter un Test"
-   - Sélectionnez une exigence
-   - Cliquez sur "Générer par IA"
-   - Vérifiez que :
-     - La modale s'ouvre correctement
-     - Les suggestions sont visibles
-     - Vous pouvez cocher/décocher les cases
-     - Le bouton "Valider" fonctionne
-     - Le bouton "Annuler" fonctionne
-     - La touche `Escape` ferme la modale
+Tests pour la page CODE et l'intégration GitHub :
+- ✅ Page CODE - Chargement initial
+- ✅ Page CODE - Affichage des exigences de l'application
+- ✅ Page CODE - Validation du formulaire de connexion
+- ✅ Page CODE - Message d'erreur pour token invalide
+- ✅ Page CODE - Section Repositories non visible sans connexion
+- ✅ Page CODE - Bouton d'analyse désactivé sans repository
+- ✅ Page CODE - Bouton analyse affiche le nombre d'exigences
+- ✅ Page CODE - Message d'avertissement sans exigences
+- ✅ Page CODE - Statistiques de matching
+- ✅ Page CODE - Navigation depuis le sidebar
+- ✅ Page CODE - Structure de la page
+- ✅ Page CODE - Styles des cartes d'exigences
+- ✅ Page CODE - Responsive design mobile
 
-## 🐛 Dépannage
+## Configuration
 
-### Si les données ne s'affichent pas :
+Le fichier `playwright.config.js` configure :
+- Les navigateurs à tester (Chromium, Firefox, WebKit)
+- Le serveur web local (port 3000)
+- Les options de reporting (HTML)
+- Le parallélisme des tests
 
-1. **Vérifiez que localStorage est disponible** :
+## Bonnes Pratiques
+
+### Écrire un nouveau test
+
+1. **Structure** :
    ```javascript
-   console.log(localStorage.getItem('besoins'));
+   test.describe('Nom du composant - Description', () => {
+     test.beforeEach(async ({ page }) => {
+       // Préparation avant chaque test
+     });
+     
+     test('Nom du test', async ({ page }) => {
+       // Étapes du test
+       await page.goto('/page');
+       await expect(page.locator('h1')).toContainText('Titre');
+     });
+   });
    ```
 
-2. **Rechargez la page** après avoir chargé les données
+2. **Sélecteurs** :
+   - Utilisez des sélecteurs stables (pas de classes générées)
+   - Préférez les sélecteurs sémantiques :
+     ```javascript
+     // Bon
+     page.locator('button:has-text("Se connecter")')
+     page.locator('h2:has-text("Connexion")')
+     
+     // À éviter
+     page.locator('.btn-primary') // Peut changer
+     page.locator('#random-id-123') // ID généré
+     ```
 
-3. **Vérifiez la console** pour les erreurs
+3. **Données de test** :
+   - Utilisez `mockData` pour les données de test
+   - Chargez les données dans localStorage avant le test
 
-4. **Essayez de vider le cache** du navigateur
+4. **Attentes** :
+   - Utilisez `await expect(locator).toBeVisible()` pour vérifier la visibilité
+   - Utilisez `await page.waitForTimeout(ms)` si nécessaire
 
-### Si les modales ne fonctionnent pas :
+## Dépannage
 
-1. Vérifiez que vous avez bien sélectionné une exigence avant de cliquer sur "Générer par IA"
-2. Essayez avec différents navigateurs (Chrome, Firefox, Edge)
-3. Vérifiez qu'il n'y a pas d'erreurs JavaScript dans la console
+### Problème : Les tests échouent en CI
 
-## 📝 Notes
+1. Vérifiez que le serveur est démarré :
+   ```bash
+   npm run start
+   ```
 
-- Ces scripts sont conçus pour le **développement et les tests manuels**
-- Les données sont stockées dans **localStorage** et persistent entre les rechargements de page
-- Pour effacer toutes les données, utilisez `clearTestData()` ou videz manuellement le localStorage
-- Les données sont générées avec des IDs uniques pour éviter les conflits
+2. Vérifiez que les dépendances sont installées :
+   ```bash
+   npm install
+   npx playwright install
+   ```
 
-## 🔧 Pour les développeurs
+### Problème : Les sélecteurs ne fonctionnent pas
 
-Vous pouvez étendre ces scripts en :
-- Ajoutant plus de données de test
-- Créant des tests automatisés avec Puppeteer ou Playwright
-- Ajoutant des validations supplémentaires
+1. Vérifiez que le texte est correct (majuscules, accents)
+2. Utilisez l'outil Playwright Codegen :
+   ```bash
+   npx playwright codegen http://localhost:3000
+   ```
 
-Voir `ihm-test.js` pour un exemple de test automatisé (nécessite Puppeteer).
+### Problème : Les tests sont trop lents
+
+1. Réduisez le nombre de navigateurs dans `playwright.config.js`
+2. Désactivez les vidéos et screenshots :
+   ```javascript
+   use: {
+     screenshot: 'off',
+     video: 'off',
+   }
+   ```
+
+## Intégration CI/CD
+
+### GitHub Actions
+
+Exemple de workflow :
+
+```yaml
+name: Tests de Non-Régression
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Install Playwright browsers
+        run: npx playwright install
+      
+      - name: Run tests
+        run: npx playwright test
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report
+          path: playwright-report/
+```
+
+### Vercel
+
+Pour exécuter les tests avant le déploiement :
+
+1. Ajoutez un script dans `package.json` :
+   ```json
+   "scripts": {
+     "test:regression": "node tests/run-regression-tests.js"
+   }
+   ```
+
+2. Configurez dans Vercel :
+   - Build Command: `npm run test:regression && npm run build`
+
+## Rapports
+
+Les rapports HTML sont générés dans le dossier `playwright-report/`.
+
+Pour ouvrir le dernier rapport :
+
+```bash
+npx playwright show-report
+```
+
+## Mises à jour récentes
+
+### v1.1.0 - Ajout des tests pour la page CODE
+
+- ✅ 13 nouveaux tests pour la page CODE
+- ✅ Tests de l'intégration GitHub
+- ✅ Tests de l'analyse de code
+- ✅ Tests de matching des exigences
+- ✅ Tests de responsive design
+
+### v1.0.0 - Tests initiaux
+
+- ✅ Tests complets de l'IHM
+- ✅ Tests des matrices
+- ✅ Configuration Playwright
+
+## Contribuer
+
+Pour ajouter un nouveau test :
+
+1. Créez un nouveau fichier dans `tests/playwright/`
+2. Suivez les conventions de nommage : `nom-du-composant.spec.js`
+3. Utilisez les bonnes pratiques décrites ci-dessus
+4. Exécutez le test localement avant de committer
+5. Ajoutez le test au script `run-regression-tests.js`
+
+## Ressources
+
+- [Documentation Playwright](https://playwright.dev/docs/intro)
+- [API Playwright](https://playwright.dev/docs/api)
+- [Bonnes pratiques](https://playwright.dev/docs/best-practices)

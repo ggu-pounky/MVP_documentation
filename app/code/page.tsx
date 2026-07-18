@@ -12,24 +12,24 @@ type CodeFile = {
 }
 
 export default function CodePage() {
-  // États pour les données locales
+  // Etats pour les donnees locales
   const [exigences, setExigences] = useState<Exigence[]>([])
   const [features, setFeatures] = useState<Feature[]>([])
   const [loadingLocal, setLoadingLocal] = useState(true)
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
 
-  // États pour GitHub
+  // Etats pour GitHub
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [githubToken, setGithubToken] = useState('')
   const [githubUsername, setGithubUsername] = useState('')
   const [selectedRepo, setSelectedRepo] = useState<GitHubRepo | null>(null)
 
-  // États pour l'analyse
+  // Etats pour l'analyse
   const [loadingAnalysis, setLoadingAnalysis] = useState(false)
   const [analysisResults, setAnalysisResults] = useState<CodeAnalysisResult[]>([])
   const [analysisError, setAnalysisError] = useState<string | null>(null)
 
-  // Charger les données locales (exigences et features)
+  // Charger les donnees locales (exigences et features)
   const loadLocalData = () => {
     const savedExigences = localStorage.getItem('exigences')
     const savedFeatures = localStorage.getItem('features')
@@ -62,22 +62,22 @@ export default function CodePage() {
     setGithubToken(token)
     setGithubUsername(username)
     if (authenticated) {
-      showNotification(`Connecté en tant que ${username}`)
+      showNotification(`Connecte en tant que ${username}`)
     }
   }
 
-  // Sélection d'un repository
+  // Selection d'un repository
   const handleRepoSelect = (repo: GitHubRepo) => {
     setSelectedRepo(repo)
     setAnalysisResults([])
     setAnalysisError(null)
-    showNotification(`Repository sélectionné: ${repo.name}`)
+    showNotification(`Repository selectionne: ${repo.name}`)
   }
 
   // Analyse du code
   const handleAnalyzeCode = async () => {
     if (!selectedRepo || !githubToken) {
-      showNotification('Veuillez sélectionner un repository', 'error')
+      showNotification('Veuillez selectionner un repository', 'error')
       return
     }
 
@@ -85,7 +85,7 @@ export default function CodePage() {
     setAnalysisError(null)
 
     try {
-      // Récupérer la structure du repository
+      // Recuperer la structure du repository
       const contentsResponse = await fetch(
         `https://api.github.com/repos/${selectedRepo.full_name}/contents`,
         {
@@ -97,7 +97,7 @@ export default function CodePage() {
       )
 
       if (!contentsResponse.ok) {
-        throw new Error('Impossible de récupérer le contenu du repository')
+        throw new Error('Impossible de recuperer le contenu du repository')
       }
 
       const contents = await contentsResponse.json()
@@ -105,7 +105,7 @@ export default function CodePage() {
       // Filtrer uniquement les fichiers (pas les dossiers)
       const files = contents.filter((item: any) => item.type === 'file')
       
-      // Récupérer le contenu des fichiers de code (extensions courantes)
+      // Recuperer le contenu des fichiers de code (extensions courantes)
       const codeFiles = files.filter((file: any) => 
         ['.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cpp', '.c', '.go', '.rs', '.php', '.rb'].some(ext => file.name.endsWith(ext))
       )
@@ -113,7 +113,7 @@ export default function CodePage() {
       // Lire le contenu de chaque fichier de code
       const fileContents: CodeFile[] = []
       
-      for (const file of codeFiles.slice(0, 20)) { // Limiter à 20 fichiers
+      for (const file of codeFiles.slice(0, 20)) { // Limiter a 20 fichiers
         try {
           const fileResponse = await fetch(file.download_url || `https://api.github.com/repos/${selectedRepo.full_name}/contents/${file.path}`, {
             headers: {
@@ -125,7 +125,7 @@ export default function CodePage() {
           if (fileResponse.ok) {
             const fileData = await fileResponse.json()
             if (fileData.content) {
-              // Décoder le contenu base64
+              // Decoder le contenu base64
               const content = Buffer.from(fileData.content, 'base64').toString('utf-8')
               fileContents.push({ path: file.path, content })
             }
@@ -140,7 +140,7 @@ export default function CodePage() {
       setAnalysisResults(results)
       setLoadingAnalysis(false)
       
-      showNotification(`Analyse terminée: ${results.length} correspondances trouvées`)
+      showNotification(`Analyse terminee: ${results.length} correspondances trouvees`)
       
     } catch (error) {
       setAnalysisError('Erreur lors de l\'analyse du code')
@@ -169,7 +169,7 @@ export default function CodePage() {
           // Extraire un snippet de code pertinent
           const codeSnippet = extractRelevantCodeSnippet(file.content, exigence, file.path)
           
-          // Générer une description de l'exigence IA
+          // Generer une description de l'exigence IA
           const iaRequirement = generateIARequirement(exigence, file.content, file.path)
           
           results.push({
@@ -188,7 +188,7 @@ export default function CodePage() {
       })
     })
     
-    // Trier par pourcentage décroissant
+    // Trier par pourcentage decroissant
     results.sort((a, b) => b.matchPercentage - a.matchPercentage)
     
     return results
@@ -200,7 +200,7 @@ export default function CodePage() {
     const exigenceText = `${exigence.titre} ${exigence.description || ''}`.toLowerCase()
     const exigenceWords = exigenceText.split(/\s+/).filter(word => word.length > 3)
     
-    // Score basé sur les mots clés
+    // Score base sur les mots cles
     exigenceWords.forEach(word => {
       if (codeContent.includes(word)) {
         score += 1
@@ -208,7 +208,7 @@ export default function CodePage() {
     })
     
     // Bonus pour les mots importants (verbes d'action)
-    const actionWords = ['créer', 'ajouter', 'supprimer', 'mettre', 'à', 'jour', 'valider', 'calculer', 'afficher', 'gérer', 'stocker', 'vérifier', 'authentifier', 'autoriser', 'charger', 'sauvegarder', 'exporter', 'importer']
+    const actionWords = ['creer', 'ajouter', 'supprimer', 'mettre', 'a', 'jour', 'valider', 'calculer', 'afficher', 'gerer', 'stocker', 'verifier', 'authentifier', 'autoriser', 'charger', 'sauvegarder', 'exporter', 'importer']
     exigenceWords.forEach(word => {
       if (actionWords.some(action => word.includes(action)) && codeContent.includes(word)) {
         score += 0.5
@@ -247,7 +247,7 @@ export default function CodePage() {
     const lines = content.split('\n')
     const exigenceText = `${exigence.titre} ${exigence.description || ''}`.toLowerCase()
     
-    // Trouver les lignes qui contiennent des mots clés de l'exigence
+    // Trouver les lignes qui contiennent des mots cles de l'exigence
     const relevantLines = lines.filter(line => 
       line.toLowerCase().split(/\s+/).some(word => 
         word.length > 3 && exigenceText.includes(word)
@@ -255,15 +255,15 @@ export default function CodePage() {
     )
     
     if (relevantLines.length > 0) {
-      // Retourner jusqu'à 3 lignes pertinentes
+      // Retourner jusqu'a 3 lignes pertinentes
       return relevantLines.slice(0, 3).join('\n')
     }
     
-    // Sinon, retourner les premières lignes du fichier
+    // Sinon, retourner les premieres lignes du fichier
     return lines.slice(0, 5).join('\n')
   }
 
-  // Générer une description IA de l'exigence trouvée dans le code
+  // Generer une description IA de l'exigence trouvee dans le code
   const generateIARequirement = (exigence: Exigence, codeContent: string, filePath: string): string => {
     const lines = codeContent.split('\n')
     const exigenceText = `${exigence.titre} ${exigence.description || ''}`.toLowerCase()
@@ -277,33 +277,33 @@ export default function CodePage() {
     
     if (relevantLines.length > 0) {
       const sampleLine = relevantLines[0].trim()
-      return `Implémentation: ${sampleLine.substring(0, 80)}...`
+      return `Implementation: ${sampleLine.substring(0, 80)}...`
     }
     
     // Analyser le contenu pour trouver des patterns
     if (codeContent.includes('function') || codeContent.includes('def ')) {
-      return `Fonction implémentée dans ${filePath} pour ${exigence.titre}`
+      return `Fonction implementee dans ${filePath} pour ${exigence.titre}`
     }
     
     if (codeContent.includes('class ')) {
-      return `Classe implémentée dans ${filePath} pour ${exigence.titre}`
+      return `Classe implementee dans ${filePath} pour ${exigence.titre}`
     }
     
     if (codeContent.includes('api') || codeContent.includes('endpoint')) {
-      return `Endpoint API implémenté dans ${filePath} pour ${exigence.titre}`
+      return `Endpoint API implemente dans ${filePath} pour ${exigence.titre}`
     }
     
-    return `Code lié à: ${exigence.titre} dans ${filePath}`
+    return `Code lie a: ${exigence.titre} dans ${filePath}`
   }
 
-  // Déterminer la classe CSS en fonction du pourcentage
+  // Determiner la classe CSS en fonction du pourcentage
   const getPercentageClass = (percentage: number) => {
     if (percentage >= 80) return 'bg-green-100 text-green-800'
     if (percentage >= 50) return 'bg-yellow-100 text-yellow-800'
     return 'bg-red-100 text-red-800'
   }
 
-  // Filtrer les résultats par plage de pourcentage
+  // Filtrer les resultats par plage de pourcentage
   const getFilteredResults = (minPercent: number, maxPercent: number) => {
     return analysisResults.filter(result => result.matchPercentage >= minPercent && result.matchPercentage <= maxPercent)
   }
@@ -313,8 +313,8 @@ export default function CodePage() {
       <div className="flex items-center justify-center min-h-[200px]">
         <div className="card">
           <div className="flex items-center gap-2 text-gray-600">
-            <span className="animate-spin">🌐</span>
-            <span>Chargement des données locales...</span>
+            <span className="animate-spin">[*]</span>
+            <span>Chargement des donnees locales...</span>
           </div>
         </div>
       </div>
@@ -330,7 +330,7 @@ export default function CodePage() {
         </div>
       )}
 
-      {/* Section Connexion GitHub et Sélection du Repository */}
+      {/* Section Connexion GitHub et Selection du Repository */}
       <GitHubIntegration
         onRepoSelect={handleRepoSelect}
         onAuthChange={handleAuthChange}
@@ -347,10 +347,10 @@ export default function CodePage() {
           </div>
           
           <div className="p-6 space-y-6">
-            {/* Informations sur le repository sélectionné */}
+            {/* Informations sur le repository selectionne */}
             <div className="p-4 bg-blue-50 rounded-lg">
               <div className="flex items-center gap-3">
-                <span className="text-2xl">📦</span>
+                <span className="text-2xl">[Pkg]</span>
                 <div>
                   <div className="font-medium text-blue-800">{selectedRepo.name}</div>
                   <div className="text-sm text-blue-600">{selectedRepo.full_name}</div>
@@ -363,8 +363,8 @@ export default function CodePage() {
                 {selectedRepo.language && (
                   <span className="px-2 py-1 bg-gray-200 rounded text-xs">{selectedRepo.language}</span>
                 )}
-                <span className="px-2 py-1 bg-gray-200 rounded text-xs">⭐ {selectedRepo.stargazers_count}</span>
-                <span className="px-2 py-1 bg-gray-200 rounded text-xs">🍴 {selectedRepo.forks_count}</span>
+                <span className="px-2 py-1 bg-gray-200 rounded text-xs">* {selectedRepo.stargazers_count}</span>
+                <span className="px-2 py-1 bg-gray-200 rounded text-xs">F {selectedRepo.forks_count}</span>
               </div>
             </div>
 
@@ -377,16 +377,16 @@ export default function CodePage() {
               >
                 {loadingAnalysis ? (
                   <>
-                    <span className="animate-spin">🌐</span> Analyse en cours...
+                    <span className="animate-spin">[*]</span> Analyse en cours...
                   </>
                 ) : (
-                  `Analyser le code (${exigences.length} exigences à vérifier)`
+                  `Analyser le code (${exigences.length} exigences a verifier)`
                 )}
               </button>
               
               {exigences.length === 0 && (
                 <span className="text-red-500 text-sm">
-                  ⚠️ Aucune exigence disponible. Veuillez d'abord ajouter des exigences.
+                  [!] Aucune exigence disponible. Veuillez d'abord ajouter des exigences.
                 </span>
               )}
               
@@ -400,7 +400,7 @@ export default function CodePage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 bg-green-50 rounded-lg text-center">
                   <div className="text-2xl font-bold text-green-800">{getFilteredResults(80, 100).length}</div>
-                  <div className="text-sm text-green-600">Exigences > 80%</div>
+                  <div className="text-sm text-green-600">Exigences &gt; 80%</div>
                 </div>
                 <div className="p-4 bg-yellow-50 rounded-lg text-center">
                   <div className="text-2xl font-bold text-yellow-800">{getFilteredResults(50, 79).length}</div>
@@ -408,12 +408,12 @@ export default function CodePage() {
                 </div>
                 <div className="p-4 bg-red-50 rounded-lg text-center">
                   <div className="text-2xl font-bold text-red-800">{getFilteredResults(0, 49).length}</div>
-                  <div className="text-sm text-red-600">Exigences < 50%</div>
+                  <div className="text-sm text-red-600">Exigences &lt; 50%</div>
                 </div>
               </div>
             )}
 
-            {/* Tableau des résultats */}
+            {/* Tableau des resultats */}
             {analysisResults.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full data-table">
@@ -422,7 +422,7 @@ export default function CodePage() {
                       <th className="text-left p-3">Exigences Application</th>
                       <th className="text-left p-3">Exigences IA (Code)</th>
                       <th className="text-left p-3">% Match</th>
-                      <th className="text-left p-3">Validé</th>
+                      <th className="text-left p-3">Valide</th>
                       <th className="text-left p-3">Fichier</th>
                     </tr>
                   </thead>
@@ -471,7 +471,7 @@ export default function CodePage() {
             ) : (
               !loadingAnalysis && (
                 <div className="text-center py-8 text-gray-500">
-                  <p>Aucune analyse effectuée. Cliquez sur "Analyser le code" pour commencer.</p>
+                  <p>Aucune analyse effectuee. Cliquez sur &quot;Analyser le code&quot; pour commencer.</p>
                 </div>
               )
             )}
@@ -479,11 +479,11 @@ export default function CodePage() {
         </div>
       )}
 
-      {/* Section Exigences locales (pour référence) */}
+      {/* Section Exigences locales (pour reference) */}
       {exigences.length > 0 && (
         <div className="card">
           <div className="card-header">
-            <h2 className="text-lg font-semibold text-gray-800">Exigences de l'Application ({exigences.length})</h2>
+            <h2 className="text-lg font-semibold text-gray-800">Exigences de l&apos;Application ({exigences.length})</h2>
           </div>
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">

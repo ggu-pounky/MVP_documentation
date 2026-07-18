@@ -46,7 +46,7 @@ export default function CodeAnalysis({
           // Extraire un snippet de code pertinent
           const codeSnippet = extractRelevantCodeSnippet(file.content, exigence, file.path)
           
-          // Générer une description de l'exigence IA
+          // Generer une description de l'exigence IA
           const iaRequirement = generateIARequirement(exigence, file.content, file.path)
           
           results.push({
@@ -65,7 +65,7 @@ export default function CodeAnalysis({
       })
     })
     
-    // Trier par pourcentage décroissant
+    // Trier par pourcentage decroissant
     results.sort((a, b) => b.matchPercentage - a.matchPercentage)
     
     return results
@@ -77,7 +77,7 @@ export default function CodeAnalysis({
     const exigenceText = `${exigence.titre} ${exigence.description || ''}`.toLowerCase()
     const exigenceWords = exigenceText.split(/\s+/).filter(word => word.length > 3)
     
-    // Score basé sur les mots clés
+    // Score base sur les mots cles
     exigenceWords.forEach(word => {
       if (codeContent.includes(word)) {
         score += 1
@@ -85,7 +85,7 @@ export default function CodeAnalysis({
     })
     
     // Bonus pour les mots importants (verbes d'action)
-    const actionWords = ['créer', 'ajouter', 'supprimer', 'mettre', 'à', 'jour', 'valider', 'calculer', 'afficher', 'gérer', 'stocker', 'vérifier', 'authentifier', 'autoriser', 'charger', 'sauvegarder', 'exporter', 'importer']
+    const actionWords = ['creer', 'ajouter', 'supprimer', 'mettre', 'a', 'jour', 'valider', 'calculer', 'afficher', 'gerer', 'stocker', 'verifier', 'authentifier', 'autoriser', 'charger', 'sauvegarder', 'exporter', 'importer']
     exigenceWords.forEach(word => {
       if (actionWords.some(action => word.includes(action)) && codeContent.includes(word)) {
         score += 0.5
@@ -124,7 +124,7 @@ export default function CodeAnalysis({
     const lines = content.split('\n')
     const exigenceText = `${exigence.titre} ${exigence.description || ''}`.toLowerCase()
     
-    // Trouver les lignes qui contiennent des mots clés de l'exigence
+    // Trouver les lignes qui contiennent des mots cles de l'exigence
     const relevantLines = lines.filter(line => 
       line.toLowerCase().split(/\s+/).some(word => 
         word.length > 3 && exigenceText.includes(word)
@@ -132,15 +132,15 @@ export default function CodeAnalysis({
     )
     
     if (relevantLines.length > 0) {
-      // Retourner jusqu'à 3 lignes pertinentes
+      // Retourner jusqu'a 3 lignes pertinentes
       return relevantLines.slice(0, 3).join('\n')
     }
     
-    // Sinon, retourner les premières lignes du fichier
+    // Sinon, retourner les premieres lignes du fichier
     return lines.slice(0, 5).join('\n')
   }
 
-  // Générer une description IA de l'exigence trouvée dans le code
+  // Generer une description IA de l'exigence trouvee dans le code
   const generateIARequirement = (exigence: Exigence, codeContent: string, filePath: string): string => {
     const lines = codeContent.split('\n')
     const exigenceText = `${exigence.titre} ${exigence.description || ''}`.toLowerCase()
@@ -154,26 +154,26 @@ export default function CodeAnalysis({
     
     if (relevantLines.length > 0) {
       const sampleLine = relevantLines[0].trim()
-      return `Implémentation: ${sampleLine.substring(0, 80)}...`
+      return `Implementation: ${sampleLine.substring(0, 80)}...`
     }
     
     // Analyser le contenu pour trouver des patterns
     if (codeContent.includes('function') || codeContent.includes('def ')) {
-      return `Fonction implémentée dans ${filePath} pour ${exigence.titre}`
+      return `Fonction implementee dans ${filePath} pour ${exigence.titre}`
     }
     
     if (codeContent.includes('class ')) {
-      return `Classe implémentée dans ${filePath} pour ${exigence.titre}`
+      return `Classe implementee dans ${filePath} pour ${exigence.titre}`
     }
     
     if (codeContent.includes('api') || codeContent.includes('endpoint')) {
-      return `Endpoint API implémenté dans ${filePath} pour ${exigence.titre}`
+      return `Endpoint API implemente dans ${filePath} pour ${exigence.titre}`
     }
     
-    return `Code lié à: ${exigence.titre} dans ${filePath}`
+    return `Code lie a: ${exigence.titre} dans ${filePath}`
   }
 
-  // Filtrer les résultats
+  // Filtrer les resultats
   const filteredResults = analysisResults.filter(result => {
     const matchesSearch = result.exigenceTitre.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          result.codeRequirement.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -195,21 +195,21 @@ export default function CodeAnalysis({
     total: analysisResults.length
   }
 
-  // Déterminer la classe CSS en fonction du pourcentage
+  // Determiner la classe CSS en fonction du pourcentage
   const getPercentageClass = (percentage: number) => {
     if (percentage >= 80) return 'bg-green-100 text-green-800'
     if (percentage >= 50) return 'bg-yellow-100 text-yellow-800'
     return 'bg-red-100 text-red-800'
   }
 
-  // Déterminer la classe pour la ligne du tableau
+  // Determiner la classe pour la ligne du tableau
   const getRowClass = (percentage: number) => {
     if (percentage >= 80) return 'bg-green-50 hover:bg-green-100'
     if (percentage >= 50) return 'bg-yellow-50 hover:bg-yellow-100'
     return 'bg-red-50 hover:bg-red-100'
   }
 
-  // Déterminer la classe pour le badge de type
+  // Determiner la classe pour le badge de type
   const getTypeClass = (type: string) => {
     switch (type) {
       case 'Fonctionnelle':
@@ -234,7 +234,7 @@ export default function CodeAnalysis({
         >
           {isAnalyzing ? (
             <>
-              <span className="animate-spin">🌐</span> Analyse en cours...
+              <span className="animate-spin">[*]</span> Analyse en cours...
             </>
           ) : (
             `Analyser le code (${exigences.length} exigences)`
@@ -243,7 +243,7 @@ export default function CodeAnalysis({
         
         {exigences.length === 0 && (
           <span className="text-red-500 text-sm">
-            ⚠️ Aucune exigence disponible. Veuillez d'abord ajouter des exigences.
+            [!] Aucune exigence disponible. Veuillez d&apos;abord ajouter des exigences.
           </span>
         )}
       </div>
@@ -253,7 +253,7 @@ export default function CodeAnalysis({
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="p-4 bg-green-50 rounded-lg text-center">
             <div className="text-2xl font-bold text-green-800">{stats.high}</div>
-            <div className="text-sm text-green-600">Exigences > 80%</div>
+            <div className="text-sm text-green-600">Exigences &gt; 80%</div>
           </div>
           <div className="p-4 bg-yellow-50 rounded-lg text-center">
             <div className="text-2xl font-bold text-yellow-800">{stats.medium}</div>
@@ -261,7 +261,7 @@ export default function CodeAnalysis({
           </div>
           <div className="p-4 bg-red-50 rounded-lg text-center">
             <div className="text-2xl font-bold text-red-800">{stats.low}</div>
-            <div className="text-sm text-red-600">Exigences < 50%</div>
+            <div className="text-sm text-red-600">Exigences &lt; 50%</div>
           </div>
           <div className="p-4 bg-blue-50 rounded-lg text-center">
             <div className="text-2xl font-bold text-blue-800">{stats.total}</div>
@@ -278,7 +278,7 @@ export default function CodeAnalysis({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher dans les résultats..."
+              placeholder="Rechercher dans les resultats..."
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -288,16 +288,16 @@ export default function CodeAnalysis({
               onChange={(e) => setFilterType(e.target.value as 'all' | 'high' | 'medium' | 'low')}
               className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="all">Tous les résultats</option>
-              <option value="high">> 80%</option>
+              <option value="all">Tous les resultats</option>
+              <option value="high">&gt; 80%</option>
               <option value="medium">50-80%</option>
-              <option value="low">< 50%</option>
+              <option value="low">&lt; 50%</option>
             </select>
           </div>
         </div>
       )}
 
-      {/* Tableau des résultats */}
+      {/* Tableau des resultats */}
       {analysisResults.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="w-full data-table">
@@ -307,7 +307,7 @@ export default function CodeAnalysis({
                 <th className="text-left p-3">Type</th>
                 <th className="text-left p-3">Exigence (IA - Code)</th>
                 <th className="text-left p-3">% Match</th>
-                <th className="text-left p-3">Validé</th>
+                <th className="text-left p-3">Valide</th>
                 <th className="text-left p-3">Fichier</th>
                 <th className="text-left p-3">Actions</th>
               </tr>
@@ -354,7 +354,7 @@ export default function CodeAnalysis({
                       onClick={() => setSelectedResult(result)}
                       className="btn btn-secondary btn-sm"
                     >
-                      Détails
+                      Details
                     </button>
                   </td>
                 </tr>
@@ -365,23 +365,23 @@ export default function CodeAnalysis({
       ) : (
         !isAnalyzing && (
           <div className="text-center py-8 text-gray-500">
-            <p>Aucune analyse effectuée. Cliquez sur "Analyser le code" pour commencer.</p>
+            <p>Aucune analyse effectuee. Cliquez sur &quot;Analyser le code&quot; pour commencer.</p>
           </div>
         )
       )}
 
-      {/* Modal de détails */}
+      {/* Modal de details */}
       {selectedResult && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
-                <h3 className="text-lg font-semibold text-gray-800">Détails du Matching</h3>
+                <h3 className="text-lg font-semibold text-gray-800">Details du Matching</h3>
                 <button
                   onClick={() => setSelectedResult(null)}
                   className="text-gray-400 hover:text-gray-600 text-2xl"
                 >
-                  ×
+                  [X]
                 </button>
               </div>
 
@@ -412,7 +412,7 @@ export default function CodeAnalysis({
                       {selectedResult.matchPercentage}%
                     </span>
                     <div className="flex-1">
-                      <div className="text-sm text-gray-600">Statut: {selectedResult.matched ? '✓ Validé' : '✗ Non validé'}</div>
+                      <div className="text-sm text-gray-600">Statut: {selectedResult.matched ? '[OK] Valide' : '[KO] Non valide'}</div>
                       <div className="text-sm text-gray-600">Fichier: {selectedResult.filePath}</div>
                     </div>
                   </div>
